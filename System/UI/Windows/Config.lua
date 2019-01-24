@@ -20,6 +20,7 @@ function br.ui:createConfigWindow()
         -- br.ui:createCheckbox(section, "Start/Stop BadRotations", "Uncheck to prevent BadRotations pulsing.");
         rotationLog = br.ui:createCheckbox(section, "Rotation Log", "Display Rotation Log.");
         -- br.ui:createCheckbox(section, "Rotation Log", "Display Rotation Log.")
+        br.ui:createCheckbox(section, "Addon Debug Messages", "Check this to display developer debug messages.")
         br.ui:createCheckbox(section, "Display Failcasts", "Dispaly Failcasts in Debug.")
         br.ui:createCheckbox(section, "Queue Casting", "Allow Queue Casting on some profiles.")
         br.ui:createSpinner(section,  "Auto Loot" ,0.5, 0.1, 3, 0.1, "Sets Autloot on/off.", "Sets a delay for Auto Loot.")
@@ -36,7 +37,7 @@ function br.ui:createConfigWindow()
     local function callEnemiesEngine()
         -- Enemies Engine
         section = br.ui:createSection(br.ui.window.config, "Enemies Engine")
-        br.ui:createDropdown(section, "Dynamic Targetting", {"Only In Combat", "Default"}, 2, "Check this to allow dynamic targetting. If unchecked, profile will only attack current target.")
+        br.ui:createDropdown(section, "Dynamic Targetting", {"Default", "Lite"}, 1, "Check this to allow dynamic targetting. Lite will only pick a new target if current is dead. If unchecked, profile will only attack current target.")
         br.ui:createCheckbox(section, "Target Dynamic Target", "Check this will target the current dynamic target.")
         br.ui:createCheckbox(section, "Hostiles Only", "Checking this will target only units hostile to you.")
         br.ui:createCheckbox(section, "Attack MC Targets", "Check this to allow addon to attack charmed/mind controlled targets.")

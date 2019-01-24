@@ -183,8 +183,32 @@ local function runRotation()
         enemies.get(5)
         enemies.get(8)
         enemies.get(30)
+        enemies.get(40)
 
-	    if profileStop == nil then profileStop = false end
+        if profileStop == nil then profileStop = false end
+        
+        local function iStrike(unit)
+            if getDistance("player",unit) < 40 then
+              local wasMouseLooking = false
+              if IsMouselooking() then
+                  wasMouseLooking = true
+                  MouselookStop()
+              end
+              local combatRange = max(5, UnitCombatReach("player") + UnitCombatReach(unit))
+              local X,Y,Z = GetPositionBetweenObjects(unit, "player", combatRange)
+              CastSpellByName(GetSpellInfo(spell.infernalStrike))
+              ClickPosition(X,Y,Z)
+              if IsAoEPending() then
+                CancelPendingSpell()
+                return false
+              end
+              if wasMouseLooking then
+                  MouselookStart()
+              end
+              return true
+            end
+            return false
+          end
 
 --------------------
 --- Action Lists ---
@@ -335,8 +359,8 @@ local function runRotation()
                 if isChecked("Pre-Pull Timer") and pullTimer <= getOptionValue("Pre-Pull Timer") then
 
                 end -- End Pre-Pull
-                if GetObjectExists("target") and not UnitIsDeadOrGhost("target") and UnitCanAttack("target", "player") and getDistance("target") < 5 then
-            -- Start Attack
+                if GetObjectExists("target") and not UnitIsDeadOrGhost("target") and UnitCanAttack("target", "player") and getDistance("target") < 5 then        
+                    -- Start Attack
                     StartAttack()
                 end
             end -- End No Combat
@@ -344,14 +368,15 @@ local function runRotation()
     -- Action List - FieryBrand
         local function actionList_FieryBrand()
             -- actions.brand=sigil_of_flame,if=cooldown.fiery_brand.remains<2
-            if isChecked("Sigil of Flame") and cast.able.sigilOfFlame() and not isMoving(units.dyn5)
+            if isChecked("Sigil of Flame") and not isMoving(units.dyn5)
                 and getDistance(units.dyn5) < 5 and #enemies.yards5 > 0 and cd.fieryBrand.remain() < 2
             then
                 if cast.sigilOfFlame("best",false,1,8) then return end
 			end
 			-- actions.brand+=/infernal_strike,if=cooldown.fiery_brand.remains=0
-			if mode.mover == 1 and cast.able.infernalStrike() and charges.infernalStrike.count() == 2 and not cd.fieryBrand.exists() and #enemies.yards5 > 0 then
-                if cast.infernalStrike("player","ground",1,6) then return end
+			if mode.mover == 1 and not cast.last.infernalStrike(1) and charges.infernalStrike.count() == 2 and not cd.fieryBrand.exists() and #enemies.yards40 > 0 and not noControl then
+                --if cast.infernalStrike("targetGround","ground",1,6) then return end
+                if iStrike("target") then return true end
             end
 			-- actions.brand+=/fiery_brand (ignore if checked for defensive use)
             if cast.able.fieryBrand() then
@@ -359,19 +384,20 @@ local function runRotation()
             end
 			if debuff.fieryBrand.exists(units.dyn5) then
 				-- actions.brand+=/immolation_aura,if=dot.fiery_brand.ticking
-				if isChecked("Immolation Aura") and cast.able.immolationAura() and #enemies.yards5 > 0 then
+				if isChecked("Immolation Aura") and #enemies.yards5 > 0 then
                     if cast.immolationAura() then return end
                 end
 				-- actions.brand+=/fel_devastation,if=dot.fiery_brand.ticking
-				if cast.able.felDevastation() and getDistance(units.dyn20) < 20 then
+				if getDistance(units.dyn20) < 20 then
 					if cast.felDevastation() then return end
 				end
 				-- actions.brand+=/infernal_strike,if=dot.fiery_brand.ticking
-				if mode.mover == 1 and cast.able.infernalStrike() and charges.infernalStrike.count() == 2 and #enemies.yards5 > 0 then
-					if cast.infernalStrike("player","ground",1,6) then return end
+				if mode.mover == 1 and not cast.last.infernalStrike(1) and charges.infernalStrike.count() == 2 and #enemies.yards40 > 0 and not noControl then
+                    --if cast.infernalStrike("player","ground",1,6) then return end
+                    if iStrike("target") then return true end
 				end
 				-- actions.brand+=/sigil_of_flame,if=dot.fiery_brand.ticking
-				if isChecked("Sigil of Flame") and cast.able.sigilOfFlame() and not isMoving(units.dyn5) and getDistance(units.dyn5) < 5 and #enemies.yards5 > 0 then
+				if isChecked("Sigil of Flame") and not isMoving(units.dyn5) and getDistance(units.dyn5) < 5 and #enemies.yards5 > 0 then
 					if cast.sigilOfFlame("best",false,1,8) then return end
 				end
             end
@@ -400,7 +426,12 @@ local function runRotation()
 --------------------------
 --- In Combat Rotation ---
 --------------------------
-            if inCombat and profileStop==false and isValidUnit("target") then
+            if inCombat and profileStop==false and isValidUnit("target")  then
+                if br.timer:useTimer("facingdelay", 0.5) then
+                    if not getFacing("player","target") then
+                        FaceDirection(GetAnglesBetweenObjects ("player", "target"),true)
+                    end
+                end
                 ChatOverlay("In-Combat!")
     ------------------------------
     --- In Combat - Interrupts ---
@@ -411,11 +442,11 @@ local function runRotation()
     ---------------------------
     -- Start Attack
                 -- auto_attack
-                if getDistance(units.dyn5) < 5 then
-                    StartAttack()
-                end
+                -- if getDistance(units.dyn5) < 5 then
+                --     StartAttack()
+                -- end
 				-- Consume Magic
-				if isChecked("Consume Magic") and cast.able.consumeMagic("target") and canDispel("target",spell.consumeMagic) and not isBoss() and GetObjectExists("target") then
+				if isChecked("Consume Magic") and canDispel("target",spell.consumeMagic) and not isBoss() and GetObjectExists("target") then
 					if cast.consumeMagic("target") then return end
                 end
                 --CDs
@@ -425,47 +456,48 @@ local function runRotation()
 	                if actionList_FieryBrand() then return end
                 end
 				-- actions.normal=infernal_strike
-				if mode.mover == 1 and cast.able.infernalStrike() and charges.infernalStrike.count() == 2 and #enemies.yards5 > 0 then
-                    if cast.infernalStrike("player","ground",1,6) then return end
+				if mode.mover == 1 and not cast.last.infernalStrike(1) and charges.infernalStrike.count() == 2 and #enemies.yards40 > 0 and not noControl then
+                    --if cast.infernalStrike("player","ground",1,6) then return end
+                    if iStrike("target") then return true end
                 end
 				-- actions.normal+=/spirit_bomb,if=soul_fragments>=4
 				if cast.able.spiritBomb() and buff.soulFragments.stack() >= 4 then
                     if cast.spiritBomb() then return end
                 end
                 -- actions.normal+=/soul_cleave,if=!talent.spirit_bomb.enabled
-                if cast.able.soulCleave() and not talent.spiritBomb then
+                if not talent.spiritBomb and buff.soulFragments.stack() >= 2 then
                     if cast.soulCleave() then return end
                 end
                 -- actions.normal+=/soul_cleave,if=talent.spirit_bomb.enabled&soul_fragments=0
-                if cast.able.soulCleave() and talent.spiritBomb and buff.soulFragments.stack() == 0 then
+                if talent.spiritBomb and buff.soulFragments.stack() == 2 then
                     if cast.soulCleave() then return end
                 end
 				-- actions.normal+=/immolation_aura,if=pain<=90
-				if isChecked("Immolation Aura") and cast.able.immolationAura("player") and pain <= 90 and #enemies.yards5 > 0 then
+				if isChecked("Immolation Aura") and pain <= 90 and #enemies.yards5 > 0 then
                     if cast.immolationAura("player") then return end
                 end
 				-- actions.normal+=/felblade,if=pain<=70
-				if cast.able.felblade() and pain <= 70 then
+				if pain <= 70 then
                     if cast.felblade() then return end
                 end
 				-- actions.normal+=/fracture,if=soul_fragments<=3
-				if cast.able.fracture() and buff.soulFragments.stack() <= 3 and talent.fracture then
+				if buff.soulFragments.stack() <= 3 and talent.fracture then
                     if cast.fracture() then return end
                 end
 				-- fel_devastation
-                if cast.able.felDevastation() and getDistance(units.dyn20) < 20 then
+                if getDistance(units.dyn20) < 20 then
 					if cast.felDevastation() then return end
 				end
 				-- actions.normal+=/sigil_of_flame
-				if isChecked("Sigil of Flame") and cast.able.sigilOfFlame() and not isMoving(units.dyn5) and #enemies.yards5 > 0 then
+				if isChecked("Sigil of Flame") and not isMoving(units.dyn5) and #enemies.yards5 > 0 then
                     if cast.sigilOfFlame("best",false,1,8) then return end
 				end
 				-- actions.normal+=/shear
-                if cast.able.shear() and not talent.fracture then
+                if not talent.fracture then
 	                if cast.shear() then return end
                 end
 				-- actions.normal+=/throw_glaive
-                if isChecked("Throw Glaive") and cast.able.throwGlaive() then
+                if isChecked("Throw Glaive") then
                     if cast.throwGlaive() then return end
                 end
 			end --End In Combat

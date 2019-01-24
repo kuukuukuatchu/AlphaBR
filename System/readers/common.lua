@@ -291,6 +291,9 @@ function br.read.commonReaders()
 			return
 		end
 		-- Update Player Info
+		if event == "PLAYER_TALENT_UPDATE" and select(2, GetSpecializationInfo(GetSpecialization())) == br.selectedSpec then
+			br.rotationChanged = true
+		end
 		if event == "PLAYER_TALENT_UPDATE" or event == "PLAYER_LEVEL_UP" or event == "PLAYER_EQUIPMENT_CHANGED" or event == "AZERITE_EMPOWERED_ITEM_SELECTION_UPDATED" then
 			br.updatePlayerInfo = true
 		end

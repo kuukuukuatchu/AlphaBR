@@ -222,7 +222,7 @@ function hasThreat(unit,playerUnit)
 		if isChecked("Cast Debug") and not GetObjectExists("target") then Print(UnitName(GetUnit(unit)).." is targetting "..UnitName(targetUnit)) end
 		return targetFriend
 	elseif UnitDetailedThreatSituation(playerUnit, unit)~=nil then
-		if select(3,UnitDetailedThreatSituation(playerUnit, unit)) > 0 then
+		if select(5,UnitDetailedThreatSituation(playerUnit, unit)) > 0 then
 			if isChecked("Cast Debug") and not UnitExists("target") then Print(UnitName(unit).." is threatening you."); end
 			return true
 		end
@@ -230,7 +230,7 @@ function hasThreat(unit,playerUnit)
 		for i = 1, #br.friend do
 			local thisUnit = br.friend[i].unit
 			if UnitDetailedThreatSituation(thisUnit,unit) ~= nil then
-				if select(3,UnitDetailedThreatSituation(thisUnit,unit)) > 0 then
+				if select(5,UnitDetailedThreatSituation(thisUnit,unit)) > 0 then
 					if isChecked("Cast Debug") and not UnitExists("target") then Print(UnitName(unit).." is threatening "..UnitName(thisUnit).."."); end
 					return true
 				end
@@ -238,6 +238,8 @@ function hasThreat(unit,playerUnit)
 		end
 	elseif isBoss() and UnitAffectingCombat(unit) and (instance == "party" or instance == "raid") then
 		return true
+	-- elseif UnitAffectingCombat(unit) and UnitDetailedThreatSituation(thisUnit,unit) == nil then
+	-- 	return true
 	end
 end
 function isTanking(unit)

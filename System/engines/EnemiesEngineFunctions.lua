@@ -182,7 +182,7 @@ function getEnemies(thisUnit,radius,checkNoCombat,facing)
 	local enemyTable = checkNoCombat and br.units or br.enemy
 	local enemiesTable = {}
 	local thisEnemy, distance
-	local isFacing = getFacing("player",thisUnit)
+	--local isFacing = getFacing("player",thisUnit)
     if checkNoCombat == nil then checkNoCombat = false end
     if refreshStored == true then
     	for k,v in pairs(br.storedTables) do br.storedTables[k] = nil end
@@ -216,7 +216,7 @@ function getEnemies(thisUnit,radius,checkNoCombat,facing)
 	for k, v in pairs(enemyTable) do
 		thisEnemy = v.unit
 		distance =  getDistance(thisUnit,thisEnemy)
-		if distance < radius and (not facing or isFacing) then
+		if distance < radius and (not facing or getFacing("player",thisEnemy)) then
 			tinsert(enemiesTable,thisEnemy)
 		end
     end
@@ -393,9 +393,9 @@ end
 					coef = coef + 100
 				end
 				-- if user checked burn target then we add the value otherwise will be 0
-				if getOptionCheck("Forced Burn") then
-					coef = coef + isBurnTarget(unit) + ((50 - distance)/100)
-				end
+				-- if getOptionCheck("Forced Burn") then
+				-- 	coef = coef + isBurnTarget(unit) + ((50 - distance)/100)
+				-- end
 				-- if user checked avoid shielded, we add the % this shield remove to coef
 				if getOptionCheck("Avoid Shields") then
 					coef = coef + isShieldedTarget(unit)
@@ -453,6 +453,10 @@ local function findBestUnit(range,facing)
 	--			lastCheckTime = GetTime() + 1
 			end
 		end
+		if range == 40 then
+			br.Debug("Total Enemies Found: "..#enemyList)
+			br.Debug("Unit Coef: "..bestUnitCoef or 0)
+		end
 	end
 	if isChecked("Debug Timers") then
 		br.debug.cpu.enemiesEngine.bestUnitFinder = debugprofilestop()-startTime or 0
@@ -465,19 +469,37 @@ function dynamicTarget(range,facing)
 	local startTime = debugprofilestop()
 	local facing = facing or false
 	local bestUnit = bestUnit or nil
+	local targetDist = GetUnitExists("target") and getDistance("target") or 100
+	if isChecked("Forced Burn") then
+		if not GetUnitExists("target" ) or isBurnTarget("target") == 0 then
+			local enemyList = getEnemies("player",range,false,facing)
+			for i = 1, #enemyList do
+				if isBurnTarget(enemyList[i]) > 0 and targetDist > getDistance(enemyList[i]) then
+					TargetUnit(enemyList[i])
+				end
+			end
+		end
+	end
 	if isChecked("Dynamic Targetting") then
-		if getOptionValue("Dynamic Targetting") == 2 or (UnitAffectingCombat("player") and getOptionValue("Dynamic Targetting") == 1) then
+		if UnitAffectingCombat("player") and getOptionValue("Dynamic Targetting") == 1 then
 			bestUnit = findBestUnit(range,facing)
+		elseif getOptionValue("Dynamic Targetting") == 2 then
+			if not GetUnitExists("target") or (UnitIsDeadOrGhost("target") and not GetUnitIsFriend("target","player"))
+			or not getFacing("player","target") then
+				if range == 40 then
+					br.Debug("Looking for new target in "..range.." yards")
+				end
+				bestUnit = findBestUnit(range,facing)
+			end
 		end
 	end
 	if (not isChecked("Dynamic Targetting") or bestUnit == nil) and getDistance("target") < range
-		and (not facing or (facing and getFacing("player","target"))) and isValidUnit("target")
+		and getFacing("player","target") and not UnitIsDeadOrGhost("target") and not GetUnitIsFriend("target","player")
 	then
 		bestUnit = "target"
 	end
-	if ((UnitIsDeadOrGhost("target") and not GetUnitIsFriend("target","player")) or (not UnitExists("target") and hasThreat(bestUnit))
-		or ((isChecked("Target Dynamic Target") and UnitExists("target")) and not GetUnitIsUnit(bestUnit,"target")))
-		or (getOptionCheck("Forced Burn") and isBurnTarget(bestUnit) > 0)
+	if (isChecked("Target Dynamic Target") and (GetUnitExists("target") and not GetUnitIsUnit(bestUnit,"target"))) or (GetUnitExists("target") and UnitIsDeadOrGhost("target") 
+	and not GetUnitIsFriend("target","player")) or (not UnitExists("target") and hasThreath(bestUnit))
 	then
 		TargetUnit(bestUnit)
 	end
