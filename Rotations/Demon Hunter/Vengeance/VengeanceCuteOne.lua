@@ -194,6 +194,14 @@ local function runRotation()
                   wasMouseLooking = true
                   MouselookStop()
               end
+              if getDistance("player",unit) <= 6 then
+                if cast.infernalStrike("player","ground") then
+                    if wasMouseLooking then
+                        MouselookStart()
+                    end 
+                    return 
+                end
+              end
               local combatRange = max(5, UnitCombatReach("player") + UnitCombatReach(unit))
               local X,Y,Z = GetPositionBetweenObjects(unit, "player", combatRange)
               CastSpellByName(GetSpellInfo(spell.infernalStrike))
@@ -227,7 +235,7 @@ local function runRotation()
 				end
 			end -- End Dummy Test
         -- Torment
-            if isChecked("Torment") and cast.able.torment() then
+            if isChecked("Torment") then
                 for i = 1, #enemies.yards30 do
                     local thisUnit = enemies.yards30[i]
                     if not isTanking(thisUnit) and hasThreat(thisUnit) then
@@ -240,19 +248,19 @@ local function runRotation()
 		local function actionList_Defensive()
 			if useDefensive() then
         -- Soul Barrier
-                if isChecked("Soul Barrier") and inCombat and cast.able.soulBarrier() and php < getOptionValue("Soul Barrier") then
+                if isChecked("Soul Barrier") and inCombat and php < getOptionValue("Soul Barrier") then
                     if cast.soulBarrier() then return end
                 end
         -- Demon Spikes
                 -- demon_spikes
-                if isChecked("Demon Spikes") and inCombat and cast.able.demonSpikes() and charges.demonSpikes.count() > getOptionValue("Hold Demon Spikes") and php <= getOptionValue("Demon Spikes") then
+                if isChecked("Demon Spikes") and inCombat and charges.demonSpikes.count() > getOptionValue("Hold Demon Spikes") and php <= getOptionValue("Demon Spikes") then
                     if (charges.demonSpikes.count() == 2 or not buff.demonSpikes.exists()) and not debuff.fieryBrand.exists(units.dyn5) and not buff.metamorphosis.exists() then
                         if cast.demonSpikes() then return end
                     end
                 end
         -- Metamorphosis
 				-- metamorphosis
-				if isChecked("Metamorphosis") and inCombat and cast.able.metamorphosis() and not buff.demonSpikes.exists()
+				if isChecked("Metamorphosis") and inCombat and not buff.demonSpikes.exists()
                     and not debuff.fieryBrand.exists(units.dyn5) and not buff.metamorphosis.exists() and php <= getOptionValue("Metamorphosis")
                 then
 					if cast.metamorphosis() then return end
@@ -285,13 +293,11 @@ local function runRotation()
 	    			end
 	    		end
         -- Sigil of Misery
-                if isChecked("Sigil of Misery - HP") and cast.able.sigilOfMisery()
-                    and php <= getOptionValue("Sigil of Misery - HP") and inCombat and #enemies.yards8 > 0
+                if isChecked("Sigil of Misery - HP") and php <= getOptionValue("Sigil of Misery - HP") and inCombat and #enemies.yards8 > 0
                 then
                     if cast.sigilOfMisery("player","ground") then return end
                 end
-                if isChecked("Sigil of Misery - AoE") and cast.able.sigilOfMisery()
-                    and #enemies.yards8 >= getOptionValue("Sigil of Misery - AoE") and inCombat
+                if isChecked("Sigil of Misery - AoE") and #enemies.yards8 >= getOptionValue("Sigil of Misery - AoE") and inCombat
                 then
                     if cast.sigilOfMisery("best",false,getOptionValue("Sigil of Misery - AoE"),8) then return end
                 end
@@ -304,16 +310,15 @@ local function runRotation()
                     thisUnit = enemies.yards30[i]
                      -- Disrupt
                     if canInterrupt(thisUnit,getOptionValue("Interrupt At")) then
-                        if isChecked("Disrupt") and cast.able.disrupt(thisUnit) and getDistance(thisUnit) < 20 then
+                        if isChecked("Disrupt") and getDistance(thisUnit) < 20 then
                             if cast.disrupt(thisUnit) then return end
                         end
                         -- Sigil of Silence
-                        if isChecked("Sigil of Silence") and cast.able.sigilOfSilence(thisUnit) and cd.disrupt.remain() > 0 then
+                        if isChecked("Sigil of Silence") and cd.disrupt.remain() > 0 then
                             if cast.sigilOfSilence(thisUnit,"ground",1,8) then return end
                         end
                         -- Sigil of Misery
-                        if isChecked("Sigil of Misery") and cast.able.sigilOfMisery(thisUnit)
-                            and cd.disrupt.remain() > 0 and cd.sigilOfSilence.remain() > 0 and cd.sigilOfSilence.remain() < 45
+                        if isChecked("Sigil of Misery") and cd.disrupt.remain() > 0 and cd.sigilOfSilence.remain() > 0 and cd.sigilOfSilence.remain() < 45
                         then
                             if cast.sigilOfMisery(thisUnit,"ground",1,8) then return end
                         end
@@ -379,7 +384,7 @@ local function runRotation()
                 if iStrike("target") then return true end
             end
 			-- actions.brand+=/fiery_brand (ignore if checked for defensive use)
-            if cast.able.fieryBrand() then
+            if cd.fieryBrand.remains() <= gcd then
 	             if cast.fieryBrand() then return end
             end
 			if debuff.fieryBrand.exists(units.dyn5) then
@@ -461,7 +466,7 @@ local function runRotation()
                     if iStrike("target") then return true end
                 end
 				-- actions.normal+=/spirit_bomb,if=soul_fragments>=4
-				if cast.able.spiritBomb() and buff.soulFragments.stack() >= 4 then
+				if buff.soulFragments.stack() >= 4 then
                     if cast.spiritBomb() then return end
                 end
                 -- actions.normal+=/soul_cleave,if=!talent.spirit_bomb.enabled
