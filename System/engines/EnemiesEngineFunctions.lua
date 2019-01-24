@@ -453,9 +453,10 @@ local function findBestUnit(range,facing)
 	--			lastCheckTime = GetTime() + 1
 			end
 		end
+		local sbestUnitCoef = bestUnitCoef or 0
 		if range == 40 then
 			br.Debug("Total Enemies Found: "..#enemyList)
-			br.Debug("Unit Coef: "..bestUnitCoef or 0)
+			br.Debug("Unit Coef: "..sbestUnitCoef)
 		end
 	end
 	if isChecked("Debug Timers") then
@@ -499,7 +500,7 @@ function dynamicTarget(range,facing)
 		bestUnit = "target"
 	end
 	if (isChecked("Target Dynamic Target") and (GetUnitExists("target") and not GetUnitIsUnit(bestUnit,"target"))) or (GetUnitExists("target") and UnitIsDeadOrGhost("target") 
-	and not GetUnitIsFriend("target","player")) or (not UnitExists("target") and hasThreath(bestUnit))
+	and not GetUnitIsFriend("target","player")) or (not UnitExists("target") and hasThreat(bestUnit))
 	then
 		TargetUnit(bestUnit)
 	end
