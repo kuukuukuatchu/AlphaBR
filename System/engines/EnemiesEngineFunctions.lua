@@ -182,7 +182,6 @@ function getEnemies(thisUnit,radius,checkNoCombat,facing)
 	local enemyTable = checkNoCombat and br.units or br.enemy
 	local enemiesTable = {}
 	local thisEnemy, distance
-	--local isFacing = getFacing("player",thisUnit)
     if checkNoCombat == nil then checkNoCombat = false end
     if refreshStored == true then
     	for k,v in pairs(br.storedTables) do br.storedTables[k] = nil end

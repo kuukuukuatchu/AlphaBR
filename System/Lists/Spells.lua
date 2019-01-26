@@ -1005,6 +1005,7 @@ br.lists.spells = {
                 latentPoison                = 273283,
                 upCloseAndPersonal          = 278533,
                 venomousFangs               = 274590,
+                wildernessSurvival          = 279589,
             }
         },
         -- All
@@ -2202,7 +2203,6 @@ br.lists.spells = {
                 grapplingHook               = 195457,
                 killingSpree                = 51690,
                 masteryMainGauche           = 76806,
-                parley                      = 199743,
                 pistolShot                  = 185763,
                 riposte                     = 199754,
                 rollTheBones                = 193316,
@@ -2264,7 +2264,6 @@ br.lists.spells = {
             },
             debuffs                         = {
                 ghostlyStrike               = 196937,
-                parley                      = 199743,
             },
             glyphs                          = {
 
@@ -2274,11 +2273,10 @@ br.lists.spells = {
                 dirtyTricks                 = 108216,
                 bladeRush                   = 271877,
                 ghostlyStrike               = 196937,
-                grapplingHook               = 195457,
+                grapplingHook               = 256188,
                 hitAndRun                   = 196922,
                 ironStomach                 = 193546,
                 killingSpree                = 51690,
-                parley                      = 199743,
                 sliceAndDice                = 5171,
                 weaponmaster                = 200733,
                 quickDraw                   = 196938,

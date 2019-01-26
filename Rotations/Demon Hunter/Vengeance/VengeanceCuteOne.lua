@@ -431,7 +431,7 @@ local function runRotation()
 --------------------------
 --- In Combat Rotation ---
 --------------------------
-            if inCombat and profileStop==false and isValidUnit("target")  then
+            if inCombat and isValidUnit("target")  then
                 if br.timer:useTimer("facingdelay", 0.5) then
                     if not getFacing("player","target") then
                         FaceDirection(GetAnglesBetweenObjects ("player", "target"),true)
