@@ -258,8 +258,14 @@ local function runRotation()
     end
 
     local function isTotem(unit)
+        local eliteTotems = { -- totems we can dot
+            [125977] = "Reanimate Totem",
+            [127315] = "Reanimate Totem",
+            [146731] = "Zombie Dust Totem"
+        }
         local creatureType = UnitCreatureType(unit)
-        if creatureType ~= nil and GetObjectID(unit) ~= 125977 and GetObjectID(unit) ~= 127315 then --reanimate totem
+        local objectID = GetObjectID(unit)
+        if creatureType ~= nil and eliteTotems[objectID] == nil then
             if creatureType == "Totem" or creatureType == "Tótem" or creatureType == "Totém" or creatureType == "Тотем" or creatureType == "토템" or creatureType == "图腾" or creatureType == "圖騰" then return true end
         end
         return false
@@ -682,10 +688,10 @@ local function runRotation()
         if stealth and targetDistance < 5 then
             if cast.shadowstrike("target") then return true end
         end
-        -- # Finish at 4+ CP without DS, 5+ with DS, and 6 with DS after Vanish
-        -- actions.stealthed+=/call_action_list,name=finish,if=combo_points.deficit<=1-(talent.deeper_stratagem.enabled&buff.vanish.up)
+        -- # Finish at 4+ CP without DS, 5+ with DS, and 6 with DS after Vanish or The First Dance and no Dark Shadow + no Subterfuge
+        -- actions.stealthed+=/call_action_list,name=finish,if=combo_points.deficit<=1-(talent.deeper_stratagem.enabled&(buff.vanish.up|azerite.the_first_dance.enabled&!talent.dark_shadow.enabled&!talent.subterfuge.enabled))
         local finishThd = 0
-        if dSEnabled and (buff.vanish.exists() or cast.last.vanish(1)) then
+        if dSEnabled and ((buff.vanish.exists() or cast.last.vanish(1)) or (trait.theFirstDance.active and not talent.darkShadow and not talent.subterfuge)) then
             finishThd = 1
         end
         if comboDeficit <= (1 - finishThd) then

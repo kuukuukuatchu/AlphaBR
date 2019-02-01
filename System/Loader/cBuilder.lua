@@ -423,15 +423,15 @@ function br.loader:new(spec,specName)
         end
 
         self.units.get = function(range,aoe)
+            local dynString = "dyn"..range
             if aoe == nil then aoe = false end
-            if aoe then
-                if self.units["dyn"..range.."AOE"] == nil then self.units["dyn"..range.."AOE"] = {} end
-                self.units["dyn"..range.."AOE"] =  dynamicTarget(range, false)
-            else
-                if self.units["dyn"..range] == nil then self.units["dyn"..range] = {} end
-                self.units["dyn"..range] =  dynamicTarget(range, true)
-            end
-            return aoe and dynamicTarget(range, false) or dynamicTarget(range, true)
+            if aoe then dynString = dynString.."AOE" end
+            local facing = not aoe
+            local thisUnit = dynamicTarget(range, facing)
+            -- Build units.dyn varaible
+            if self.units[dynString] == nil then self.units[dynString] = {} end
+            self.units[dynString] = thisUnit
+            return thisUnit -- Backwards compatability for old way
         end
 
         self.enemies.get = function(range,unit,checkNoCombat,facing)
@@ -447,7 +447,7 @@ function br.loader:new(spec,specName)
             -- Add to table
             if self.enemies[insertTable] == nil then self.enemies[insertTable] = {} else wipe(self.enemies[insertTable]) end
             if #enemyTable > 0 then insertTableIntoTable(self.enemies[insertTable],enemyTable) end
-            return enemyTable
+            return enemyTable  -- Backwards compatability for old way
         end
 
         if self.spell.pets ~= nil then

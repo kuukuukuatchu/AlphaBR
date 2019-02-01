@@ -618,8 +618,8 @@ local function runRotation()
         end
         
         local function actionList_AMR()
-             -- Temple of Seth
-             if inCombat and isChecked("Temple of Seth") then
+            -- Temple of Seth
+            if inCombat and isChecked("Temple of Seth") then
                 for i = 1, GetObjectCount() do
                     local thisUnit = GetObjectWithIndex(i)
                     if GetObjectID(thisUnit) == 133392 then

@@ -885,10 +885,10 @@ local function runRotation()
                             if cast.totemMastery() then return true end
                         end
                         --actions+=/fire_elemental,if=!talent.storm_elemental.enabled
-                        if isChecked("Storm Elemental/Fire Elemental") and not talent.stormElemental and useCDs() and holdBreak then
+                        if isChecked("Storm Elemental/Fire Elemental") and not talent.stormElemental and useCDs() and holdBreak and not earthEle then
                             if cast.fireElemental() then return true end
                         else    
-                            if isChecked("Storm Elemental/Fire Elemental") and useCDs() and holdBreak then
+                            if isChecked("Storm Elemental/Fire Elemental") and useCDs() and holdBreak and not earthEle then
                                 if cast.stormElemental() then return true end
                             end
                         end

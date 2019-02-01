@@ -396,6 +396,8 @@ function enemyListCheck(Unit)
 		and ((Unit ~= 131824 and Unit ~=  131823 and Unit ~= 131825) or ((UnitBuffID(Unit,260805) or GetUnitIsUnit(Unit,"target")) and (Unit == 131824 or Unit ==  131823 or Unit == 131825)))  
 end
 
+
+
 function isValidUnit(Unit)
 	local hostileOnly = isChecked("Hostiles Only")
 	local playerTarget = GetUnitIsUnit(Unit, "target")
@@ -410,10 +412,8 @@ function isValidUnit(Unit)
 	end
 	if not pause(true) and Unit ~= nil and
 		(br.units[Unit] ~= nil or Unit == "target" or validUnitBypassList[GetObjectID(Unit)] ~= nil or burnUnit) and
-		(not UnitIsTapDenied(Unit) or dummy) and
-		(isSafeToAttack(Unit) or burnUnit) and
-		((reaction < 5 and not hostileOnly) or (hostileOnly and (reaction < 4 or playerTarget or targeting)) or dummy or burnUnit) and
-		mcCheck and not isCC
+		mcCheck and not isCC and (dummy or burnUnit or (not UnitIsTapDenied(Unit) and isSafeToAttack(Unit) and		
+			((not hostileOnly and reaction < 5) or (hostileOnly and (reaction < 4 or playerTarget or targeting)))))
 	 then
 		local instance = IsInInstance()
 		local distanceToTarget = getDistance(Unit, "target")
@@ -754,3 +754,4 @@ function br.Debug(msg)
 		print(br.classColor .. "[BadRotations] Debug: |cffFFFFFF" .. msg)
 	end
 end
+
