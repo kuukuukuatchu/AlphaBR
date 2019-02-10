@@ -1,6 +1,5 @@
 local rotationName = "Fiskee - 8.1"
 local opener, opn1, opn2, opn3, opn4, opn5, opn6 = false, false, false, false, false, false, false
-local br = br
 br.rogueTables = {}
 local rogueTables = br.rogueTables
 rogueTables.enemyTable5, rogueTables.enemyTable10, rogueTables.enemyTable30 = {}, {}, {}
@@ -173,7 +172,7 @@ local function runRotation()
     local debuff                                        = br.player.debuff
     local enemies                                       = br.player.enemies
     local energy, energyDeficit, energyRegen            = br.player.power.energy.amount(), br.player.power.energy.deficit(), br.player.power.energy.regen()
-    local falling, swimming, flying                     = getFallTime(), IsSwimming(), IsFlying()
+    local flying                                        = IsFlying()
     local gcd                                           = br.player.gcd
     local has                                           = br.player.has
     local healPot                                       = getHealthPot()
@@ -183,13 +182,13 @@ local function runRotation()
     local moving                                        = isMoving("player") ~= false or br.player.moving
     local php                                           = br.player.health
     local power, powmax, powgen                         = br.player.power, br.player.powerMax, br.player.powerRegen
-    local pullTimer                                     = br.DBM:getPulltimer()
+    --local pullTimer                                     = br.DBM:getPulltimer()
     local race                                          = br.player.race
     local racial                                        = br.player.getRacial()
     local spell                                         = br.player.spell
     local stealth                                       = br.player.buff.stealth.exists()
-    local stealthedRogue                                = br.player.buff.stealth.exists() or br.player.buff.vanish.exists() or br.player.buff.subterfuge.remain() > 0.2 or br.player.cast.last.vanish(1) or botSpell == spell.vanish
-    local stealthedAll                                  = br.player.buff.stealth.exists() or br.player.buff.vanish.exists() or br.player.buff.subterfuge.exists() or br.player.buff.shadowmeld.exists()
+    local stealthedRogue                                = stealth or br.player.buff.vanish.exists() or br.player.buff.subterfuge.remain() > 0.2 or br.player.cast.last.vanish(1) or botSpell == spell.vanish
+    local stealthedAll                                  = stealthedRogue or br.player.buff.shadowmeld.exists()
     local talent                                        = br.player.talent
     local targetDistance                                = getDistance("target")
     local thp                                           = getHP("target")
@@ -309,7 +308,6 @@ local function runRotation()
                 enemyUnit.ttd = ttd(thisUnit)
                 enemyUnit.distance = getDistance(thisUnit)
                 enemyUnit.hpabs = UnitHealth(thisUnit)
-                enemyUnit.facing = getFacing("player",thisUnit)
                 tinsert(enemyTable30, enemyUnit)
                 if highestHP == nil or highestHP < enemyUnit.hpabs then highestHP = enemyUnit.hpabs end
                 if lowestHP == nil or lowestHP > enemyUnit.hpabs then lowestHP = enemyUnit.hpabs end
@@ -324,7 +322,6 @@ local function runRotation()
                 local hpNorm = (10-1)/(highestHP-lowestHP)*(enemyTable30[i].hpabs-highestHP)+10 -- normalization of HP value, high is good
                 if hpNorm ~= hpNorm or tostring(hpNorm) == tostring(0/0) then hpNorm = 0 end -- NaN check
                 local enemyScore = hpNorm
-                if enemyTable30[i].facing then enemyScore = enemyScore + 30 end
                 if enemyTable30[i].ttd > 1.5 then enemyScore = enemyScore + 5 end
                 if enemyTable30[i].distance <= 5 then enemyScore = enemyScore + 30 end
                 local raidTarget = GetRaidTargetIndex(enemyTable30[i].unit)
@@ -332,7 +329,6 @@ local function runRotation()
                     enemyScore = enemyScore + raidTarget * 3
                     if raidTarget == 8 then enemyScore = enemyScore + 5 end
                 end
-                if UnitBuffID(enemyTable30[i].unit, 277242) then enemyScore = enemyScore + 50 end
                 enemyTable30[i].enemyScore = enemyScore
             end
             table.sort(enemyTable30, function(x,y)
@@ -348,7 +344,7 @@ local function runRotation()
             if thisUnit.distance <= 10 then
                 if fokIgnore[objectID] == nil and not isTotem(thisUnit.unit) then
                     tinsert(enemyTable10, thisUnit)
-                    if deadlyPoison10 and (getOptionValue("Poison") == 1 and not debuff.deadlyPoison.exists(thisUnit.unit)) or (getOptionValue("Poison") == 2 and not debuff.woundPoison.exists(thisUnit.unit)) then deadlyPoison10 = false end
+                    if deadlyPoison10 and not trait.echoingBlades.active and (getOptionValue("Poison") == 1 and not debuff.deadlyPoison.exists(thisUnit.unit)) or (getOptionValue("Poison") == 2 and not debuff.woundPoison.exists(thisUnit.unit)) then deadlyPoison10 = false end
                 end
                 if debuff.garrote.remain(thisUnit.unit) > 0.5 then garroteCount = garroteCount + 1 end
                 if thisUnit.distance <= 5 then
@@ -385,7 +381,7 @@ local function runRotation()
     end
 
     -- actions+=/variable,name=energy_regen_combined,value=energy.regen+poisoned_bleeds*7%(2*spell_haste)
-    local energyRegenCombined = energyRegen + ((debuff.garrote.count() + debuff.rupture.count()) * 7 / (2 * (GetHaste()/100)))
+    local energyRegenCombined = energyRegen + ((garroteCount + debuff.rupture.count()) * 7 / (2 * (GetHaste()/100)))
 
     if not inCombat and mode.open ~= 1 and opener == true and not cast.last.kidneyShot(1) and not cast.last.kidneyShot(2) then
         opener, opn1, opn2, opn3, opn4, opn5, opn6 = false, false, false, false, false, false, false
@@ -644,18 +640,18 @@ local function runRotation()
         if useCDs() and ttd("target") > getOptionValue("CDs TTD Limit") then
             -- # Vendetta outside stealth with Rupture up. With Subterfuge talent and Shrouded Suffocation power always use with buffed Garrote. With Nightstalker and Exsanguinate use up to 5s (3s with DS) before Vanish combo.
             -- actions.cds+=/vendetta,if=!stealthed.rogue&dot.rupture.ticking&(!talent.subterfuge.enabled|!azerite.shrouded_suffocation.enabled|dot.garrote.pmultiplier>1)&(!talent.nightstalker.enabled|!talent.exsanguinate.enabled|cooldown.exsanguinate.remains<5-2*talent.deeper_stratagem.enabled)
-            if isChecked("Vendetta") and not stealthedRogue and debuff.rupture.exists("target") and (not talent.subterfuge or trait.shroudedSuffocation.active or debuff.garrote.applied("target") > 1 or not isChecked("Vanish")) and (not talent.nightstalker or not talent.exsanguinate or (talent.exsanguinate and cd.exsanguinate.remain() < (5-2*dSEnabled))) then
+            if isChecked("Vendetta") and not stealthedRogue and (not talent.subterfuge or trait.shroudedSuffocation.active or debuff.garrote.applied("target") > 1 or not isChecked("Vanish")) and (not talent.nightstalker or not talent.exsanguinate or (talent.exsanguinate and cd.exsanguinate.remain() < (5-2*dSEnabled))) and debuff.rupture.exists("target") then
                 if cast.vendetta("target") then return true end
             end
-            if isChecked("Vanish") and not stealthedRogue and targetDistance < 5 and gcd < 0.2 then
+            if isChecked("Vanish") and not stealthedRogue and targetDistance < 5 and gcd < 0.2 and getSpellCD(spell.vanish) == 0 then
                 -- # Extra Subterfuge Vanish condition: Use when Garrote dropped on Single Target
                 -- actions.cds+=/vanish,if=talent.subterfuge.enabled&!dot.garrote.ticking&variable.single_target
-                if talent.subterfuge and not debuff.garrote.exists("target") and enemies10 == 1 then
+                if talent.subterfuge and enemies10 == 1 and getSpellCD(spell.garrote) == 0 and not debuff.garrote.exists("target") then
                     if cast.vanish("player") then return true end
                 end
                 -- # Vanish with Exsg + (Nightstalker, or Subterfuge only on 1T): Maximum CP and Exsg ready for next GCD
                 -- actions.cds+=/vanish,if=talent.exsanguinate.enabled&(talent.nightstalker.enabled|talent.subterfuge.enabled&variable.single_target)&combo_points>=cp_max_spend&cooldown.exsanguinate.remains<1&(!talent.subterfuge.enabled|!azerite.shrouded_suffocation.enabled|dot.garrote.pmultiplier<=1)
-                if talent.exsanguinate and (talent.nightstalker or (talent.subterfuge and enemies10 == 1)) and combo >= comboMax and cd.exsanguinate.remain() < 1 and (not talent.subterfuge or not trait.shroudedSuffocation.active or debuff.garrote.applied("target") <= 1) then
+                if talent.exsanguinate and (talent.nightstalker or (talent.subterfuge and enemies10 == 1)) and combo >= comboMax and cd.exsanguinate.remain() < 1 and (not talent.subterfuge or not trait.shroudedSuffocation.active or debuff.garrote.applied("target") <= 1) and getSpellCD(spell.garrote) == 0 then
                     if cast.vanish("player") then return true end
                 end
                 -- # Vanish with Nightstalker + No Exsg: Maximum CP and Vendetta up
@@ -670,18 +666,18 @@ local function runRotation()
                 end
                 -- # Vanish with Master Assasin: No stealth and no active MA buff, Rupture not in refresh range
                 -- actions.cds+=/vanish,if=talent.master_assassin.enabled&!stealthed.all&master_assassin_remains<=0&!dot.rupture.refreshable
-                if talent.masterAssassin and not stealthedAll and not debuff.garrote.exists("target") and enemies10 == 1 then
+                if talent.masterAssassin and not stealthedAll and gcd < 0.1 and not buff.masterAssassin.exists() and not debuff.rupture.refresh("target") then
                     if cast.vanish("player") then return true end
                 end
             end
         end
         -- # Exsanguinate when both Rupture and Garrote are up for long enough
         -- actions.cds+=/exsanguinate,if=dot.rupture.remains>4+4*cp_max_spend&!dot.garrote.refreshable
-        if mode.exsang == 1 and talent.exsanguinate and debuff.rupture.remain("target") > 16 and (not debuff.garrote.refresh("target") or garroteCheck == false) and ttd("target") > 8 then
+        if mode.exsang == 1 and talent.exsanguinate and getSpellCD(spell.exsanguinate) == 0 and debuff.rupture.remain("target") > 16 and (not debuff.garrote.refresh("target") or garroteCheck == false) and ttd("target") > 8 then
             if cast.exsanguinate("target") then return true end
         end
         -- actions.cds+=/toxic_blade,if=dot.rupture.ticking
-        if talent.toxicBlade and mode.tb == 1 and debuff.rupture.exists("target") then
+        if talent.toxicBlade and mode.tb == 1 and getSpellCD(spell.toxicBlade) == 0 and debuff.rupture.exists("target") then
             if cast.toxicBlade("target") then return true end
         end
     end
@@ -693,7 +689,7 @@ local function runRotation()
             if cast.envenom("target") then return true end
         end
         -- actions.direct+=/variable,name=use_filler,value=combo_points.deficit>1|energy.deficit<=25+variable.energy_regen_combined|!variable.single_target
-        local useFiller = (comboDeficit > 1 or energyDeficit <= (25 + energyRegenCombined) or enemies10 > 1) and not stealthedRogue
+        local useFiller = (comboDeficit > 1 or energyDeficit <= (25 + energyRegenCombined) or enemies10 > 1) and (not stealthedRogue or talent.masterAssassin)
         -- # With Echoing Blades, Fan of Knives at 2+ targets.
         -- actions.direct+=/fan_of_knives,if=variable.use_filler&azerite.echoing_blades.enabled&spell_targets.fan_of_knives>=2
         if useFiller and enemies10 >= 2 and trait.echoingBlades.active then
@@ -752,7 +748,7 @@ local function runRotation()
             if isChecked("Vanish") and cd.vanish.remain() == 0 then vanishCheck = true end
             if isChecked("Vendetta") and cd.vendetta.remain() <= 4 then vendettaCheck = true end
         end
-        if (not talent.subterfuge or not (vanishCheck and vendettaCheck)) and comboDeficit >= 1 and garroteCheck then
+        if (not talent.subterfuge or not (vanishCheck and vendettaCheck)) and comboDeficit >= 1 and garroteCheck and getSpellCD(spell.garrote) == 0 then
             if garroteCount <= getOptionValue("Multidot Limit") then
                 for i = 1, #enemyTable5 do
                     local thisUnit = enemyTable5[i].unit
@@ -772,12 +768,12 @@ local function runRotation()
         -- actions.dot+=/crimson_tempest,if=spell_targets>=2&remains<2+(spell_targets>=5)&combo_points>=4
         local crimsonTargets
         if enemies10 >= 5 then crimsonTargets = 1 else crimsonTargets = 0 end
-        if talent.crimsonTempest and enemies10 >= 2 and debuff.crimsonTempest.remain() < (2+crimsonTargets) and combo >= 4 and not buff.stealth.exists() and not buff.vanish.exists() then
+        if talent.crimsonTempest and enemies10 >= 2 and debuff.crimsonTempest.remain("target") < (2+crimsonTargets) and combo >= 4 and not buff.stealth.exists() and not buff.vanish.exists() then
             if cast.crimsonTempest("player") then return true end
         end
         -- # Keep up Rupture at 4+ on all targets (when living long enough and not snapshot)
         -- actions.dot+=/rupture,cycle_targets=1,if=combo_points>=4&refreshable&(pmultiplier<=1|remains<=tick_time&spell_targets.fan_of_knives>=3+azerite.shrouded_suffocation.enabled)&(!exsanguinated|remains<=tick_time*2&spell_targets.fan_of_knives>=3+azerite.shrouded_suffocation.enabled)&target.time_to_die-remains>4
-        if combo >= 4 then
+        if combo >= 4 and getSpellCD(spell.rupture) == 0 then
             for i = 1, #enemyTable5 do
                 local thisUnit = enemyTable5[i].unit
                 local ruptureRemain = debuff.rupture.remain(thisUnit)
@@ -800,7 +796,8 @@ local function runRotation()
         if talent.subterfuge then
             for i = 1, #enemyTable5 do
                 local thisUnit = enemyTable5[i].unit
-                if shallWeDot(thisUnit) and debuff.garrote.refresh(thisUnit) and (enemyTable5[i].ttd - debuff.garrote.remain(thisUnit)) > 2 then
+                local garroteRemain = debuff.garrote.remain(thisUnit)
+                if shallWeDot(thisUnit) and garroteRemain <= 5.4 and (enemyTable5[i].ttd - garroteRemain) > 2 then
                     if cast.garrote(thisUnit) then return true end
                 end
             end
@@ -887,7 +884,7 @@ local function runRotation()
             -- actions+=/call_action_list,name=cds
             if validTarget then
                 if actionList_Cooldowns() then return true end
-            end            
+            end
             -- actions+=/call_action_list,name=dot
             if actionList_Dot() then return true end
             -- actions+=/call_action_list,name=direct

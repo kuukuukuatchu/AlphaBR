@@ -102,7 +102,7 @@ function slashHelpList()
 	SlashCommandHelp("br queue clear", "Clears the Spell Queue of all queued spells.")
 	SlashCommandHelp("br queue add spellId", "Adds the Spell to the Queue by Spell Id.")
 	SlashCommandHelp("br queue remove spellId", "Removes the Spell from the Queue by Spell Id.")
-	SlashCommandHelp("br showui", "Shows a list of toggleable UI elements, IE: /br showui main")
+	SlashCommandHelp("br ui", "Shows a list of toggleable UI elements, IE: /br ui main")
 	SlashCommandHelp("br updaterate", "Displays Current Update Rate")
 	if select(2, UnitClass("player")) == "HUNTER" then
 		SlashCommandHelp("br disengage", "Assign to macro to Forward Disengage.")
@@ -327,7 +327,7 @@ function handler(message, editbox)
 	elseif msg == "disengage" then
 -- Forward Disengage
 		forewardDisengage()
-	elseif msg1 == "showui" then
+	elseif msg1 == "ui" then
 -- Other
 		if msg2 == "main" then
 			-- Show/Hide Bot Options
@@ -352,9 +352,22 @@ function handler(message, editbox)
 					mainButton:Show()
 				end
 			end
+		elseif msg2 == "icon" then 
+			if hiddenIcon == nil or hiddenIcon == false then 
+				BadRotationsButton:Hide()
+				hiddenIcon = true
+			else
+				BadRotationsButton:Show()
+				hiddenIcon = false 
+			end
 		elseif msg2 == nil then
 			-- Show UI Options
-			Print("Please provide one of the following options with showUI\n" .. "|cFFFF0000 main |r - Shows/Hides main bot options\n" .. "|cFFFF0000 profile |r - Shows/Hides profile options\n" .. "|cFFFF0000 togglebar |r - Shows/Hides toggle bar\n")
+			Print("Please provide one of the following options with showUI\n" .. 
+				"|cFFFF0000 main |r - Shows/Hides main bot options\n" .. 
+				"|cFFFF0000 profile |r - Shows/Hides profile options\n" .. 
+				"|cFFFF0000 togglebar |r - Shows/Hides toggle bar\n" .. 
+				"|cFFFF0000 icon |r - Shows/Hides minimap button\n"
+			)
 		end
 	else
 		Print("Invalid Command: |cFFFF0000" .. msg .. "|r try |cffFFDD11 /br help")

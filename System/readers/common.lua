@@ -252,6 +252,9 @@ function br.read.commonReaders()
 	--Frame:SetScript("OnEvent", addonReader)
 	GameTooltip:HookScript("OnTooltipSetUnit", function(self)
 		local name,lunit = self:GetUnit()
+		if not UnitIsVisible(lunit) then
+			return
+		end
 		local unit = ObjectPointer(lunit)
 		local burnUnit = getOptionCheck("Forced Burn") and isBurnTarget(unit) > 0
 		local playerTarget = GetUnitIsUnit(unit, "target")
