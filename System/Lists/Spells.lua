@@ -1022,6 +1022,7 @@ br.lists.spells = {
             traits                          = {
                 blurOfTalons                = 277653,
                 latentPoison                = 273283,
+                primevalIntuition           = 288570,
                 upCloseAndPersonal          = 278533,
                 venomousFangs               = 274590,
                 wildernessSurvival          = 279589,
@@ -2051,10 +2052,13 @@ br.lists.spells = {
                 voidForm                    = 194249,
                 voidTorrent                 = 205065,
                 zeksExterminatus            = 236546, -- Legendary Cloak proc
+                thoughtsHarvester           = 288340,
             },
             debuffs                         = {
                 shadowWordPain              = 589,
                 vampiricTouch               = 34914,
+                weakenedSoul                = 6788,
+
             },
             glyphs                          = {
 
@@ -2063,6 +2067,7 @@ br.lists.spells = {
                 auspiciousSpirits           = 155271,
                 bodyAndSoul                 = 64129,
                 darkVoid                    = 263346,
+                darkAscension               = 280711,
                 --dominantMind                = 205367,
                 fortressOfTheMind           = 193195,
                 legacyOfTheVoid             = 193225,
@@ -2106,6 +2111,7 @@ br.lists.spells = {
             buffs                           = {
                 classHallSpeed              = 224098,
                 powerWordFortitude          = 21562,
+                
             },
             debuffs                         = {
 

@@ -60,7 +60,7 @@ local function createOptions()
             -- Trinkets
             br.ui:createDropdown(section,"Trinkets", {"Always", "Cooldown"}, 1, "Use Trinkets always or with CDs")
             -- Racials
-            br.ui:createCheckbox(section,"Racial")
+            br.ui:createCheckbox(section,"Racials")
             -- Bladestorm Units
             br.ui:createSpinner(section, "Bladestorm Units", 3, 1, 10, 1, "Number of units to Bladestorm on")
             -- Dragons Roar
@@ -160,6 +160,7 @@ local function runRotation()
 
         units.get(5)
         units.get(8)
+        enemies.get(5)
         enemies.get(8)
         enemies.get(15)
         enemies.get(20)
@@ -172,7 +173,7 @@ local function runRotation()
             if isChecked("Battle Shout") and cast.able.battleShout() then
                 for i = 1, #br.friend do
                     local thisUnit = br.friend[i].unit
-                    if not UnitIsDeadOrGhost(thisUnit) and getDistance(thisUnit) < 100 and buff.battleShout.remain(thisUnit) < 300 then
+                    if not UnitIsDeadOrGhost(thisUnit) and getDistance(thisUnit) < 100 and not buff.battleShout.exists(thisUnit) then
                         if cast.battleShout() then return end
                     end
                 end
@@ -289,9 +290,15 @@ local function runRotation()
             end
 
             -- Execute
-            if cast.able.execute() and (thp <= 20 or (talent.massacre and thp <= 35) or buff.suddenDeath.exists()) and (buff.enrage.exists() or rage <= 60) then
-                if cast.execute() then return end
+            for i = 1, #enemies.yards5 do
+                local thisUnit = enemies.yards5[i]
+                if cast.able.execute() and (getHP(thisUnit) <= 20 or (talent.massacre and getHP(thisUnit) <= 35) or buff.suddenDeath.exists()) and (buff.enrage.exists() or rage <= 70) then
+                    if cast.execute(thisUnit) then return end
+                end
             end
+            --if cast.able.execute() and (thp <= 20 or (talent.massacre and thp <= 35) or buff.suddenDeath.exists()) and (buff.enrage.exists() or rage <= 60) then
+             --   if cast.execute() then return end
+           -- end
 
             -- High Prio Bloodthirst
             if traits.coldSteelHotBlood.rank > 1 or not buff.enrage.exists() then
@@ -324,14 +331,14 @@ local function runRotation()
 
             -- whirlwind filler
             if not talent.furiousSlash then 
-                if cast.whirlwind() then return end
+                if cast.whirlwind("player",nil,1,5) then return end
             end
         end --  end single target
 
         function multilist()
             -- Maintain Whirlwind buff
             if not buff.whirlwind.exists() then
-                if cast.whirlwind() then return end
+                if cast.whirlwind("player",nil,1,5) then return end
             end
 
             -- Recklessness
@@ -344,6 +351,11 @@ local function runRotation()
                 if cast.siegebreaker() then return end
             end
 
+            -- Dragon Roar
+            if buff.enrage.exists() then 
+                if cast.dragonRoar() then return end
+            end
+
             -- Rampage
             if buff.whirlwind.exists() and (buff.recklessness.exists() or (not buff.enrage.exists() or (talent.carnage and rage >= 75) or (rage >= 85))) then
                 if cast.rampage() then return end
@@ -354,15 +366,16 @@ local function runRotation()
                 if cast.bladestorm() then return end
             end
 
-            -- Dragon Roar
-            if buff.enrage.exists() then 
-                if cast.dragonRoar() then return end
-            end
-
             -- Execute
-            if buff.whirlwind.exists() and cast.able.execute() and (thp <= 20 or (talent.massacre and thp <= 35) or buff.suddenDeath.exists()) and (buff.enrage.exists() or rage <= 60) then
-                if cast.execute() then return end
+            for i = 1, #enemies.yards5 do
+                local thisUnit = enemies.yards5[i]
+                if buff.whirlwind.exists() and cast.able.execute() and (getHP(thisUnit) <= 20 or (talent.massacre and getHP(thisUnit) <= 35) or buff.suddenDeath.exists()) and (buff.enrage.exists() or rage <= 70) then
+                    if cast.execute(thisUnit) then return end
+                end
             end
+            --if buff.whirlwind.exists() and cast.able.execute() and (thp <= 20 or (talent.massacre and thp <= 35) or buff.suddenDeath.exists()) and (buff.enrage.exists() or rage <= 60) then
+            --    if cast.execute() then return end
+            --end
 
             -- furious slash
             if talent.furiousSlash and (buff.furiousSlash.stack() < 3 or buff.furiousSlash.remains() <= 2) then
@@ -411,7 +424,7 @@ local function runRotation()
             --racials
             if isChecked("Racials") then
                 if race == "Orc" or race == "Troll" or race == "LightforgedDraenei" then
-                    if cast.racial() then return end
+                    if cast.racial("player") then return end
                 end
             end
         end
@@ -429,8 +442,8 @@ local function runRotation()
             defensivelist()
             extralist()
         end
-        if inCombat and profileStop==false and not (IsMounted() or IsFlying()) and #enemies.yards8 >=1 then
-            if getDistance(units.dyn5) < 5 then
+        if inCombat and profileStop==false and not (IsMounted() or IsFlying()) and #enemies.yards5 >=1 then
+            if getDistance(units.dyn5) < 6 then
                 StartAttack()
             end
             if moverlist() then return end

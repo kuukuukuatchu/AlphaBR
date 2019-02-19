@@ -63,6 +63,8 @@ local function createOptions()
 		    br.ui:createSpinner(section, "Pre-Pull Timer",  2.5,  0,  10,  0.5,  "|cffFFFFFFSet to desired time to start Pre-Pull (DBM Required). Min: 1 / Max: 10 / Interval: 1")
             br.ui:createCheckbox(section, "Revive")
             br.ui:createDropdownWithout(section, "Revive - Target", {"|cff00FF00Target","|cffFF0000Mouseover","|cffFFBB00Auto"}, 1, "|cffFFFFFFTarget to cast on")
+            br.ui:createCheckbox(section, "Opener")
+            br.ui:createDropdown(section, "Opener Reset Key", br.dropOptions.Toggle, 6)
             br.ui:createSpinner(section, "OOC Regrowth", 50, 1, 100, 5, "Set health to heal while out of combat. Min: 1 / Max: 100 / Interval: 5")
             br.ui:createCheckbox(section, "Auto Shapeshifts")
             br.ui:createCheckbox(section, "Auto Soothe")
@@ -109,6 +111,7 @@ local function createOptions()
         section = br.ui:createSection(br.ui.window.profile, "Interrupts")
             br.ui:createCheckbox(section, "Solar Beam")
             br.ui:createCheckbox(section, "Mighty Bash")
+            br.ui:createCheckbox(section, "Typhoon")
             -- Interrupt Percentage
             br.ui:createSpinner(section,  "InterruptAt",  0,  0,  95,  5,  "|cffFFBB00Cast Percentage to use at.")    
         br.ui:checkSectionState(section)
@@ -169,7 +172,7 @@ local function runRotation()
         local debuff                                        = br.player.debuff
         local enemies                                       = br.player.enemies
         local falling, swimming, flying, moving             = getFallTime(), IsSwimming(), IsFlying(), GetUnitSpeed("player")>0
-        local gcd                                           = br.player.gcd
+        local gcd                                           = br.player.gcdMax
         local hastar                                        = GetObjectExists("target")
         local healPot                                       = getHealthPot()
         local inCombat                                      = br.player.inCombat
@@ -211,6 +214,25 @@ local function runRotation()
             moon = 40
         elseif cast.last.fullMoon(1) then 
             moon = 10
+        end
+
+        ABOpener = ABOpener or false
+        SW1 = SW1 or false
+        SW2 = SW2 or false
+        MF = MF or false
+        SF = SF or false
+        StF = StF or false
+        CA = CA or false
+
+        if (not inCombat and not GetObjectExists("target")) or (isChecked("Opener Reset Key") and SpecificToggle("Opener Reset Key")) then
+            br.Debug("Opener Reset")
+            ABOpener = false
+            SW1 = false
+            SW2 = false
+            MF = false
+            SF = false
+            StF = false
+            CA = false
         end
 
         enemies.get(8,"target")  --enemies.yards8t
@@ -399,6 +421,10 @@ local function runRotation()
                         if isChecked("Solar Beam") then
                             if cast.solarBeam(thisUnit) then return end
                         end
+                        -- Typhoon
+                        if isChecked("Typhoon") and talent.typhoon and getDistance(thisUnit) <= 15 then
+                            if cast.typhoon() then return end
+                        end
                         -- Mighty Bash
                         if isChecked("Mighty Bash") and talent.mightyBash and getDistance(thisUnit) <= 10 then
                             if cast.mightyBash(thisUnit) then return true end
@@ -445,7 +471,7 @@ local function runRotation()
                 end
             end
             -- Warrior of Elune
-            if useCDs() and isChecked("Warrior Of Elune") and talent.warriorOfElune then
+            if useCDs() and isChecked("Warrior Of Elune") and talent.warriorOfElune and not buff.warriorOfElune.exists() then
                 if cast.warriorOfElune() then return true end
             end
             -- Stellar Flare
@@ -486,7 +512,7 @@ local function runRotation()
             end
             -- Force Of Nature
             if talent.forceOfNature and br.player.power.astralPower.deficit() > 20 and mode.forceOfNature == 1 then
-                if cast.forceOfNature() then return true end
+                if cast.forceOfNature("best",nil,1,15,true) then return true end
             end
             -- Fury of Elune
             if talent.furyOfElune and isChecked("Fury Of Elune") and (buff.celestialAlignment.exists() or buff.incarnationChoseOfElune.exists() or cd.celestialAlignment.remain() > 30 or cd.incarnationChoseOfElune.remain() > 30) then
@@ -602,6 +628,72 @@ local function runRotation()
                 end   
             end
         end
+
+        local function actionList_Opener()
+            if ABOpener == false then 
+                if not SW1 then
+                    if cast.solarWrath() then 
+                        SW1 = true
+                        br.Debug("Opener: Solar Wrath 1 cast")
+                        return
+                    end
+                elseif SW1 and not SW2 then
+                    if cast.solarWrath() then
+                        SW2 = true
+                        br.Debug("Opener: Solar Wrath 2 cast")
+                        return
+                    end
+                elseif SW2 and not MF then
+                    if cast.moonfire() then
+                        MF = true
+                        br.Debug("Opener: Moonfire cast")
+                        return
+                    end
+                elseif MF and not SF then
+                    if cast.sunfire() then
+                        SF = true
+                        br.Debug("Opener: Sunfire cast")
+                        return
+                    end
+                elseif SF and not StF then
+                    if talent.stellarFlare then
+                        if cast.stellarFlare() then 
+                            StF = true
+                            br.Debug("Opener: Stellar Flare cast")
+                            return
+                        end
+                    else
+                        StF = true
+                        br.Debug("Opener: Stellar Flare not talented, bypassing")
+                        return
+                    end
+                elseif StF and not CA and power < 40 then
+                    if cast.solarWrath() then
+                        br.Debug("Opener: Building Up AP") 
+                        return 
+                    end
+                elseif StF and not CA and power >= 40 then
+                    if talent.incarnationChoseOfElune and cd.incarnationChoseOfElune.remains() <= 3 then
+                        if cast.incarnationChoseOfElune("player") then
+                            br.Debug("Opener: Inc cast")
+                            CA = true
+                        end
+                    elseif not talent.incarnationChoseOfElune and cd.celestialAlignment.remains() <= 3 then
+                        if cast.celestialAlignment("player") then 
+                            br.Debug("Opener: CA cast")
+                            CA = true
+                        end
+                    else
+                        br.Debug("Opener: CA/Inc On CD, Bypassing")
+                        CA = true
+                    end
+                    return
+                elseif CA then
+                    ABOpener = true
+                    br.Debug("Opener Complete")
+                end
+            end
+        end
         
 
 -----------------
@@ -630,6 +722,9 @@ local function runRotation()
                 actionList_Interrupts()
                 if useDefensive() then
                     actionList_Defensive()
+                end
+                if ABOpener == false and isChecked("Opener") and (GetObjectExists("target") and isBoss("target")) then
+                    actionList_Opener()
                 end
                 actionList_AMR()
             end -- End In Combat Rotation
