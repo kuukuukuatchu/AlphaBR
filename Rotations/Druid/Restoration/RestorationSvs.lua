@@ -267,18 +267,10 @@ local function runRotation()
 		if not isCastingSpell(spell.regrowth) then
 			regrowth_target = nil
 		end
-
+		shiftTimer = shiftTimer or 0
 		local function clearForm()
 			if not noform then
-				if cat then
-					RunMacroText("/cancelAura Cat Form")
-				elseif bear then
-					RunMacroText("/cancelAura Bear Form")
-				elseif moonkin then
-					RunMacroText("/cancelAura Moonkin Form")
-				elseif travel then
-					RunMacroText("/cancelAura Travel Form")
-				end
+				RunMacroText("/CancelForm")
 			end
 		end
 		-- Overhealing Cancel
@@ -439,7 +431,7 @@ local function runRotation()
 					return true
 				end
 				-- Cat Form
-				if not cat and not IsMounted() then
+				if not cat and not IsMounted() and IsIndoors() then
 					-- Cat Form when not swimming or flying or stag and not in combat
 					if not inCombat and moving and not swimming and not flying and not travel and not isValidUnit("target") then
 						if cast.catForm("player") then return true end
@@ -654,7 +646,7 @@ local function runRotation()
 					local c = getAllHotCnt(getValue("HOT Time count"))
 					if c>= getValue("Flourish HOT Targets") or buff.tranquility.exists() then
 						clearForm()
-						if cast.flourish() then Print("Flourish HOT cnt="..c) return true end
+						if cast.flourish() then return true end
 					end
 				end
 			end
@@ -745,7 +737,7 @@ local function runRotation()
 				end
 			end
 			-- In advance cast Lifebloom
-			if isChecked("Lifebloom") then
+			if isChecked("Lifebloom") and not cat and not travel then
 				for i = 1, #br.friend do
 					if br.friend[i].hp <= 80 and buff.lifebloom.remain(br.friend[i].unit) < 4.5 and buff.lifebloom.remain(br.friend[i].unit) > 0 then
 						clearForm()
@@ -777,7 +769,7 @@ local function runRotation()
 				end
 			end
 			-- Lifebloom
-			if isChecked("Lifebloom") then
+			if isChecked("Lifebloom") and not cat and not travel then
 				for i = 1, #br.friend do
 					if getOptionValue("Lifebloom") == 1 then
 						if bloomCount < 1 and not buff.lifebloom.exists(br.friend[i].unit) and (br.friend[i].role == "TANK" or UnitGroupRolesAssigned(br.friend[i].unit) == "TANK") then
@@ -1022,7 +1014,7 @@ local function runRotation()
 							if UnitInRange(br.friend[j].unit) then
 								if not buff.rejuvenation.exists(br.friend[j].unit) then
 									clearForm()
-									if cast.rejuvenation(br.friend[j].unit) then Print("DBM cast Rejuvenation--"..spell_name) return true end
+									if cast.rejuvenation(br.friend[j].unit) then return true end
 								end
 							end
 						end
@@ -1174,7 +1166,7 @@ local function runRotation()
 			-- Balance Affinity
 			if talent.balanceAffinity then
 				-- Moonkin form
-				if not moonkin and not moving and not travel and not IsMounted() then
+				if not moonkin and not moving and not travel and not IsMounted() and GetTime() - shiftTimer > 5 then
 					for i = 1, #br.friend do
 						if buff.lifebloom.exists(br.friend[i].unit) and buff.lifebloom.remain(br.friend[i].unit) < 5 then
 							return
@@ -1191,11 +1183,11 @@ local function runRotation()
 					if cast.starsurge() then return true end
 				end
 				-- Sunfire
-				if not debuff.sunfire.exists(units.dyn40) and mana >= getOptionValue("DPS Save mana") and GetUnitExists(units.dyn40) then
+				if not debuff.sunfire.exists(units.dyn40) and mana >= getOptionValue("DPS Save mana") and GetUnitExists(units.dyn40) and (not travel or (travel and not moving)) then
 					if cast.sunfire(units.dyn40) then return true end
 				end
 				-- Moonfire
-				if not debuff.moonfire.exists(units.dyn40) and mana >= getOptionValue("DPS Save mana") and GetUnitExists(units.dyn40) then
+				if not debuff.moonfire.exists(units.dyn40) and mana >= getOptionValue("DPS Save mana") and GetUnitExists(units.dyn40) and (not travel or (travel and not moving)) then
 					if cast.moonfire(units.dyn40) then return true end
 				end
 				-- Lunar Strike charged

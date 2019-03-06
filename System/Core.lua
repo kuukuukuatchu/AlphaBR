@@ -13,6 +13,7 @@ end
 function br:ObjectManager()
 	-- Object Manager
 	if OM_Engine == nil then
+		ObjectManagerUpdate()
 		OM_Engine = CreateFrame("Frame", nil, UIParent)
 		OM_Engine:SetScript("OnUpdate", ObjectManagerUpdate)
 		OM_Engine:Show()
@@ -25,8 +26,8 @@ function getUpdateRate()
 
 	local FrameRate = GetFramerate() or 0
 	if isChecked("Auto Delay") then
-		if FrameRate >= 0 and FrameRate < 100 then
-			updateRate = (100 - FrameRate) / 100
+		if FrameRate >= 0 and FrameRate < 60 then
+			updateRate = (60 - FrameRate) / 60
 		else
 			updateRate = 0.1
 		end
@@ -52,7 +53,8 @@ function ObjectManagerUpdate(self)
                 omPulse = GetTime() + getUpdateRate()
                 updateOM()
             end
-        end
+		end
+		br.om:Update()
 	end
 end
 

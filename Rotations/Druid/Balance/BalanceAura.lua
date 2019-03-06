@@ -66,6 +66,7 @@ local function createOptions()
             br.ui:createCheckbox(section, "Opener")
             br.ui:createDropdown(section, "Opener Reset Key", br.dropOptions.Toggle, 6)
             br.ui:createSpinner(section, "OOC Regrowth", 50, 1, 100, 5, "Set health to heal while out of combat. Min: 1 / Max: 100 / Interval: 5")
+            br.ui:createSpinner(section, "OOC Wild Growth", 50, 1, 100, 5, "Set health to heal while out of combat. Min: 1 / Max: 100 / Interval: 5")
             br.ui:createCheckbox(section, "Auto Shapeshifts")
             br.ui:createCheckbox(section, "Auto Soothe")
             br.ui:createSpinnerWithout(section, "Starsurge/Starfall Dump", 40,40,100,5, "Set minimum AP value for Starsurge use. Min: 40 / Max: 100 / Interval: 5")
@@ -104,6 +105,7 @@ local function createOptions()
             br.ui:createSpinner(section, "Renewal",  25,  0,  100,  5,  "Health Percent to Cast At")
             br.ui:createSpinner(section, "Barkskin",  60,  0,  100,  5,  "Health Percent to Cast At")
             br.ui:createSpinner(section, "Regrowth",  30,  0,  100,  5,  "Health Percent to Cast At")
+            br.ui:createSpinner(section, "Swiftmend",  15,  0,  100,  5,  "Health Percent to Cast At")
         br.ui:checkSectionState(section)
         -------------------------
         --- INTERRUPT OPTIONS --- -- Define Interrupt Options
@@ -225,7 +227,7 @@ local function runRotation()
         CA = CA or false
 
         if (not inCombat and not GetObjectExists("target")) or (isChecked("Opener Reset Key") and SpecificToggle("Opener Reset Key")) then
-            br.Debug("Opener Reset")
+          --  br.addonDebug("Opener Reset")
             ABOpener = false
             SW1 = false
             SW2 = false
@@ -273,6 +275,10 @@ local function runRotation()
                         end
                     end
                 end
+            end
+            -- Wild Growth
+            if isChecked("OOC Wild Growth") and not isMoving("player") and php <= getValue("OOC Wild Growth") then
+                if cast.wildGrowth() then return true end
             end
             -- Regrowth
             if isChecked("OOC Regrowth") and not isMoving("player") and php <= getValue("OOC Regrowth") then
@@ -339,6 +345,10 @@ local function runRotation()
             -- Barkskin
             if isChecked("Barkskin") and php <= getValue("Barkskin") then
                 if cast.barkskin() then return end
+            end
+             -- Swiftmend
+             if talent.restorationAffinity and isChecked("Swiftmend") and php <= getValue("Swiftmend") and charges.swiftmend.count() >= 1 then
+                if cast.swiftmend("player") then return true end
             end
             -- Regrowth
             if isChecked("Regrowth") and not moving and php <= getValue("Regrowth") then
@@ -475,7 +485,7 @@ local function runRotation()
                 if cast.warriorOfElune() then return true end
             end
             -- Stellar Flare
-            if talent.stellarFlare and debuff.stellarFlare.count() < getOptionValue("Max Stellar Flare Targets") then
+            if talent.stellarFlare and debuff.stellarFlare.count() < getOptionValue("Max Stellar Flare Targets") and not isMoving("player") then
                 if GetUnitExists("target") and not debuff.stellarFlare.exists("target") or debuff.stellarFlare.remains("target") < 3 then
                     if cast.stellarFlare("target") then return true end
                 end
@@ -535,7 +545,7 @@ local function runRotation()
                 end
             end
             -- Solar Wrath
-            if traits.streakingStars.active then
+            if traits.streakingStars.active and not isMoving("player") then
                 if not cast.last.solarWrath(1) and (buff.celestialAlignment.exists() or buff.incarnationChoseOfElune.exists()) and br.player.power.astralPower.deficit() > 20 then
                     if cast.solarWrath() then return true end
                 end
@@ -563,7 +573,7 @@ local function runRotation()
                 end
             end
             -- Refresh Stellar Flare
-            if debuff.stellarFlare.count() <= getOptionValue("Max Stellar Flare Targets") then
+            if debuff.stellarFlare.count() <= getOptionValue("Max Stellar Flare Targets") and not isMoving("player") then
                 if GetUnitExists("target") and not debuff.stellarFlare.exists("target") or debuff.stellarFlare.remains("target") < 7.2 then
                     if cast.stellarFlare("target") then return true end
                 end
@@ -594,7 +604,7 @@ local function runRotation()
                 end
             end
             -- Solar Wrath
-            if buff.solarEmpowerment.stack() == 3 then
+            if buff.solarEmpowerment.stack() == 3 and not isMoving("player") then
                 if cast.solarWrath() then return true end
             end
             -- Lunar Strike
@@ -602,7 +612,7 @@ local function runRotation()
                 if cast.lunarStrike() then return true end
             end
             -- Solar Wrath
-            if buff.solarEmpowerment.exists() then
+            if buff.solarEmpowerment.exists() and not isMoving("player") then
                 if cast.solarWrath() then return true end
             end
             -- Lunar Strike (Filler)
@@ -610,7 +620,9 @@ local function runRotation()
                 if cast.lunarStrike() then return true end
             end
             -- Solar Wrath (Filler)
-            if cast.solarWrath() then return true end
+            if not isMoving("player") then
+                if cast.solarWrath() then return true end
+            end
             -- Moonfire
             if isMoving() then
                 for i = 1, #enemies.yards45 do
@@ -634,63 +646,63 @@ local function runRotation()
                 if not SW1 then
                     if cast.solarWrath() then 
                         SW1 = true
-                        br.Debug("Opener: Solar Wrath 1 cast")
+                        br.addonDebug("Opener: Solar Wrath 1 cast")
                         return
                     end
                 elseif SW1 and not SW2 then
                     if cast.solarWrath() then
                         SW2 = true
-                        br.Debug("Opener: Solar Wrath 2 cast")
+                        br.addonDebug("Opener: Solar Wrath 2 cast")
                         return
                     end
                 elseif SW2 and not MF then
                     if cast.moonfire() then
                         MF = true
-                        br.Debug("Opener: Moonfire cast")
+                        br.addonDebug("Opener: Moonfire cast")
                         return
                     end
                 elseif MF and not SF then
                     if cast.sunfire() then
                         SF = true
-                        br.Debug("Opener: Sunfire cast")
+                        br.addonDebug("Opener: Sunfire cast")
                         return
                     end
                 elseif SF and not StF then
                     if talent.stellarFlare then
                         if cast.stellarFlare() then 
                             StF = true
-                            br.Debug("Opener: Stellar Flare cast")
+                            br.addonDebug("Opener: Stellar Flare cast")
                             return
                         end
                     else
                         StF = true
-                        br.Debug("Opener: Stellar Flare not talented, bypassing")
+                        br.addonDebug("Opener: Stellar Flare not talented, bypassing")
                         return
                     end
                 elseif StF and not CA and power < 40 then
                     if cast.solarWrath() then
-                        br.Debug("Opener: Building Up AP") 
+                        br.addonDebug("Opener: Building Up AP") 
                         return 
                     end
                 elseif StF and not CA and power >= 40 then
                     if talent.incarnationChoseOfElune and cd.incarnationChoseOfElune.remains() <= 3 then
                         if cast.incarnationChoseOfElune("player") then
-                            br.Debug("Opener: Inc cast")
+                            br.addonDebug("Opener: Inc cast")
                             CA = true
                         end
                     elseif not talent.incarnationChoseOfElune and cd.celestialAlignment.remains() <= 3 then
                         if cast.celestialAlignment("player") then 
-                            br.Debug("Opener: CA cast")
+                            br.addonDebug("Opener: CA cast")
                             CA = true
                         end
                     else
-                        br.Debug("Opener: CA/Inc On CD, Bypassing")
+                        br.addonDebug("Opener: CA/Inc On CD, Bypassing")
                         CA = true
                     end
                     return
                 elseif CA then
                     ABOpener = true
-                    br.Debug("Opener Complete")
+                    br.addonDebug("Opener Complete")
                 end
             end
         end

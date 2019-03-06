@@ -74,6 +74,7 @@ local function createOptions()
       br.ui:createSpinner(section, "Arcane Torrent Mana", 30, 0, 95, 1, "", "|cffFFFFFFMinimum When to use for mana")
     end
     -- Redemption
+    br.ui:createCheckbox(section, "Glimmer mode")
     br.ui:createCheckbox(section, "Redemption")
     -- Critical
     br.ui:createSpinner(section, "Critical HP", 30, 0, 100, 5, "", "|cffFFFFFFHealth Percent to Critical Heals")
@@ -86,6 +87,9 @@ local function createOptions()
     -- m+ Rot
     br.ui:createSpinner(section, "Necrotic Rot", 40, 0, 100, 1, "", "|cffFFFFFFNecrotic Rot Stacks does not healing the unit", true)
     br.ui:createCheckbox(section, "Grievous Wounds", "|cff15FF00Enables|cffFFFFFF/|cffD60000Disables |cffFFFFFFGrievousWound|cffFFBB00.", 1)
+    br.ui:createCheckbox(section, "Choking Waters", "|cff15FF00Enables|cffFFFFFF/|cffD60000Disables |cffFFFFFFGrievousWound|cffFFBB00.", 1)
+    br.ui:createSpinner(section, "Bursting", 1, 0, 10, 1, "", "|cffFFFFFFBurst Targets")
+
     br.ui:checkSectionState(section)
     -------------------------
     ------ DEFENSIVES -------
@@ -123,15 +127,9 @@ local function createOptions()
     ------ COOL  DOWNS ------
     -------------------------
     section = br.ui:createSection(br.ui.window.profile, "Cool Downs")
-    -- Trinkets
-    br.ui:createSpinner(section, "Trinket 1", 70, 0, 100, 5, "Health Percent to Cast At")
-    br.ui:createSpinnerWithout(section, "Min Trinket 1 Targets", 3, 1, 40, 1, "", "Minimum Trinket 1 Targets(This includes you)", true)
-    br.ui:createDropdownWithout(section, "Trinket 1 Mode", { "|cffFFFFFFNormal", "|cffFFFFFFTarget" }, 1, "", "")
-    br.ui:createSpinner(section, "Trinket 2", 70, 0, 100, 5, "Health Percent to Cast At")
-    br.ui:createSpinnerWithout(section, "Min Trinket 2 Targets", 3, 1, 40, 1, "", "Minimum Trinket 2 Targets(This includes you)", true)
-    br.ui:createDropdownWithout(section, "Trinket 2 Mode", { "|cffFFFFFFNormal", "|cffFFFFFFTarget" }, 1, "", "")
     -- Lay on Hands
-    br.ui:createSpinner(section, "Lay on Hands", 20, 0, 100, 5, "", "|cffFFFFFFHealth Percent to Cast At")
+    br.ui:createSpinner(section, "Lay on Hands - min", 20, 0, 100, 5, "", "|cffFFFFFFMin Health Percent to Cast At")
+    br.ui:createSpinner(section, "Lay on Hands - max", 20, 0, 100, 5, "", "|cffFFFFFFMax Health Percent to Cast At", true)
     br.ui:createDropdownWithout(section, "Lay on Hands Target", { "|cffFFFFFFAll", "|cffFFFFFFTanks", "|cffFFFFFFSelf" }, 1, "|cffFFFFFFTarget for LoH")
     -- Blessing of Protection
     br.ui:createSpinner(section, "Blessing of Protection", 20, 0, 100, 5, "", "|cffFFFFFFHealth Percent to Cast At")
@@ -139,15 +137,31 @@ local function createOptions()
     -- Blessing of Sacrifice
     br.ui:createSpinner(section, "Blessing of Sacrifice", 40, 0, 100, 5, "", "|cffFFFFFFHealth Percent to Cast At")
     br.ui:createDropdownWithout(section, "BoS Target", { "|cffFFFFFFAll", "|cffFFFFFFTanks", "|cffFFFFFFDamage" }, 2, "|cffFFFFFFTarget for BoS")
-    -- Avenging Wrath
+    -- Avenging Wrath/Crusader
+    br.ui:createSpinner(section, "Avenging Crusader", 50, 0, 100, 5, "", "|cffFFFFFFHealth Percent to Cast At")
+    br.ui:createSpinner(section, "Avenging Crusader Targets", 4, 0, 40, 1, "", "|cffFFFFFFMinimum Avenging Wrath Targets", true)
     br.ui:createSpinner(section, "Avenging Wrath", 50, 0, 100, 5, "", "|cffFFFFFFHealth Percent to Cast At")
     br.ui:createSpinner(section, "Avenging Wrath Targets", 4, 0, 40, 1, "", "|cffFFFFFFMinimum Avenging Wrath Targets", true)
+
+
     -- Holy Avenger
     br.ui:createSpinner(section, "Holy Avenger", 60, 0, 100, 5, "", "|cffFFFFFFHealth Percent to Cast At")
     br.ui:createSpinner(section, "Holy Avenger Targets", 3, 0, 40, 1, "", "|cffFFFFFFMinimum Holy Avenger Targets", true)
     -- Aura Mastery
     br.ui:createSpinner(section, "Aura Mastery", 50, 0, 100, 5, "", "|cffFFFFFFHealth Percent to Cast At")
     br.ui:createSpinner(section, "Aura Mastery Targets", 3, 0, 40, 1, "", "|cffFFFFFFMinimum Aura Mastery Targets", true)
+    br.ui:checkSectionState(section)
+
+
+    -- Trinkets
+    section = br.ui:createSection(br.ui.window.profile, "Trinkets")
+    br.ui:createSpinner(section, "Trinket 1", 70, 0, 100, 5, "Health Percent to Cast At")
+    br.ui:createSpinnerWithout(section, "Min Trinket 1 Targets", 3, 1, 40, 1, "", "Minimum Trinket 1 Targets(This includes you)", true)
+    br.ui:createDropdownWithout(section, "Trinket 1 Mode", { "|cffFFFFFFNormal", "|cffFFFFFFTarget", "|cffFFFFFFGround" }, 1, "", "")
+    br.ui:createSpinner(section, "Trinket 2", 70, 0, 100, 5, "Health Percent to Cast At")
+    br.ui:createSpinnerWithout(section, "Min Trinket 2 Targets", 3, 1, 40, 1, "", "Minimum Trinket 2 Targets(This includes you)", true)
+    br.ui:createDropdownWithout(section, "Trinket 2 Mode", { "|cffFFFFFFNormal", "|cffFFFFFFTarget", "|cffFFFFFFGround" }, 1, "", "")
+    -- br.ui:createCheckbox(section, "Advanced Trinket Support")
     br.ui:checkSectionState(section)
     -------------------------
     ---- SINGLE TARGET ------
@@ -180,6 +194,8 @@ local function createOptions()
     -- Rule of Law
     br.ui:createSpinner(section, "Rule of Law", 70, 0, 100, 5, "", "|cffFFFFFFHealth Percent to Cast At")
     br.ui:createSpinner(section, "RoL Targets", 3, 0, 40, 1, "", "|cffFFFFFFMinimum RoL Targets", true)
+    br.ui:createCheckbox(section, "Judgment heal")
+    br.ui:createCheckbox(section, "Judgment - SAFE")
     -- Light of Dawn
     br.ui:createSpinner(section, "Light of Dawn", 90, 0, 100, 5, "", "|cffFFFFFFHealth Percent to Cast At")
     br.ui:createSpinner(section, "LoD Targets", 3, 0, 40, 1, "", "|cffFFFFFFMinimum LoD Targets", true)
@@ -199,15 +215,17 @@ local function createOptions()
     -------------------------
     section = br.ui:createSection(br.ui.window.profile, "DPS")
     br.ui:createCheckbox(section, "Auto Focus target")
-    br.ui:createSpinner(section, "DPS", 70, 0, 100, 5, "", "|cffFFFFFFMinimum Health to DPS")
+    br.ui:createSpinner(section, "DPS Health", 70, 0, 100, 5, "", "|cffFFFFFFMinimum Health to DPS")
+    br.ui:createSpinner(section, "DPS Mana", 70, 0, 100, 5, "", "|cffFFFFFFMinimum Mana % to DPS")
     -- Consecration
     br.ui:createSpinner(section, "Consecration", 1, 0, 40, 1, "", "|cffFFFFFFMinimum Consecration Targets")
     -- Holy Prism
     br.ui:createSpinner(section, "Holy Prism Damage", 3, 0, 40, 1, "", "|cffFFFFFFMinimum Holy Prism Targets")
     -- Light's Hammer
     br.ui:createSpinner(section, "Light's Hammer Damage", 3, 0, 40, 1, "", "|cffFFFFFFMinimum Light's Hammer Targets")
-    -- Judgement
-    br.ui:createCheckbox(section, "Judgement")
+    -- Judgment
+    br.ui:createCheckbox(section, "Judgment - DPS")
+
     -- Holy Shock
     br.ui:createCheckbox(section, "Holy Shock Damage")
     -- Crusader Strike
@@ -614,7 +632,7 @@ local function runRotation()
       end
       -- Divine Shield
       if isChecked("Divine Shield") and cast.able.divineShield() then
-        if php <= getOptionValue("Divine Shield") then
+        if php <= getOptionValue("Divine Shield") or (isChecked("Choking Waters") and (getDebuffRemain("player", 272571) > 0)) then
           if cast.divineShield() then
             return true
           end
@@ -854,12 +872,25 @@ local function runRotation()
     local blessingOfSacrificeall = nil
     local blessingOfSacrificeTANK = nil
     local blessingOfSacrificeDAMAGER = nil
+    local burst = nil
+
+
+
+    --Print("Check" ..isChecked("Bursting").."#: "..getOptionValue("Bursting"))
+    if isChecked("Bursting") and inInstance and #tanks > 0 then
+      local ourtank = tanks[1].unit
+      local Burststack = getDebuffStacks(ourtank, 240443)
+      if Burststack >= getOptionValue("Bursting") then
+        burst = true
+      end
+    end
+
     for i = 1, #br.friend do
       if br.friend[i].hp < 100 and UnitInRange(br.friend[i].unit) then
-        if br.friend[i].hp <= getValue("Lay on Hands") and (not inInstance or (inInstance and getDebuffStacks(br.friend[i].unit, 209858) < getValue("Necrotic Rot"))) then
+        if br.friend[i].hp <= math.random(getValue("Lay on Hands - min"), getValue("Lay on Hands - max")) and (not inInstance or (inInstance and getDebuffStacks(br.friend[i].unit, 209858) < getValue("Necrotic Rot"))) then
           layOnHandsall = br.friend[i].unit
         end
-        if br.friend[i].hp <= getValue("Lay on Hands") and (br.friend[i].role == "TANK" or UnitGroupRolesAssigned(br.friend[i].unit) == "TANK") and (not inInstance or (inInstance and getDebuffStacks(br.friend[i].unit, 209858) < getValue("Necrotic Rot"))) then
+        if br.friend[i].hp <= math.random(getValue("Lay on Hands - min"), getValue("Lay on Hands - max")) and (br.friend[i].role == "TANK" or UnitGroupRolesAssigned(br.friend[i].unit) == "TANK") and (not inInstance or (inInstance and getDebuffStacks(br.friend[i].unit, 209858) < getValue("Necrotic Rot"))) then
           layOnHandsTANK = br.friend[i].unit
         end
         if br.friend[i].hp <= getValue("Blessing of Protection") then
@@ -968,6 +999,35 @@ local function runRotation()
             return true
           end
         end
+      elseif getOptionValue("Trinket 1 Mode") == 3 and #tanks > 0 then
+        for i = 1, #tanks do
+          -- get the tank's target
+          local tankTarget = UnitTarget(tanks[i].unit)
+          if tankTarget ~= nil then
+            -- get players in melee range of tank's target
+            local meleeFriends = getAllies(tankTarget, 5)
+            -- get the best ground circle to encompass the most of them
+            local loc = nil
+            if #meleeFriends >= 8 then
+              loc = getBestGroundCircleLocation(meleeFriends, 4, 6, 10)
+            else
+              local meleeHurt = {}
+              for j = 1, #meleeFriends do
+                if meleeFriends[j].hp < getValue("Trinket 1") then
+                  tinsert(meleeHurt, meleeFriends[j])
+                end
+              end
+              if #meleeHurt >= getValue("Min Trinket 1 Targets") or burst == true then
+                loc = getBestGroundCircleLocation(meleeHurt, 2, 6, 10)
+              end
+            end
+            if loc ~= nil then
+              useItem(13)
+              ClickPosition(loc.x, loc.y, loc.z)
+              return true
+            end
+          end
+        end
       end
     end
     if isChecked("Trinket 2") and canUse(14) then
@@ -983,37 +1043,79 @@ local function runRotation()
             return true
           end
         end
-      end
-    end
-    local Trinket13 = GetInventoryItemID("player", 13)
-    local Trinket14 = GetInventoryItemID("player", 14)
-    if (Trinket13 == 165569 or Trinket14 == 165569) and GetItemCooldown(165569) == 0 then
-      -- get melee players
-      for i = 1, #tanks do
-        -- get the tank's target
-        local tankTarget = UnitTarget(tanks[i].unit)
-        if tankTarget ~= nil then
-          -- get players in melee range of tank's target
-          local meleeFriends = getAllies(tankTarget, 5)
-          -- get the best ground circle to encompass the most of them
-          local loc = nil
-          if #meleeFriends >= 8 then
-            loc = getBestGroundCircleLocation(meleeFriends, 4, 6, 10)
-          else
-            local meleeHurt = {}
-            for j = 1, #meleeFriends do
-              if meleeFriends[j].hp < 75 then
-                tinsert(meleeHurt, meleeFriends[j])
+      elseif getOptionValue("Trinket 2 Mode") == 3 and #tanks > 0 then
+        for i = 1, #tanks do
+          -- get the tank's target
+          local tankTarget = UnitTarget(tanks[i].unit)
+          if tankTarget ~= nil then
+            -- get players in melee range of tank's target
+            local meleeFriends = getAllies(tankTarget, 5)
+            -- get the best ground circle to encompass the most of them
+            local loc = nil
+            if #meleeFriends >= 8 then
+              loc = getBestGroundCircleLocation(meleeFriends, 4, 6, 10)
+            else
+              local meleeHurt = {}
+              for j = 1, #meleeFriends do
+                if meleeFriends[j].hp < getValue("Trinket 2") then
+                  tinsert(meleeHurt, meleeFriends[j])
+                end
+              end
+              if #meleeHurt >= getValue("Min Trinket 2 Targets") or burst == true then
+                loc = getBestGroundCircleLocation(meleeHurt, 2, 6, 10)
               end
             end
-            if #meleeHurt >= 2 then
-              loc = getBestGroundCircleLocation(meleeHurt, 2, 6, 10)
+            if loc ~= nil then
+              useItem(14)
+              ClickPosition(loc.x, loc.y, loc.z)
+              return true
             end
           end
-          if loc ~= nil then
-            useItem(165569)
-            ClickPosition(loc.x, loc.y, loc.z)
-            return true
+        end
+
+      end
+    end
+
+    if isChecked("Advanced Trinket Support") then
+      --special trinket support - under development
+      local Trinket13 = GetInventoryItemID("player", 13)
+      local Trinket14 = GetInventoryItemID("player", 14)
+
+      --Balefire Branch(159630)
+      if (Trinket13 == 159630 or Trinket14 == 159630) and GetItemCooldown(159630) == 0 then
+        if getLowAllies(75) > 3 or (#tanks > 0 and tanks[1].hp <= 40) or lowest.hp <= 40 then
+          useItem(159630)
+        end
+      end
+      -- Ward of Envelopment(165569)
+      if (Trinket13 == 165569 or Trinket14 == 165569) and GetItemCooldown(165569) == 0 then
+        -- get melee players
+        for i = 1, #tanks do
+          -- get the tank's target
+          local tankTarget = UnitTarget(tanks[i].unit)
+          if tankTarget ~= nil then
+            -- get players in melee range of tank's target
+            local meleeFriends = getAllies(tankTarget, 5)
+            -- get the best ground circle to encompass the most of them
+            local loc = nil
+            if #meleeFriends >= 8 then
+              loc = getBestGroundCircleLocation(meleeFriends, 4, 6, 10)
+            else
+              local meleeHurt = {}
+              for j = 1, #meleeFriends do
+                if meleeFriends[j].hp < 75 then
+                  tinsert(meleeHurt, meleeFriends[j])
+                end
+              end
+              if #meleeHurt >= 2 then
+                loc = getBestGroundCircleLocation(meleeHurt, 2, 6, 10)
+              end
+            end
+            if loc ~= nil then
+              useItem(165569)
+              ClickPosition(loc.x, loc.y, loc.z)
+              return true
+            end
           end
         end
       end
@@ -1036,6 +1138,14 @@ local function runRotation()
         end
       end
     end
+    -- Avenging Crusader
+    if isChecked("Avenging Crusader") and cast.able.avengingCrusader() and talent.avengingCrusader and getDistance("target") <= 5 then
+      if getLowAllies(getValue "Avenging Crusader") >= getValue("Avenging Crusader Targets") then
+        if cast.avengingCrusader() then
+          return true
+        end
+      end
+    end
     -- Aura Mastery
     if isChecked("Aura Mastery") and cast.able.auraMastery() then
       if getLowAllies(getValue "Aura Mastery") >= getValue("Aura Mastery Targets") then
@@ -1044,16 +1154,12 @@ local function runRotation()
         end
       end
     end
-    if isChecked("Light's Hammer") and cast.able.lightsHammer() and talent.lightsHammer and not moving then
-      if castWiseAoEHeal(br.friend, spell.lightsHammer, 10, getValue("Light's Hammer"), getValue("Light's Hammer Targets"), 6, false, true) then
-        return true
-      end
-    end
   end
   ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
   -- DPS ----------- DPS ----------- DPS ----------- DPS ----------- DPS ----------- DPS ----------- DPS ----------- DPS ----------- DPS ----------- DPS ----------- DPS -----------
   ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
   local function DPS()
+
     if buff.avengingCrusader.exists() and getFacing("player", "target") then
       if cast.judgment("target") then
         return true
@@ -1062,7 +1168,8 @@ local function runRotation()
         return true
       end
     end
-    if mode.DPS == 1 and isChecked("DPS") and lowest.hp > getValue("DPS") then
+    --and isChecked("DPS")
+    if mode.DPS == 1 then
       if isChecked("Auto Focus target") and not UnitExists("target") and not UnitIsDeadOrGhost("focustarget") and UnitAffectingCombat("focustarget") and hasThreat("focustarget") then
         TargetUnit("focustarget")
       end
@@ -1071,31 +1178,31 @@ local function runRotation()
         StartAttack()
       end
       --Consecration
-      if isChecked("Consecration") and cast.able.consecration() and #enemies.yards5 >= getValue("Consecration") and getDebuffRemain("target", 204242) == 0 and not moving and not buff.avengingCrusader.exists() then
+      if isChecked("Consecration") and cast.able.consecration() and mana > getValue("DPS Mana") and #enemies.yards5 >= getValue("Consecration") and getDebuffRemain("target", 204242) == 0 and not moving and not buff.avengingCrusader.exists() then
         if cast.consecration() then
           return true
         end
       end
       -- Holy Prism
-      if isChecked("Holy Prism Damage") and talent.holyPrism and cast.able.holyPrism() and #enemies.yards15 >= getValue("Holy Prism Damage") and php < 95 then
-        if cast.holyPrism("player") then
+      if isChecked("Holy Prism Damage") and lowest.hp > getValue("DPS Health") and talent.holyPrism and mana > getValue("DPS Mana") and cast.able.holyPrism() and #enemies.yards15 >= getValue("Holy Prism Damage") then
+        if cast.holyPrism(units.dyn30) then
           return true
         end
       end
       -- Light's Hammer
-      if isChecked("Light's Hammer Damage") and talent.lightsHammer and cast.able.lightsHammer() and not moving then
+      if isChecked("Light's Hammer Damage") and talent.lightsHammer and cast.able.lightsHammer() and mana > getValue("DPS Mana") and not moving then
         if cast.lightsHammer("best", false, getOptionValue("Light's Hammer Damage"), 10) then
           return true
         end
       end
-      -- Judgement
-      if isChecked("Judgement") and cast.able.judgment() and getFacing("player", units.dyn30) then
+      -- Judgment
+      if isChecked("Judgment - DPS") and lowest.hp > getValue("DPS Health") and cast.able.judgment() then
         if cast.judgment(units.dyn30) then
           return true
         end
       end
-      -- Holy Shock
-      if isChecked("Holy Shock Damage") and cast.able.holyShock() and getFacing("player", units.dyn40) then
+      -- Holy Shock  ((inInstance and getDistance(units.dyn40, tanks[1].unit) <= 10 or not inInstance))
+      if isChecked("Holy Shock Damage") and lowest.hp > getValue("DPS Health") and cast.able.holyShock() and ((inInstance and getDistance(units.dyn40, tanks[1].unit) <= 10 or not inInstance)) and mana > getValue("DPS Mana") then
         if cast.holyShock(units.dyn40) then
           return true
         end
@@ -1112,6 +1219,28 @@ local function runRotation()
   --AOEHealing ------ AOEHealing ------AOEHealing ------ AOEHealing ------ AOEHealing ------ AOEHealing ------ AOEHealing ------ AOEHealing ------ AOEHealing ----- AOEHealing -----
   ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
   local function AOEHealing()
+    if burst then
+      Print("Burst:" .. burst)
+    end
+    --Lights Hammner
+    if isChecked("Light's Hammer") and cast.able.lightsHammer() and talent.lightsHammer and not moving and burst == nil then
+      if castWiseAoEHeal(br.friend, spell.lightsHammer, 10, getValue("Light's Hammer"), getValue("Light's Hammer Targets"), 6, false, true) then
+        return true
+      end
+    elseif isChecked("Light's Hammer") and cast.able.lightsHammer() and talent.lightsHammer and not moving and burst == 1 then
+      if castWiseAoEHeal(br.friend, spell.lightsHammer, 10, 99, 1, 6, false, true) then
+        return true
+      end
+    end
+    -- Judgment as heal
+    if isChecked("Judgment heal") and inCombat and cast.able.judgment() and (inInstance and getDistance(units.dyn30, tanks[1].unit) <= 10 or not inInstance) then
+      if buff.avengingCrusader.exists() or (talent.fistOfJustice and getSpellCD(853) > 5) or traits.graceoftheJusticar or (talent.judgmentOfLight and not debuff.judgmentoflight.exists(units.dyn30)) then
+        if cast.judgment(units.dyn30) then
+          return true
+        end
+      end
+    end
+
     -- Rule of Law
     if isChecked("Rule of Law") and cast.able.ruleOfLaw() and talent.ruleOfLaw and not buff.ruleOfLaw.exists("player") then
       if getLowAllies(getValue("Rule of Law")) >= getValue("RoL Targets") then
@@ -1143,28 +1272,10 @@ local function runRotation()
         end
       end
     end
-    -- Judgement
-    if isChecked("Judgement") and cast.able.judgment() and inCombat and getFacing("player", units.dyn30) then
-      if talent.judgmentOfLight and not debuff.judgmentoflight.exists(units.dyn30) then
-        if cast.judgment(units.dyn30) then
-          return true
-        end
-      end
-    end
-
-
-
-
     -- Light of Dawn
     if isChecked("Light of Dawn") and cast.able.lightOfDawn() then
-      --[[ old function
-      if healConeAround(getValue("LoD Targets"), getValue("Light of Dawn"), 90, lightOfDawn_distance * lightOfDawn_distance_coff, 5 * lightOfDawn_distance_coff) then
-        if cast.lightOfDawn() then
-          return true
-        end
-      end
-      ]]
-      if bestConeHeal(spell.lightOfDawn, getValue("LoD Targets"), getValue("Light of Dawn"), 90, lightOfDawn_distance * lightOfDawn_distance_coff, 5) then
+      if bestConeHeal(spell.lightOfDawn, getValue("LoD Targets"), getValue("Light of Dawn"), 90, lightOfDawn_distance * lightOfDawn_distance_coff, 5)
+      then
         return true
       end
     end
@@ -1178,7 +1289,8 @@ local function runRotation()
     local holyShock10 = nil
     local holyShock20 = nil
     local holyShock30 = nil
-    local holyShock40 = nil
+    local holyShock40 = nilc
+    local holyshocktarget = nil
     local lightOfTheMartyrDS = nil
     local lightOfTheMartyrHS = nil
     local lightOfTheMartyrTANK = nil
@@ -1213,6 +1325,7 @@ local function runRotation()
         --count grievance stacks here
         if isChecked("Grievous Wounds") then
           local CurrentBleedstack = getDebuffStacks(br.friend[i].unit, 240559)
+
           if CurrentBleedstack > BleedStack then
             BleedStack = CurrentBleedstack
             BleedFriend = br.friend[i]
@@ -1220,17 +1333,17 @@ local function runRotation()
         end
         if isChecked("Mastery bonus") and inRaid then
           if br.friend[i].hp <= getValue("Holy Shock") and not buff.beaconOfFaith.exists(br.friend[i].unit) and not buff.beaconOfVirtue.exists(br.friend[i].unit) and br.friend[i].distance <= (10 * master_coff) then
-            holyShock10 = br.friend[i].unit
+            holyshocktarget = br.friend[i].unit
           end
-          if br.friend[i].hp <= getValue("Holy Shock") and not buff.beaconOfFaith.exists(br.friend[i].unit) and not buff.beaconOfVirtue.exists(br.friend[i].unit) and br.friend[i].distance <= (20 * master_coff) then
-            holyShock20 = br.friend[i].unit
+          if holyshocktarget == nil and br.friend[i].hp <= getValue("Holy Shock") and not buff.beaconOfFaith.exists(br.friend[i].unit) and not buff.beaconOfVirtue.exists(br.friend[i].unit) and br.friend[i].distance <= (20 * master_coff) then
+            holyshocktarget = br.friend[i].unit
           end
-          if br.friend[i].hp <= getValue("Holy Shock") and not buff.beaconOfFaith.exists(br.friend[i].unit) and not buff.beaconOfVirtue.exists(br.friend[i].unit) and br.friend[i].distance <= (30 * master_coff) then
-            holyShock30 = br.friend[i].unit
+          if holyshocktarget == nil and br.friend[i].hp <= getValue("Holy Shock") and not buff.beaconOfFaith.exists(br.friend[i].unit) and not buff.beaconOfVirtue.exists(br.friend[i].unit) and br.friend[i].distance <= (30 * master_coff) then
+            holyshocktarget = br.friend[i].unit
           end
         end
-        if br.friend[i].hp <= getValue("Holy Shock") and (not inInstance or (inInstance and getDebuffStacks(br.friend[i].unit, 209858) < getValue("Necrotic Rot"))) then
-          holyShock40 = br.friend[i].unit
+        if holyshocktarget == nil and br.friend[i].hp <= getValue("Holy Shock") and (not inInstance or (inInstance and getDebuffStacks(br.friend[i].unit, 209858) < getValue("Necrotic Rot"))) then
+          holyshocktarget = br.friend[i].unit
         end
         if br.friend[i].hp <= 90 and buff.divineShield.exists("player") and not GetUnitIsUnit(br.friend[i].unit, "player") then
           lightOfTheMartyrDS = br.friend[i].unit
@@ -1313,13 +1426,10 @@ local function runRotation()
         end
       end
     end
+
     -- Holy Shock
-    if isChecked("Holy Shock") then
-      if php <= getValue("Critical HP") then
-        if cast.holyShock("player") then
-          return true
-        end
-      end
+    if isChecked("Holy Shock") and cast.able.holyShock() then
+      --critical first
       if #tanks > 0 then
         if tanks[1].hp <= getValue("Critical HP") and getDebuffStacks(tanks[1].unit, 209858) < getValue("Necrotic Rot") then
           if cast.holyShock(tanks[1].unit) then
@@ -1327,12 +1437,12 @@ local function runRotation()
           end
         end
       end
-      if lowest.hp <= getValue("Critical HP") and getDebuffStacks(lowest.unit, 209858) < getValue("Necrotic Rot") then
-        if cast.holyShock(lowest.unit) then
+      if php <= getValue("Critical HP") then
+        if cast.holyShock("player") then
           return true
         end
       end
-      if isChecked("Holy Shock on CD") and lowest.hp <= getValue("Holy Shock") and getDebuffStacks(lowest.unit, 209858) < getValue("Necrotic Rot") then
+      if lowest.hp <= getValue("Critical HP") and getDebuffStacks(lowest.unit, 209858) < getValue("Necrotic Rot") then
         if cast.holyShock(lowest.unit) then
           return true
         end
@@ -1341,33 +1451,48 @@ local function runRotation()
         if cast.holyShock(BleedFriend.unit) then
           return true
         end
-        if cast.flashOfLight(BleedFriend.unit) then
-          return true
+      end
+
+
+      --Glimmer support
+      if (inInstance or inRaid) and isChecked("Glimmer mode") and #br.friend > 1 and inCombat then
+        local glimmerTable = { }
+        --find lowest friend without glitter buff on them
+        for i = 1, #br.friend do
+          if not UnitBuffID(br.friend[i].unit, 287280) then
+            tinsert(glimmerTable, br.friend[i])
+          end
         end
-        if php >= 60 and BleedFriend.hp > 80 and cast.lightOfTheMartyr(BleedFriend.unit) then
-          return true
+        if #glimmerTable > 1 then
+          table.sort(glimmerTable, function(x, y)
+            return x.hp < y.hp
+          end)
+        end
+        if glimmerTable[1].unit ~= nil then
+          if cast.holyShock(glimmerTable[1].unit) then
+            --Print("Just glimmered: " .. glimmerTable[1].unit)
+            return true
+          end
         end
       end
 
-      if holyShock10 ~= nil then
-        if cast.holyShock(holyShock10) then
+      if isChecked("Mastery bonus") and inRaid and holyshocktarget ~= nil then
+        if cast.holyShock(holyshocktarget) then
+          return true
+        end
+      elseif lowest.hp <= getValue("Holy Shock") and getDebuffStacks(lowest.unit, 209858) < getValue("Necrotic Rot") then
+        if cast.holyShock(lowest.unit) then
           return true
         end
       end
-      if holyShock20 ~= nil then
-        if cast.holyShock(holyShock20) then
-          return true
-        end
+    end
+
+    if BleedFriend ~= nil then
+      if php >= 60 and BleedFriend.hp > 70 and cast.lightOfTheMartyr(BleedFriend.unit) then
+        return true
       end
-      if holyShock30 ~= nil then
-        if cast.holyShock(holyShock30) then
-          return true
-        end
-      end
-      if holyShock40 ~= nil then
-        if cast.holyShock(holyShock40) then
-          return true
-        end
+      if cast.flashOfLight(BleedFriend.unit) then
+        return true
       end
     end
     -- Divine Shield and Light of the Martyr
@@ -1590,14 +1715,8 @@ local function runRotation()
         end
       end
     end
-    -- Judgement
-    if isChecked("Judgement") and cast.able.judgment() and getFacing("player", units.dyn30) then
-      if talent.fistOfJustice and getSpellCD(853) > 1.5 then
-        if cast.judgment(units.dyn30) then
-          return true
-        end
-      end
-    end
+
+
   end
   if (not IsMounted() or buff.divineSteed.exists()) then
     if pause() or drinking then

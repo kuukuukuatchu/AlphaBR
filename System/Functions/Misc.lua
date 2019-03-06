@@ -396,8 +396,6 @@ function enemyListCheck(Unit)
 		and ((Unit ~= 131824 and Unit ~=  131823 and Unit ~= 131825) or ((UnitBuffID(Unit,260805) or GetUnitIsUnit(Unit,"target")) and (Unit == 131824 or Unit ==  131823 or Unit == 131825)))  
 end
 
-
-
 function isValidUnit(Unit)
 	local hostileOnly = isChecked("Hostiles Only")
 	local playerTarget = GetUnitIsUnit(Unit, "target")
@@ -745,7 +743,7 @@ function talentAnywhere()
 	end
 end
 
-function br.Debug(msg)
+function br.addonDebug(msg)
 	if msg == nil then
 		return
 	end

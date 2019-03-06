@@ -381,7 +381,7 @@ local function runRotation()
                 if cast.sigilOfFlame("best",false,1,8) then return end
 			end
 			-- actions.brand+=/infernal_strike,if=cooldown.fiery_brand.remains=0
-			if mode.mover == 1 and not cast.last.infernalStrike(1) and charges.infernalStrike.count() == 2 and not cd.fieryBrand.exists() and #enemies.yards40 > 0 and not noControl and GetTime() - iStrikeDelay > 2 then
+			if mode.mover == 1 and not cast.last.infernalStrike(1) and charges.infernalStrike.count() == 2 and not cd.fieryBrand.exists() and #enemies.yards40 > 0 and C_LossOfControl.GetNumEvents() == 0 and GetTime() - iStrikeDelay > 2 then
                 --if cast.infernalStrike("targetGround","ground",1,6) then return end
                 if iStrike("target") then iStrikeDelay = GetTime()  return true end
             end
@@ -399,7 +399,7 @@ local function runRotation()
 					if cast.felDevastation() then return end
 				end
 				-- actions.brand+=/infernal_strike,if=dot.fiery_brand.ticking
-				if mode.mover == 1 and not cast.last.infernalStrike(1) and charges.infernalStrike.count() == 2 and #enemies.yards40 > 0 and not noControl and GetTime() - iStrikeDelay > 2 then
+				if mode.mover == 1 and not cast.last.infernalStrike(1) and charges.infernalStrike.count() == 2 and #enemies.yards40 > 0 and C_LossOfControl.GetNumEvents() == 0 and GetTime() - iStrikeDelay > 2 then
                     --if cast.infernalStrike("player","ground",1,6) then return end
                     if iStrike("target") then iStrikeDelay = GetTime() return true end
 				end
@@ -463,7 +463,7 @@ local function runRotation()
 	                if actionList_FieryBrand() then return end
                 end
 				-- actions.normal=infernal_strike
-				if mode.mover == 1 and not cast.last.infernalStrike(1) and charges.infernalStrike.count() == 2 and #enemies.yards40 > 0 and not noControl and GetTime() - iStrikeDelay > 2  then
+				if mode.mover == 1 and not cast.last.infernalStrike(1) and charges.infernalStrike.count() == 2 and #enemies.yards40 > 0 and C_LossOfControl.GetNumEvents() == 0 and GetTime() - iStrikeDelay > 2  then
                     --if cast.infernalStrike("player","ground",1,6) then return end
                     if iStrike("target") then iStrikeDelay = GetTime() return true end
                 end

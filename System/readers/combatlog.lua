@@ -422,12 +422,6 @@ function br.read.combatLog()
             end
             return
         end
-        if event == "LOSS_OF_CONTROL_ADDED" then
-            noControl = true
-        end
-        if event == "LOSS_OF_CONTROL_UPDATE" then
-            noControl = false
-        end
     end
     function cl:Druid(...)
         local timeStamp, param, hideCaster, source, sourceName, sourceFlags, sourceRaidFlags, destination, destName, destFlags, destRaidFlags, spell, spellName, _, spellType = CombatLogGetCurrentEventInfo()

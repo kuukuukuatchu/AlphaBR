@@ -361,5 +361,6 @@ validUnitBypassList = {
 	[148907] = "Prismatic Image", --Jaina
     [148716] = "Risen Soul", --M+ Reaping
     [148893] = "Tormented Soul", --M+ Reaping
-    [148894] = "Lost Soul" --M+ Reaping
+	[148894] = "Lost Soul", --M+ Reaping
+	[24664] = "Kael'thas Sunstrider" -- Magister's Terrace
 }
