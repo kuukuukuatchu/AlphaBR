@@ -15,28 +15,30 @@ function getRacial()
     end
     local racialSpells = {
         -- Alliance
-        Dwarf    = 20594, -- Stoneform
-        Gnome    = 20589, -- Escape Artist
-        Draenei  = DraeneiRacial, -- Gift of the Naaru
-        Human    = 59752, -- Every Man for Himself
-        NightElf = 58984, -- Shadowmeld
-        Worgen   = 68992, -- Darkflight
+        Dwarf    = 20594,           -- Stoneform
+        Gnome    = 20589,           -- Escape Artist
+        Draenei  = DraeneiRacial,   -- Gift of the Naaru
+        Human    = 59752,           -- Every Man for Himself
+        NightElf = 58984,           -- Shadowmeld
+        Worgen   = 68992,           -- Darkflight
         -- Horde
-        BloodElf = BloodElfRacial, -- Arcane Torrent
-        Goblin   = 69041, -- Rocket Barrage
-        Orc      = OrcRacial, -- Blood Fury
-        Tauren   = 20549, -- War Stomp
-        Troll    = 26297, -- Berserking
-        Scourge  = 7744,  -- Will of the Forsaken
+        BloodElf = BloodElfRacial,  -- Arcane Torrent
+        Goblin   = 69041,           -- Rocket Barrage
+        Orc      = OrcRacial,       -- Blood Fury
+        Tauren   = 20549,           -- War Stomp
+        Troll    = 26297,           -- Berserking
+        Scourge  = 7744,            -- Will of the Forsaken
         -- Both
-        Pandaren = 107079, -- Quaking Palm
+        Pandaren = 107079,          -- Quaking Palm
         -- Allied Races
-        HighmountainTauren = 255654, -- Bull Rush
-        LightforgedDraenei = 255647, -- Light's Judgment
-        Nightborne = 260364, -- Arcane Pulse
-        VoidElf = 256948, -- Spatial Rift
-        DarkIronDwarf = 265221, -- Fireblood
-        MagharOrc = 274738, -- Ancestral Call
+        HighmountainTauren  = 255654, -- Bull Rush
+        LightforgedDraenei  = 255647, -- Light's Judgment
+        Nightborne          = 260364, -- Arcane Pulse
+        VoidElf             = 256948, -- Spatial Rift
+        DarkIronDwarf       = 265221, -- Fireblood
+        MagharOrc           = 274738, -- Ancestral Call
+        ZandalariTroll      = 291944, -- Regeneratin'
+        KulTiran            = 287712, -- Haymaker
     }
     local trueRace = nil
     local forTheAlliance = UnitBuffID("player",193863) or false
@@ -573,6 +575,7 @@ br.lists.spells = {
                 warriorOfElune              = 202425,
             },
             traits                          = {
+                arcanicPulsar               = 287773,
                 dawningSun                  = 276152,
                 highNoon                    = 278505,
                 livelySpirit                = 279642,
@@ -907,18 +910,14 @@ br.lists.spells = {
             abilities                       = {
                 aimedShot                   = 19434,
                 arcaneShot                  = 185358,
-                barrage                     = 120360,
                 burstingShot                = 186387,
                 concussiveShot              = 5116,
                 counterShot                 = 147362,
-                doubleTap                   = 260402,
-                explosiveShot               = 212431,
                 multiShot                   = 257620,
-                piercingShot                = 198670,
                 rapidFire                   = 257044,
                 serpentSting                = 271788,
                 steadyShot                  = 56641,
-                trueShot                    = 193526,
+                trueshot                    = 193526,
             },
             artifacts                       = {
             },
@@ -929,9 +928,7 @@ br.lists.spells = {
                 lockAndLoad                 = 194594,
                 masterMarksman              = 269576,
                 preciseShots                = 260242,
-                preciseShots                = 260242,
                 steadyFocus                 = 193534,
-                trickShots                  = 257622,
                 trickShots                  = 257622,
                 trueshot                    = 288613,
                 unerringVision              = 274447,
@@ -963,7 +960,7 @@ br.lists.spells = {
             },
             traits                          = {
                 focusedFire                 = 278531,
-                inTheRhytm                  = 264198,
+                inTheRhythm                 = 264198,
                 rapidReload                 = 278530,
                 steadyAim                   = 277651,
                 surgingShots                = 287707,
@@ -2957,7 +2954,7 @@ br.lists.spells = {
                 shadowfury                  = 30283,
                 soulHarvest                 = 196098,
                 soulstone                   = 20707,
-                summonDoomguard             = 18540,
+                --summonDoomguard             = 18540,
                 summonFelguard              = 30146,
                 summonFelhunter             = 691,
                 summonFelImp                = 688,

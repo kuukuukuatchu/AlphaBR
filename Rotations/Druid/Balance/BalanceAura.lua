@@ -322,7 +322,7 @@ local function runRotation()
                         if cast.catForm("player") then return true end
                     end
                     -- Cat Form - Less Fall Damage
-                    if (not canFly() or inCombat or level < 58 or not IsOutdoors()) and (not swimming or (not moving and swimming and #enemies.yards5 > 0)) and br.fallDist > 90 then --falling > getOptionValue("Fall Timer") then
+                    if (not canFly() or inCombat or level < 58) and (not swimming or (not moving and swimming and #enemies.yards5 > 0)) and br.fallDist > 90 then --falling > getOptionValue("Fall Timer") then
                         if cast.catForm("player") then return true end
                     end
                 end

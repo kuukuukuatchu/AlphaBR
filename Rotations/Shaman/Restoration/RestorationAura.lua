@@ -98,6 +98,7 @@ local function createOptions()
             br.ui:createSpinnerWithout(section, "Min Trinket 2 Targets",  4,  1,  40,  1,  "","Minimum Trinket 2 Targets(This includes you)", true)
             br.ui:createSpinner(section, "Revitalizing Voodoo Totem", 75, 0 , 100, 5, "|cffFFFFFFHealth Percent to Cast At. Default: 75")
             br.ui:createSpinner(section, "Inoculating Extract", 75, 0 , 100, 5, "|cffFFFFFFHealth Percent to Cast At. Default: 75")
+            br.ui:createSpinner(section,"Ward of Envelopment", 75, 0 , 100, 5, "|cffFFFFFFHealth Percent to Cast At. Default: 75")
         -- Cloudburst Totem
             br.ui:createSpinner(section, "Cloudburst Totem",  90,  0,  100,  5,  "Health Percent to Cast At") 
             br.ui:createSpinnerWithout(section, "Cloudburst Totem Targets",  3,  0,  40,  1,  "Minimum Cloudburst Totem Targets (excluding yourself)")
@@ -601,6 +602,21 @@ local function runRotation()
                         br.addonDebug("Using Inoculating Extract")
                     end
                 end
+                if isChecked("Ward of Envelopment") and hasEquiped(165569) then
+                    if GetItemCooldown(165569) <= gcd then
+                        for i = 1, #tanks do
+                            local tankTarget = UnitTarget(tanks[i].unit)
+                            if tankTarget ~= nil and tanks[i].hp < getValue("Ward of Envelopment") and getDistance(tanks[i].unit,"player") < 40 and getLineOfSight("player",tanks[i].unit) then
+                                local x1,y1,z1 = GetObjectPosition(tanks[i].unit)
+                                UseItemByName(165569)
+                                if IsAoEPending() then
+                                    ClickPosition(x1,y1,z1)
+                                end
+                                if IsAoEPending() then ClickPosition(x1,y1,z1,true) return false end
+                            end
+                        end
+                    end
+                end
                 if isChecked("Trinket 1") and canUse(13) and getLowAllies(getValue("Trinket 1")) >= getValue("Min Trinket 1 Targets") then
                     useItem(13)
                     br.addonDebug("Using Trinket 1")
@@ -659,7 +675,7 @@ local function runRotation()
                         for i=1, #tanks do
                             -- get the tank's target
                             local tankTarget = UnitTarget(tanks[i].unit)
-                            if tankTarget ~= nil and getDistance(tanks[i].unit,"player") < 40 then
+                            if tankTarget ~= nil and getDistance(tankTarget,"player") < 40 then
                                 -- get players in melee range of tank's target
                                 local meleeFriends = getAllies(tankTarget,5)
                                 -- get the best ground circle to encompass the most of them
