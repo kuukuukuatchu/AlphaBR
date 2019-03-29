@@ -124,7 +124,17 @@ function frame:OnEvent(event, arg1, arg2, arg3, arg4, arg5)
         br.ui:saveWindowPosition()
         if getOptionCheck("Reset Options") then
         	-- Reset Settings
-        	brdata = {}
+			brdata = {}
+			if getOptionCheck("Reset Saved Profiles") then
+				dungeondata = {}
+				raiddata = {}
+				mdungeondata = {}
+				mraiddata = {}
+				br.dungeon = {}
+				br.mdungeon = {}
+				br.raid = {}
+				br.mraid = {}
+			end
 		elseif getOptionCheck("Reset Saved Profiles") then
 			dungeondata = {}
         	raiddata = {}

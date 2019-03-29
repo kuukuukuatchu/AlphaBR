@@ -535,7 +535,7 @@ function castGroundAtLocation(loc, SpellID)
     local mouselookup = IsMouseButtonDown(2)
     if IsAoEPending() then
 	    MouselookStop()
-        ClickPosition(loc.x,loc.y,loc.z)
+        ClickPosition(loc.x,loc.y,loc.z+3)
 	    if mouselookup then MouselookStart() end
 	else
 		return false
@@ -591,7 +591,7 @@ function getBestGroundCircleLocation(unitTable,minTargets,maxHealTargets,radius)
 	local X2,Y2,Z2 = center.x,center.y,center.z
 	local LoS = TraceLine(X1, Y1, Z1 + 2, X2, Y2, Z2 + 2, 0x10) == nil
 	local distance = getDistanceToObject("player",X2,Y2,Z2) <= 40
-    if (numInside >= #points - 1) and (numInside >= minTargets) and LoS and distance then return center end
+    if (numInside >= #points - 1) and (numInside >= minTargets) and distance then return center end
 
     -- start with taking #pointsInRange, #pointsInRange-1 at a time
     -- then take #pointsInRange, #pointsInRange-2 at a time
@@ -615,7 +615,7 @@ function getBestGroundCircleLocation(unitTable,minTargets,maxHealTargets,radius)
 			local tx,ty,tz = c.x,c.y,c.z
 			local LoS = TraceLine(X1, Y1, Z1 + 2, tx, ty, tz + 2, 0x10) == nil
 			local tdistance = getDistanceToObject("player",tx,ty,tz) <= 40
-			if LoS and tdistance then
+			if LoS then
 				-- how many of the points are inside the circle?
 				local n = GetNumPointsInCircle(c,radius,allCombinations[i])
 				-- if we got a whole group inside the circle, we can stop here

@@ -1,16 +1,6 @@
 local rotationName = "Laksmackt" -- Change to name of profile listed in options drop down
 
---[[
-This rotation is 99.9% Fengshen work - all credit should go to him
-Added features:
-   - Arcane Torrent for Mana usage
-   - Opportunity to keep Holy Shock on CD
-   - Added some checks
-   - Added some trinket support
-]]
-
-
-
+--[[Originally by Fengshen - all credit should go to him]]
 
 ---------------
 --- Toggles ---
@@ -149,6 +139,8 @@ local function createOptions()
     -- Holy Avenger
     br.ui:createSpinner(section, "Holy Avenger", 60, 0, 100, 5, "", "|cffFFFFFFHealth Percent to Cast At")
     br.ui:createSpinner(section, "Holy Avenger Targets", 3, 0, 40, 1, "", "|cffFFFFFFMinimum Holy Avenger Targets", true)
+    br.ui:createCheckbox(section, "Group Avenger w/ Wrath")
+
     -- Aura Mastery
     br.ui:createSpinner(section, "Aura Mastery", 50, 0, 100, 5, "", "|cffFFFFFFHealth Percent to Cast At")
     br.ui:createSpinner(section, "Aura Mastery Targets", 3, 0, 40, 1, "", "|cffFFFFFFMinimum Aura Mastery Targets", true)
@@ -880,6 +872,14 @@ local function runRotation()
     local layOnHandsTarget = nil
     local burst = nil
 
+    if isChecked("Group Avenger w/ Wrath") then
+      if buff.avengingWrath.exists() or buff.avengingCrusader.exists() then
+        if cast.holyAvenger() then
+          return true
+        end
+      end
+    end
+
 
     --Bursting
     --Print("Check" ..isChecked("Bursting").."#: "..getOptionValue("Bursting"))
@@ -1174,12 +1174,44 @@ local function runRotation()
       if not IsAutoRepeatSpell(GetSpellInfo(6603)) and isValidUnit("target") and getDistance("target") <= 5 then
         StartAttack()
       end
+      --[[
       --Consecration
       if isChecked("Consecration") and cast.able.consecration() and mana > getValue("DPS Mana") and #enemies.yards5 >= getValue("Consecration") and getDebuffRemain("target", 204242) == 0 and not moving and not buff.avengingCrusader.exists() then
         if cast.consecration() then
           return true
         end
       end
+      ]]
+
+      --Consecration
+
+      if isChecked("Consecration") and cast.able.consecration() then
+
+        if consecrationCastTime == nil then
+          consecrationCastTime = 0
+        end
+        if consecrationRemain == nil then
+          consecrationRemain = 0
+        end
+        if cast.last.consecration() then
+          consecrationCastTime = GetTime() + 12
+        end
+        if consecrationCastTime > GetTime() then
+          consecrationRemain = consecrationCastTime - GetTime()
+        else
+          consecrationCastTime = 0;
+          consecrationRemain = 0
+        end
+
+        if isChecked("Consecration") and cast.able.consecration() and mana > getValue("DPS Mana") and #enemies.yards5 >= getValue("Consecration") and getDebuffRemain("target", 204242) == 0 and not moving and not buff.avengingCrusader.exists() then
+          if cast.able.consecration() and consecrationRemain < gcd then
+            if cast.consecration() then
+              return
+            end
+          end
+        end
+      end
+
       -- Holy Prism
       if isChecked("Holy Prism Damage") and lowest.hp > getValue("DPS Health") and talent.holyPrism and mana > getValue("DPS Mana") and cast.able.holyPrism() and #enemies.yards15 >= getValue("Holy Prism Damage") then
         if cast.holyPrism(units.dyn30) then
@@ -1284,7 +1316,7 @@ local function runRotation()
   local function topPriority()
     --Talent Crusaders Might
     if isChecked("Crusader Strike") and not isChecked("Glimmer mode") and talent.crusadersMight and cast.able.crusaderStrike() and getFacing("player", units.dyn5) then
-      if (getSpellCD(20473) > 1.5 or getSpellCD(85222) > 1.5) then
+      if (getSpellCD(20473) > gcd or getSpellCD(85222) > gcd) then
         if cast.crusaderStrike(units.dyn5) then
           return true
         end
@@ -1309,21 +1341,28 @@ local function runRotation()
     --Glimmer support
     if (inInstance or inRaid) and isChecked("Glimmer mode") and #br.friend > 1 and (inCombat or isChecked("Glimmer mode - ooc")) then
       local glimmerTable = { }
-      --find lowest friend without glitter buff on them
       if getSpellCD(20473) == 0 then
-        --[[for i = 1, #br.friend do
-          --first prioritize tanks
-          if (br.friend[i].role == "TANK" or UnitGroupRolesAssigned(br.friend[i].unit) == "TANK") and not buff.beaconOfLight.exists(br.friend[i].unit) and getLineOfSight("player", br.friend[i]) and getDistance("player", br.friend[i]) <= 40 and not UnitBuffID(br.friend[i].unit, 287280) then
-            if cast.holyShock(br.friend[1].unit) then
-              Print("Just glimmered: " .. glimmerTable[1].unit)
+        --critical first
+        if #tanks > 0 then
+          if tanks[1].hp <= getValue("Critical HP") and getDebuffStacks(tanks[1].unit, 209858) < getValue("Necrotic Rot") then
+            if cast.holyShock(tanks[1].unit) then
               return true
             end
           end
         end
-        ]]
-        -- tank first
+        if php <= getValue("Critical HP") then
+          if cast.holyShock("player") then
+            return true
+          end
+        end
+        if lowest.hp <= getValue("Critical HP") and getDebuffStacks(lowest.unit, 209858) < getValue("Necrotic Rot") then
+          if cast.holyShock(lowest.unit) then
+            return true
+          end
+        end
+        --find lowest friend without glitter buff on them - tank first
         for i = 1, #br.friend do
-          if UnitInRange(br.friend[i].unit) then
+          if UnitInRange(br.friend[i].unit) and getLineOfSight(br.friend[i].unit, "player") then
             if (br.friend[i].role == "TANK" or UnitGroupRolesAssigned(br.friend[i].unit) == "TANK") and not buff.beaconOfLight.exists(br.friend[i].unit) and not buff.beaconOfFaith.exists(br.friend[i].unit) and not UnitBuffID(br.friend[i].unit, 287280) then
               if cast.holyShock(br.friend[i].unit) then
                 --Print(br.friend[i].unit)
@@ -1333,7 +1372,7 @@ local function runRotation()
           end
         end
         for i = 1, #br.friend do
-          if not UnitBuffID(br.friend[i].unit, 287280) then
+          if UnitInRange(br.friend[i].unit) and getLineOfSight(br.friend[i].unit, "player") and not UnitBuffID(br.friend[i].unit, 287280) and not UnitBuffID(br.friend[i].unit, 115191) then
             tinsert(glimmerTable, br.friend[i])
           end
         end
@@ -1355,19 +1394,19 @@ local function runRotation()
             return true
           end
         end
-        ---      if (getSpellCD(20473) > 1.5 or getSpellCD(85222) > 1.5) then
-      elseif getSpellCD(20473) > 0 and getSpellCD(85222) == 0 then
+        -- Check here to see if shock is not ready, but dawn is - then use dawn
+      elseif getSpellCD(20473) > gcd and getSpellCD(85222) == 0 then
         if bestConeHeal(spell.lightOfDawn, getValue("LoD Targets"), getValue("Light of Dawn"), 90, lightOfDawn_distance * lightOfDawn_distance_coff, 5)
         then
           return true
         end
-      elseif talent.crusadersMight and cast.able.crusaderStrike() and getFacing("player", units.dyn5) then
+      end
+      if talent.crusadersMight and cast.able.crusaderStrike() and getFacing("player", units.dyn5) then
         if cast.crusaderStrike(units.dyn5) then
           return true
         end
       end
     end
-
   end
 
   local function SingleTarget()

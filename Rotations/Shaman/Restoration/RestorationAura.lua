@@ -151,13 +151,12 @@ local function createOptions()
             br.ui:createSpinnerWithout(section, "Healing Rain Targets",  2,  0,  40,  1,  "Minimum Healing Rain Targets")
             br.ui:createDropdown(section,"Healing Rain Key", br.dropOptions.Toggle, 6, colorGreen.."Enables"..colorWhite.."/"..colorRed.."Disables "..colorWhite.." Healing Rain manual usage.")
             br.ui:createCheckbox(section,"Healing Rain on Melee", "Cast on Melee only")
-            br.ui:createCheckbox(section,"Healing Rain on CD")
+            br.ui:createCheckbox(section,"Healing Rain on CD", "Requires Healing Rain on Melee to be checked to work")
         -- Downpour
             br.ui:createSpinner(section, "Downpour", 70, 0 , 100, 5, "Health Percent to Cast At")
             br.ui:createSpinnerWithout(section, "Downpour Targets",  2,  0,  40,  1,  "Minimum Downpour Targets")
             br.ui:createDropdown(section,"Downpour Key", br.dropOptions.Toggle, 6, colorGreen.."Enables"..colorWhite.."/"..colorRed.."Disables "..colorWhite.." Downpour manual usage.")
             br.ui:createCheckbox(section,"Downpour on Melee", "Cast on Melee only")
-            br.ui:createCheckbox(section,"Downpour on CD")
         -- Spirit Link Totem
             br.ui:createSpinner(section, "Spirit Link Totem",  50,  0,  100,  5,  "Health Percent to Cast At") 
             br.ui:createSpinnerWithout(section, "Spirit Link Totem Targets",  3,  0,  40,  1,  "Minimum Spirit Link Totem Targets")
@@ -641,7 +640,7 @@ local function runRotation()
                 end
             end
         -- Ascendance
-            if isChecked("Ascendance") and useCDs() and talent.ascendance and cd.healingTideTotem.remain() < 166 and cd.healingTideTotem.remain() > gcd and cd.ascendance.remain() <= gcd then
+            if isChecked("Ascendance") and useCDs() and talent.ascendance and cd.ascendance.remain() <= gcd then
                 if getLowAllies(getValue("Ascendance")) >= getValue("Ascendance Targets") then    
                     if cast.ascendance() then br.addonDebug("Casting Ascendance") return end    
                 end
@@ -680,8 +679,14 @@ local function runRotation()
                                 local meleeFriends = getAllies(tankTarget,5)
                                 -- get the best ground circle to encompass the most of them
                                 local loc = nil
-                                if isChecked("Healing Rain on CD") and #meleeFriends >= getValue("Healing Rain Targets") then
-                                    loc = getBestGroundCircleLocation(meleeFriends,getValue("Healing Rain Targets"),6,10)
+                                if isChecked("Healing Rain on CD") then
+                                    if #meleeFriends >= getValue("Healing Rain Targets") then
+                                        if #meleeFriends < 12 then
+                                            loc = getBestGroundCircleLocation(meleeFriends,getValue("Healing Rain Targets"),6,10)
+                                        else
+                                            if castWiseAoEHeal(meleeFriends,spell.healingRain,10,100,getValue("Healing Rain Targets"),6,true, true) then br.addonDebug("Casting Healing Rain") return end
+                                        end
+                                    end
                                 else
                                     local meleeHurt = {}
                                     for j=1, #meleeFriends do
@@ -690,7 +695,11 @@ local function runRotation()
                                         end
                                     end
                                     if #meleeHurt >= getValue("Healing Rain Targets") then
-                                        loc = getBestGroundCircleLocation(meleeHurt,getValue("Healing Rain Targets"),6,10)
+                                        if #meleeHurt < 12 then
+                                            loc = getBestGroundCircleLocation(meleeHurt,getValue("Healing Rain Targets"),6,10)
+                                        else
+                                            if castWiseAoEHeal(meleeHurt,spell.healingRain,10,getValue("Healing Rain"),getValue("Healing Rain Targets"),6,true, true) then br.addonDebug("Casting Healing Rain") return end
+                                        end
                                     end
                                 end
                                 if loc ~= nil then
@@ -748,18 +757,18 @@ local function runRotation()
                                 local meleeFriends = getAllies(tankTarget,5)
                                 -- get the best ground circle to encompass the most of them
                                 local loc = nil
-                                if isChecked("Downpour on CD") and #meleeFriends >= getValue("Downpour Targets") then
-                                    loc = getBestGroundCircleLocation(meleeFriends,getValue("Downpour Targets"),6,10)
-                                else
-                                    local meleeHurt = {}
-                                    for j=1, #meleeFriends do
-                                        if meleeFriends[j].hp < getValue("Downpour") then
-                                            tinsert(meleeHurt,meleeFriends[j])
-                                        end
+                                local meleeHurt = {}
+                                for j=1, #meleeFriends do
+                                    if meleeFriends[j].hp < getValue("Downpour") then
+                                        tinsert(meleeHurt,meleeFriends[j])
                                     end
-                                    if #meleeHurt >= getValue("Downpour Targets") then
+                                end
+                                if #meleeHurt >= getValue("Downpour Targets") then
+                                    if #meleeHurt < 12 then
                                         loc = getBestGroundCircleLocation(meleeHurt,getValue("Downpour Targets"),6,10)
-                                    end
+                                    else
+                                        if castWiseAoEHeal(meleeHurt,spell.downpour,10,getValue("Downpour"),getValue("Downpour Targets"),6,true, true) then br.addonDebug("Casting Downpour") return end
+                                    end            
                                 end
                                 if loc ~= nil then
                                     if castGroundAtLocation(loc, spell.downpour) then br.addonDebug("Casting Downpour") return true end
@@ -772,7 +781,7 @@ local function runRotation()
                 end 
             end
         -- Healing Stream Totem
-            if isChecked("Healing Stream Totem") and cd.healingStreamTotem.remain() <= gcd then
+            if isChecked("Healing Stream Totem") and cd.healingStreamTotem.remain() <= gcd and movingCheck then
               --  for i = 1, #br.friend do                           
                     if lowest.hp <= getValue("Healing Stream Totem") then
                         if not talent.echoOfTheElements then
