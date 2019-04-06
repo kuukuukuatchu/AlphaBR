@@ -36,7 +36,7 @@ function getUpdateRate()
 	else
 		updateRate = getOptionValue("Bot Update Rate")
 		if updateRate < 0.2 then
-			updateRate == 0.2
+			updateRate = 0.2
 		end
 	end
 
