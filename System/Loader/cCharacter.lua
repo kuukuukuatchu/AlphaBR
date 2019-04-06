@@ -111,6 +111,10 @@ function cCharacter:new(class)
 			self.potion.strength 	= {}	-- Strength Potions
 			self.potion.versatility = {} 	-- Versatility Potions
 			self.potion.waterwalk = {}
+			self.flask.agility 		= {}
+			self.flask.intellect  = {}
+			self.flask.stamina		= {}
+			self.flask.strength   = {}
 			self.getConsumables()		-- Find All The Tasty Things!
 			bagsUpdated = false
 		end
@@ -410,7 +414,7 @@ function cCharacter:new(class)
 							local itemInfo = { --Collect Item Data
 								itemID 		= itemID,
 								itemCD 		= GetItemCooldown(itemID),
-								itemName 	= select(1,GetItemInfo(itemID)),
+								itemName 	= GetItemInfo(itemID),
 								minLevel 	= select(5,GetItemInfo(itemID)),
 								itemType 	= select(7,GetItemInfo(itemID)),
 								itemEffect 	= itemEffect,
@@ -446,6 +450,23 @@ function cCharacter:new(class)
 								end
 							end
 							if itemInfo.itemType == "Flask" and self.level >= itemInfo.minLevel then -- Is the item a Flask and am I level to use it?
+								print("Flask Found: "..itemInfo.itemName.." "..itemInfo.itemEffect)
+								local flaskList = {
+									{id = 152638,   type = "agility"},
+									{id = 152639,   type = "intellect"},
+									{id = 152640,   type = "stamina"},
+									{id = 152641,   type = "strength"},
+								}
+								for y = 1, #flaskList do
+									local flasktype = flaskList[y].type
+									local flaskID = flaskList[y].id
+									if strmatch(itemInfo.itemID,flaskID)~=nil then
+										tinsert(self.flask[flasktype],itemInfo)
+										table.sort(self.flask[flasktype], function(x,y)
+											return x.minLevel and y.minLevel and x.minLevel > y.minLevel or false
+										end)
+									end
+								end
 								--TODO
 							end
 						end

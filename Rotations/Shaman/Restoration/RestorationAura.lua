@@ -87,6 +87,10 @@ local function createOptions()
         -- Critical HP
             br.ui:createSpinner(section, "Critical HP", 30, 0, 100, 5, "|cffFFFFFFWill stop casting a DPS Spell if party member drops below value. Default: 30" )
         br.ui:checkSectionState(section)
+    -- Burst Damage Options
+        section = br.ui:createSection(br.ui.window.profile, "Raid Burst Damage Options")
+            br.ui:createSpinner(section, "Burst Count", 1, 1, 10, 1, "Set which burst damage (ie. Grong Tantrum/Opulence Wail) number you need to cover with CDs.  Uncheck to use CDs whenever available.")
+        br.ui:checkSectionState(section)
     -- Cooldown Options
         section = br.ui:createSection(br.ui.window.profile, "Cooldowns")
          -- Racial
@@ -282,7 +286,7 @@ local function runRotation()
         end
 
         local dpsSpells = {spell.lightningBolt, spell.chainLightning, spell.lavaBurst,spell.flameShock}
-        local movingCheck = not isMoving("player") or (isMoving and buff.spiritwalkersGrace.exists("player"))
+        local movingCheck = not isMoving("player") and not IsFalling() or (isMoving and buff.spiritwalkersGrace.exists("player"))
 --------------------
 --- Action Lists ---
 --------------------
@@ -444,7 +448,7 @@ local function runRotation()
             -- Ghost Wolf
             if not (IsMounted() or IsFlying()) and isChecked("Auto Ghost Wolf") then
                if mode.ghostWolf == 1 then
-                   if ((#enemies.yards20 == 0 and not inCombat) or (#enemies.yards10 == 0 and inCombat)) and isMoving("player") and not buff.ghostWolf.exists() then
+                   if ((#enemies.yards20 == 0 and not inCombat) or (#enemies.yards10 == 0 and inCombat)) and isMoving("player") and not buff.ghostWolf.exists() and not buff.spiritwalkersGrace.exists() then
                        if cast.ghostWolf() then br.addonDebug("Casting Ghost Wolf") end
                    elseif movingCheck and buff.ghostWolf.exists() and br.timer:useTimer("Delay",0.5) then
                        RunMacroText("/cancelAura Ghost Wolf")
@@ -616,12 +620,12 @@ local function runRotation()
                         end
                     end
                 end
-                if isChecked("Trinket 1") and canUse(13) and getLowAllies(getValue("Trinket 1")) >= getValue("Min Trinket 1 Targets") then
+                if isChecked("Trinket 1") and canTrinket(13) and getLowAllies(getValue("Trinket 1")) >= getValue("Min Trinket 1 Targets") then
                     useItem(13)
                     br.addonDebug("Using Trinket 1")
                     return true
                 end
-                if isChecked("Trinket 2") and canUse(14) and getLowAllies(getValue("Trinket 2")) >= getValue("Min Trinket 2 Targets") then
+                if isChecked("Trinket 2") and canTrinket(14) and getLowAllies(getValue("Trinket 2")) >= getValue("Min Trinket 2 Targets") then
                     useItem(14)
                     br.addonDebug("Using Trinket 2")
                     return true
@@ -631,17 +635,33 @@ local function runRotation()
                 if (SpecificToggle("Spirit Link Totem Key") and not GetCurrentKeyBoardFocus()) and isChecked("Spirit Link Totem Key") then
                     if CastSpellByName(GetSpellInfo(spell.spiritLinkTotem),"cursor") then br.addonDebug("Casting Spirit Link Totem") return end 
                 end
-                if castWiseAoEHeal(br.friend,spell.spiritLinkTotem,12,getValue("Spirit Link Totem"),getValue("Spirit Link Totem Targets"),40,false,true) then br.addonDebug("Casting Spirit Link Totem") return end
+                if raidBurstInc and (not isChecked("Burst Count") or (isChecked("Burst Count") and burstCount == getOptionValue("Burst Count"))) then
+                    local nearHealer = getAllies("player",10)
+                    -- get the best ground circle to encompass the most of them
+                    local loc = nil
+                    if #nearHealer >= getValue("Spirit Link Totem Targets") then
+                        if #nearHealer < 12 then
+                            loc = getBestGroundCircleLocation(nearHealer,getValue("Spirit Link Totem Targets"),40,10)
+                            if loc ~= nil then
+                                if castGroundAtLocation(loc, spell.spiritLinkTotem) then br.addonDebug("Casting Spirit Link Totem") return true end
+                            end
+                        else
+                            if castWiseAoEHeal(nearHealer,spell.spiritLinkTotem,10,100,getValue("Spirit Link Targets"),40,true, true) then br.addonDebug("Casting Spirit Link Totem") return end
+                        end
+                    end
+                else
+                    if castWiseAoEHeal(br.friend,spell.spiritLinkTotem,12,getValue("Spirit Link Totem"),getValue("Spirit Link Totem Targets"),40,false,true) then br.addonDebug("Casting Spirit Link Totem") return end
+                end
             end
         -- Healing Tide Totem
             if isChecked("Healing Tide Totem") and useCDs() and not buff.ascendance.exists() and cd.healingTideTotem.remain() <= gcd then
-                if getLowAllies(getValue("Healing Tide Totem")) >= getValue("Healing Tide Totem Targets") then    
-                    if cast.healingTideTotem() then br.addonDebug("Casting Healing Tide Totem") return end    
+                if getLowAllies(getValue("Healing Tide Totem")) >= getValue("Healing Tide Totem Targets") or (raidBurstInc and (not isChecked("Burst Count") or (isChecked("Burst Count") and burstCount == getOptionValue("Burst Count")))) then    
+                    if cast.healingTideTotem() then br.addonDebug("Casting Healing Tide Totem") HTTimer = GetTime() return end    
                 end
             end
         -- Ascendance
-            if isChecked("Ascendance") and useCDs() and talent.ascendance and cd.ascendance.remain() <= gcd then
-                if getLowAllies(getValue("Ascendance")) >= getValue("Ascendance Targets") then    
+            if isChecked("Ascendance") and useCDs() and talent.ascendance and cd.ascendance.remain() <= gcd and (not HTTimer or GetTime() - HTTimer > 10) then
+                if getLowAllies(getValue("Ascendance")) >= getValue("Ascendance Targets") or (raidBurstInc and (not isChecked("Burst Count") or (isChecked("Burst Count") and burstCount == getOptionValue("Burst Count")))) then    
                     if cast.ascendance() then br.addonDebug("Casting Ascendance") return end    
                 end
             end	
@@ -655,7 +675,7 @@ local function runRotation()
             end
         -- Cloud Burst Totem
             if isChecked("Cloudburst Totem") and talent.cloudburstTotem and not buff.cloudburstTotem.exists() and cd.cloudburstTotem.remain() <= gcd then
-                if getLowAllies(getValue("Cloudburst Totem")) >= getValue("Cloudburst Totem Targets") then
+                if getLowAllies(getValue("Cloudburst Totem")) >= getValue("Cloudburst Totem Targets") or (raidBurstInc and (not isChecked("Burst Count") or (isChecked("Burst Count") and burstCount == getOptionValue("Burst Count")))) then
                     if cast.cloudburstTotem("player") then
                         br.addonDebug("Casting Cloud Burst Totem")
                         ChatOverlay(colorGreen.."Cloudburst Totem!")
@@ -680,6 +700,8 @@ local function runRotation()
                                 -- get the best ground circle to encompass the most of them
                                 local loc = nil
                                 if isChecked("Healing Rain on CD") then
+                                    -- CastGroundHeal(spell.healingRain, meleeFriends)
+                                    -- return
                                     if #meleeFriends >= getValue("Healing Rain Targets") then
                                         if #meleeFriends < 12 then
                                             loc = getBestGroundCircleLocation(meleeFriends,getValue("Healing Rain Targets"),6,10)
@@ -835,7 +857,7 @@ local function runRotation()
             end
         end
         -- Pause
-        if pause() or mode.rotation == 4 then
+        if pause() then
             return true
         else 
 ---------------------------------

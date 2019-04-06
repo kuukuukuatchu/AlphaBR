@@ -112,17 +112,19 @@ if not metaTable1 then
 			if not UnitInPhase(o.unit) then
 				return false
 			end
-			for i = 1, #novaEngineTables.DispelID do
-				if UnitDebuffID(o.unit,GetSpellInfo(novaEngineTables.DispelID[i].id)) ~= nil and novaEngineTables.DispelID[i].id ~= nil then
-					if select(3,UnitDebuffID(o.unit,GetSpellInfo(novaEngineTables.DispelID[i].id))) >= novaEngineTables.DispelID[i].stacks
-                    and (isChecked("Dispel delay") and
-                            (getDebuffDuration(o.unit, novaEngineTables.DispelID[i].id) - getDebuffRemain(o.unit, novaEngineTables.DispelID[i].id)) > (getDebuffDuration(o.unit, novaEngineTables.DispelID[i].id) * (math.random(getValue("Dispel delay")-2, getValue("Dispel delay")+2)/100) ))then -- Dispel Delay
-						if novaEngineTables.DispelID[i].range ~= nil then
-							if #getAllies(o.unit,novaEngineTables.DispelID[i].range) > 1 then
-								return false
+			for i=1,40 do
+				local buffName,_,_,_,_,_,buffCaster,_,_,buffSpellID = UnitAura(o.unit,i,"HELPFUL|HARMFUL")
+				if buffName then
+					if novaEngineTables.DispelID[buffSpellID] ~= nil then
+						if select(4,UnitDebuffID(o.unit,novaEngineTables.DispelID[buffSpellID])) >= novaEngineTables.DispelID[buffSpellID].stacks
+						and (isChecked("Dispel delay") and
+						(getDebuffDuration(o.unit, novaEngineTables.DispelID[buffSpellID]) - getDebuffRemain(o.unit, novaEngineTables.DispelID[buffSpellID])) > (getDebuffDuration(o.unit, novaEngineTables.DispelID[buffSpellID]) * (math.random(getValue("Dispel delay")-2, getValue("Dispel delay")+2)/100) ))then -- Dispel Delay then
+							if novaEngineTables.DispelID[buffSpellID].range ~= nil then
+								if #getAllies(o.unit,novaEngineTables.DispelID[buffSpellID].range) > 1 then
+									return false
+								end
 							end
 						end
-						return true
 					end
 				end
 			end
@@ -303,7 +305,7 @@ if not metaTable1 then
 
                 -- set to true if unit should be dispelled
                 startTime = debugprofilestop()
-                --o.dispel = o:Dispel(o.unit)
+                o.dispel = o:Dispel(o.unit)
                 br.debug.cpu.healingEngine.Dispel = debugprofilestop()-startTime
 
                 -- distance to player
@@ -365,7 +367,7 @@ if not metaTable1 then
                 -- subgroup number
                 o.subgroup = o:getUnitGroupNumber()
                 -- set to true if unit should be dispelled
-                --o.dispel = o:Dispel(o.unit)
+                o.dispel = o:Dispel(o.unit)
                 -- distance to player
                 o.distance = o:getUnitDistance()
                 -- Unit's threat situation(1-4)

@@ -397,6 +397,30 @@ function br.read.combatLog()
                 end
             end
         end
+        -- Big Raid Damage Tracker
+        if isInCombat("player") then
+            if param == "SPELL_CAST_START" then
+                if spell == 281936 or spell == 282399 then
+                    print("Tantrum Detected")
+                    if burstCount == nil then burstCount = 0 end
+                    burstCount = burstCount + 1
+                    raidBurstInc = true
+                elseif spell == 284941 then
+                    if burstCount == nil then burstCount = 0 end
+                    burstCount = burstCount + 1
+                    raidBurstInc = true
+                end
+            elseif param == "SPELL_CAST_SUCCESS" then
+                if spell == 281936 or spell == 282399 then
+                    raidBurstInc = false
+                elseif spell == 284941 then
+                    raidBurstInc = false
+                end
+            end
+        else
+            burstCount = 0
+            raidBurstInc = false
+        end
     end
     function cl:Deathknight(...)
         local timeStamp, param, hideCaster, source, sourceName, sourceFlags, sourceRaidFlags, destination, destName, destFlags, destRaidFlags, spell, spellName, _, spellType = CombatLogGetCurrentEventInfo()

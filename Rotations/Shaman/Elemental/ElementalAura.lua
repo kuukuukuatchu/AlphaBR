@@ -695,10 +695,10 @@ local function runRotation()
             end
             --Trinkets
             if isChecked("Trinkets") and useCDs() and (buff.ascendance.exists("player") or #enemies.yards10t >= 3 or cast.last.fireElemental() or cast.last.stormElemental() ) then
-                if canUse(13) then
+                if canTrinket(13) then
                     useItem(13)
                 end
-                if canUse(14) then
+                if canTrinket(14) then
                     useItem(14)
                 end
             end
@@ -852,7 +852,7 @@ local function runRotation()
             else
                 if cast.ghostWolf("player") then return true end
             end
-        elseif pause() or (UnitExists("target") and (UnitIsDeadOrGhost("target") or not UnitCanAttack("target", "player"))) or mode.rotation == 4 then
+        elseif pause() or (UnitExists("target") and not UnitCanAttack("target", "player")) or mode.rotation == 4 then
             return true
         else
 ---------------------------------

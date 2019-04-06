@@ -2,28 +2,30 @@ novaEngineTables = { }
 -- This is for the Dispel Check, all Debuffs we want dispelled go here
 -- valid arguments: stacks = num range = num
 novaEngineTables.DispelID = {
-	{ id = 143579, stacks = 3 }, -- Immersius
-	{ id = 143434, stacks = 3 }, -- Fallen Protectors
-	{ id = 144514, stacks = 0 }, -- Norushen
-	{ id = 144351, stacks = 0 }, -- Sha of Pride
-	{ id = 146902, stacks = 0 }, -- Galakras(Korga Poisons)
-	{ id = 143432, stacks = 0 }, -- General Nazgrim
-	{ id = 142913, stacks = 0, range = 10}, -- Malkorok(Displaced Energy)
-	{ id = 115181, stacks = 0 }, -- Spoils of Pandaria(Breath of Fire)
-	{ id = 143791, stacks = 0 }, -- Thok(Corrosive Blood)
-	{ id = 145206, stacks = 0 }, -- Aqua Bomb(Proving Grounds)
+	[143579] = {stacks = 3 }, -- Immersius
+	[143434] = {stacks = 3 }, -- Fallen Protectors
+	[144514] = {stacks = 0 }, -- Norushen
+	[144351] = {stacks = 0 }, -- Sha of Pride
+	[146902] = {stacks = 0 }, -- Galakras(Korga Poisons)
+	[143432] = {stacks = 0 }, -- General Nazgrim
+	[142913] = {stacks = 0, range = 10}, -- Malkorok(Displaced Energy)
+	[115181] = {stacks = 0 }, -- Spoils of Pandaria(Breath of Fire)
+	[143791] = {stacks = 0 }, -- Thok(Corrosive Blood)
+	[145206] = {stacks = 0 }, -- Aqua Bomb(Proving Grounds)
 	-- Ko'ragh
-	{ id = 142913, stacks = 0, range = 5}, -- http://www.wowhead.com/spell=162185/expel-magic-fire
-	{ id = 185066, stacks = 0}, -- Mark of Necromancer red level
+	[142913] = {stacks = 0, range = 5}, -- http://www.wowhead.com/spell=162185/expel-magic-fire
+	[185066] = {stacks = 0}, -- Mark of Necromancer red level
 	-- Xavius
-	{ id = 206651, stacks = 3}, -- Xavius Darkening Soul
-	{ id = 209158, stacks = 3}, -- Xavius Blackening Soul
+	[206651] = {stacks = 3}, -- Xavius Darkening Soul
+	[209158] = {stacks = 3}, -- Xavius Blackening Soul
 	-- Belac
-	{ id = 233983, stacks = 0, range = 8}, -- Echoing Anguish http://www.wowhead.com/spell=233983/echoing-anguish
+	[233983] = {stacks = 0, range = 8}, -- Echoing Anguish http://www.wowhead.com/spell=233983/echoing-anguish
 	-- Antoran High Command (Antorus)
-	{ id = 257974, stacks = 9}, -- http://www.wowhead.com/spell=257974/chaos-pulse
+	[257974] = {stacks = 9}, -- http://www.wowhead.com/spell=257974/chaos-pulse
 	-- Imonar the Soulhunter
-	{ id = 247552, stacks = 0, range = 15} -- http://www.wowhead.com/spell=247552/sleep-canister
+	[247552] = {stacks = 0, range = 15}, -- http://www.wowhead.com/spell=247552/sleep-canister
+	-- Conclave of the Chosen
+	[282135] = {stacks = 0, range = 8} -- https://www.wowhead.com/spell=282135/crawling-hex
 }
 -- List of debuffs that we should never dispell
 novaEngineTables.DoNotDispellList = {
@@ -116,7 +118,7 @@ novaEngineTables.SpecificHPDebuffs = {
 	-- Gul'dan 
 	{ debuff = 221891 , value = 30 }, --http://www.wowhead.com/spell=221891/soul-siphon
 	-- Sisters of the Moon (ToS)
-	--{ debuff = 233263 , value = 30 }, --http://www.wowhead.com/spell=233263/embrace-of-the-eclipse
+	{ debuff = 233263 , value = 30 }, --http://www.wowhead.com/spell=233263/embrace-of-the-eclipse
 	-- Fallen Avater (ToS)
 	{ debuff = 240728 , value = -100, stacks = 8 }, --http://www.wowhead.com/spell=240728/tainted-essence
 }

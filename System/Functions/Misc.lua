@@ -211,7 +211,7 @@ function isGarrMCd(Unit)
 end
 -- if isInCombat("target") then
 function isInCombat(Unit)
-	if UnitAffectingCombat(Unit) then
+	if UnitAffectingCombat(Unit) or isChecked("Ignore Combat") then
 		return true
 	else
 		return false

@@ -473,10 +473,10 @@ local function runRotation()
             end
             -- Trinkets
             if useCDs() and isChecked("Trinkets") and (buff.celestialAlignment.exists() or buff.incarnationChoseOfElune.exists()) then
-                if canUse(13) then
+                if canTrinket(13) then
                     useItem(13)
                 end
-                if canUse(14) then
+                if canTrinket(14) then
                     useItem(14)
                 end
             end
@@ -712,7 +712,7 @@ local function runRotation()
 --- Rotations ---
 -----------------
         -- Pause
-        if pause() or (UnitExists("target") and (UnitIsDeadOrGhost("target") or not UnitCanAttack("target", "player"))) or mode.rotation == 4 then
+        if pause() or (UnitExists("target") and not UnitCanAttack("target", "player")) or mode.rotation == 2 then
             return true
         else
 ---------------------------------

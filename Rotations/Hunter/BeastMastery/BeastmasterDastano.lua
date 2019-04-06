@@ -397,22 +397,24 @@ local function runRotation()
             end
             if isChecked("Auto Attack/Passive") then
                 -- Set Pet Mode Out of Comat / Set Mode Passive In Combat
-                if petMode == nil then petMode = "None" end
-                if not inCombat then
-                    if petMode == "Passive" then
-                        if petMode == "Assist" then PetAssistMode() end
-                        if petMode == "Defensive" then PetDefensiveMode() end
-                    end
+                if petMode == nil then 
                     for i = 1, NUM_PET_ACTION_SLOTS do
                         local name, _, _, _, isActive = GetPetActionInfo(i)
                         if isActive then
                             if name == "PET_MODE_ASSIST" then petMode = "Assist" end
                             if name == "PET_MODE_DEFENSIVE" then petMode = "Defensive" end
+                            if name == "PET_MODE_PASSIVE" then petMode = "Passive" end
                         end
                     end
-                elseif inCombat and petMode ~= "Passive" then
-                    PetPassiveMode()
-                    petMode = "Passive"
+                end
+                if not inCombat then
+                    if petMode ~= "Passive" then
+                        PetPassiveMode()
+                        petMode = "Passive"
+                    end
+                elseif inCombat and petMode ~= "Assist" then
+                    PetAssistMode()
+                    petMode = "Assist"
                 end
                 -- Pet Attack / retreat
                 if (not UnitExists("pettarget") or not isValidUnit("pettarget")) and (inCombat or petCombat) and not buff.playDead.exists("pet") then

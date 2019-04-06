@@ -1975,7 +1975,7 @@ br.lists.spells = {
                 symbolOfHope                = 64901,
             },
             artifacts                       = {
-                lightOfTuure                = 208065,
+--                lightOfTuure                = 208065,
             },
             buffs                           = {
                 angelicFeather              = 121557,
@@ -1986,7 +1986,7 @@ br.lists.spells = {
                 prayerOfMending             = 41635,
                 renew                       = 139,
                 surgeOfLight                = 109186,
-                spiritOfRedemption          = 20711,
+                spiritOfRedemption          = 27827,
             },
             debuffs                         = {
 
@@ -2411,7 +2411,7 @@ br.lists.spells = {
                 sap                         = 6770,
                 shadowmeld                  = 58984,
                 sprint                      = 2983,
-                stealth                     = 1784,
+                stealth                     = 115191,
                 tricksOfTheTrade            = 57934,
                 vanish                      = 1856,
             },
@@ -2424,7 +2424,7 @@ br.lists.spells = {
                 feint                       = 1966,
                 masterAssassinsInitiative   = 235027, --235022
                 sprint                      = 2983,
-                stealth                     = 1784 or 115191,
+                stealth                     = 115191,
                 vanish                      = 11327 or 115193,
             },
             debuffs                         = {
