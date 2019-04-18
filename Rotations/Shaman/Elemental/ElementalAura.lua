@@ -103,6 +103,7 @@ local function createOptions()
             br.ui:createSpinnerWithout(section, "LMT Targets", 3, 1, 10, 1, "|cff0070deSet to desired number of targets needed to use Liquid Magma Totem. Min: 1 / Max: 10 / Interval: 1" )
             br.ui:createSpinnerWithout(section, "Earthquake Targets", 3, 1, 10, 1, "|cff0070deSet to desired number of targets needed to use Earthquake. Min: 1 / Max: 10 / Interval: 1" )
             br.ui:createSpinnerWithout(section, "Lava Beam Targets", 3, 1, 10, 1, "|cff0070deSet to desired number of targets needed to use Lava Beam. Min: 1 / Max: 10 / Interval: 1" )
+            br.ui:createSpinnerWithout(section, "Meteor Targets", 2, 1, 10, 1, "|cff0070deSet to desired number of targets needed to use Meteor. Min: 1 / Max: 10 / Interval: 1" )
             br.ui:createSpinnerWithout(section, "Earth Shock Maelstrom Dump", 90, 1, 100, 5, "|cff0070deSet to desired value to use Earth Shock as maelstrom dump. Min: 1 / Max: 100 / Interval: 5")
         br.ui:checkSectionState(section)
         -------------------------
@@ -543,7 +544,7 @@ local function runRotation()
             --actions.single_target=(|talent.storm_elemental.enabled&cooldown.storm_elemental.remains<2*gcd|dot.flame_shock.remains<=gcd|talent.ascendance.enabled&dot.flame_shock.remains<(cooldown.ascendance.remains+buff.ascendance.duration)&cooldown.ascendance.remains<4&(!talent.storm_elemental.enabled|talent.storm_elemental.enabled&cooldown.storm_elemental.remains<120))&buff.wind_gust.stack<14&!buff.surge_of_power.up
             if debuff.flameShock.count() < #enemies.yards40 and #enemies.yards40 <= 2 then
                 for i = 1, #enemies.yards40 do
-                    if (not debuff.flameShock.exists(enemies.yards40[i]) and ((talent.stormElemental and cd.stormElemental.remains() < 2 * gcd) or (debuff.flameShock.remains("target") <= gcd) or (talent.ascendance and debuff.flameShock.remains("target") < (cd.ascendance.remains() + buff.ascendance.duration()) and cd.ascendance.remains() < 4 and (not talent.stormElemental or not stormEle)))) and buff.windGust.stack() < 14 and not buff.surgeOfPower.exists() then
+                    if (not debuff.flameShock.exists(enemies.yards40[i]) and ((talent.stormElemental and cd.stormElemental.remains() < 2 * gcd) or (debuff.flameShock.remains(enemies.yards40[i]) <= gcd) or (talent.ascendance and debuff.flameShock.remains(enemies.yards40[i]) < (cd.ascendance.remains() + buff.ascendance.duration()) and cd.ascendance.remains() < 4 and (not talent.stormElemental or not stormEle)))) and buff.windGust.stack() < 14 and not buff.surgeOfPower.exists() then
                         if cast.flameShock(enemies.yards40[i]) then return true end
                     end
                 end
@@ -612,12 +613,12 @@ local function runRotation()
             --Lava Burst
             --actions.single_target+=/lava_burst,if=cooldown_react|buff.ascendance.up
             if (cd.lavaBurst.remain() <= gcdMax or buff.ascendance.exists()) and not stormEle and holdBreak then
-                if debuff.flameShock.exists("target") then
+                if debuff.flameShock.remain("target") > getCastTime(spell.lavaBurst) then
                     if cast.lavaBurst() then return true end
                 else
                     for i = 1, #enemies.yards40 do
                         local thisUnit = enemies.yards40[i]
-                        if debuff.flameShock.exists(thisUnit) then
+                        if debuff.flameShock.remain(thisUnit) > getCastTime(spell.lavaBurst) then
                             if cast.lavaBurst(thisUnit) then return true end
                         end
                     end
@@ -812,7 +813,7 @@ local function runRotation()
                         local thisUnit = pet[k].id or 0
                         if fireEle then
                             --print("Fire Elemental Detected")
-                            if #enemies.yards8t > 1 then
+                            if #enemies.yards8t >= getValue("Meteor Targets") then
                                 --if cast.meteor("pettarget") then end
                                 CastSpellByName(GetSpellInfo(spell.meteor))
                             end        

@@ -25,7 +25,13 @@ novaEngineTables.DispelID = {
 	-- Imonar the Soulhunter
 	[247552] = {stacks = 0, range = 15}, -- http://www.wowhead.com/spell=247552/sleep-canister
 	-- Conclave of the Chosen
-	[282135] = {stacks = 0, range = 8} -- https://www.wowhead.com/spell=282135/crawling-hex
+	[282135] = {stacks = 0, range = 8}, -- https://www.wowhead.com/spell=282135/crawling-hex
+	-- SoB
+	[275014] = {stacks = 0, range = 3}, --https://www.wowhead.com/spell=274991/putrid-waters
+	-- Waycrest Manor
+	[261440] = {stacks = 0, range = 6}, --https://www.wowhead.com/spell=261439/virulent-pathogen
+	-- Atal'Dazar
+	[252781] = {stacks = 0, range = 8}, -- https://www.wowhead.com/spell=252781/unstable-hex
 }
 -- List of debuffs that we should never dispell
 novaEngineTables.DoNotDispellList = {
@@ -53,6 +59,8 @@ novaEngineTables.BadDebuffList= {
 	[236550] = "Discorporate", --Decreases all Healing by 75%
 	[243961] = "Misery", --Immune to all healing effects.
 	[274148] = "Taint", --Avatar of Sethraliss Debuff
+	[285213] = "Caress of Death", -- Caress of Death (Rastakhan)
+	[282738] = "Embrace of the Void", -- Embrace of the Void (The Restless Cabal)
 }
 -- list of special units we want to heal, these npc will go directly into healing engine(Special Heal must be checked)
 novaEngineTables.SpecialHealUnitList = {
@@ -121,6 +129,12 @@ novaEngineTables.SpecificHPDebuffs = {
 	{ debuff = 233263 , value = 30 }, --http://www.wowhead.com/spell=233263/embrace-of-the-eclipse
 	-- Fallen Avater (ToS)
 	{ debuff = 240728 , value = -100, stacks = 8 }, --http://www.wowhead.com/spell=240728/tainted-essence
+	-- Rastakhan (BoD)
+	{ debuff = 284781, value = 50}, --https://www.wowhead.com/spell=284781/grievous-axe
+	{ debuff = 286779, value = 30}, --https://www.wowhead.com/spell=286779/focused-demise
+
+	{ debuff = 260741, value = 30}, --https://www.wowhead.com/spell=260741/jagged-nettles
+
 }
 -- this table will assign role to any unit wearing the unit name
 novaEngineTables.roleTable = {

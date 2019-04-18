@@ -450,7 +450,6 @@ function cCharacter:new(class)
 								end
 							end
 							if itemInfo.itemType == "Flask" and self.level >= itemInfo.minLevel then -- Is the item a Flask and am I level to use it?
-								print("Flask Found: "..itemInfo.itemName.." "..itemInfo.itemEffect)
 								local flaskList = {
 									{id = 152638,   type = "agility"},
 									{id = 152639,   type = "intellect"},

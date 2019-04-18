@@ -198,6 +198,7 @@ local function runRotation()
               end
               if getDistance("player",unit) <= 6 then
                 if cast.infernalStrike("player","ground") then
+                    iStrikeDelay = GetTime()
                     if wasMouseLooking then
                         MouselookStart()
                     end 
@@ -208,6 +209,7 @@ local function runRotation()
               local X,Y,Z = GetPositionBetweenObjects(unit, "player", combatRange)
               CastSpellByName(GetSpellInfo(spell.infernalStrike))
               ClickPosition(X,Y,Z)
+              iStrikeDelay = GetTime()
               if IsAoEPending() then
                 CancelPendingSpell()
                 return false
@@ -383,7 +385,7 @@ local function runRotation()
 			-- actions.brand+=/infernal_strike,if=cooldown.fiery_brand.remains=0
 			if mode.mover == 1 and not cast.last.infernalStrike(1) and charges.infernalStrike.count() == 2 and not cd.fieryBrand.exists() and #enemies.yards40 > 0 and C_LossOfControl.GetNumEvents() == 0 and GetTime() - iStrikeDelay > 2 then
                 --if cast.infernalStrike("targetGround","ground",1,6) then return end
-                if iStrike("target") then iStrikeDelay = GetTime()  return true end
+                if iStrike("target") then return true end
             end
 			-- actions.brand+=/fiery_brand (ignore if checked for defensive use)
             if cd.fieryBrand.remains() <= gcd then
@@ -401,7 +403,7 @@ local function runRotation()
 				-- actions.brand+=/infernal_strike,if=dot.fiery_brand.ticking
 				if mode.mover == 1 and not cast.last.infernalStrike(1) and charges.infernalStrike.count() == 2 and #enemies.yards40 > 0 and C_LossOfControl.GetNumEvents() == 0 and GetTime() - iStrikeDelay > 2 then
                     --if cast.infernalStrike("player","ground",1,6) then return end
-                    if iStrike("target") then iStrikeDelay = GetTime() return true end
+                    if iStrike("target") then return true end
 				end
 				-- actions.brand+=/sigil_of_flame,if=dot.fiery_brand.ticking
 				if isChecked("Sigil of Flame") and not isMoving(units.dyn5) and getDistance(units.dyn5) < 5 and #enemies.yards5 > 0 then
@@ -465,7 +467,7 @@ local function runRotation()
 				-- actions.normal=infernal_strike
 				if mode.mover == 1 and not cast.last.infernalStrike(1) and charges.infernalStrike.count() == 2 and #enemies.yards40 > 0 and C_LossOfControl.GetNumEvents() == 0 and GetTime() - iStrikeDelay > 2  then
                     --if cast.infernalStrike("player","ground",1,6) then return end
-                    if iStrike("target") then iStrikeDelay = GetTime() return true end
+                    if iStrike("target") then return true end
                 end
 				-- actions.normal+=/spirit_bomb,if=soul_fragments>=4
 				if buff.soulFragments.stack() >= 4 then

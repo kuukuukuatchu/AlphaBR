@@ -5,7 +5,7 @@
 -----------------------------------------Bubba's Healing Engine--------------------------------------]]
 if not metaTable1 then
 	-- localizing the commonly used functions while inside loops
-	local getDistance,tinsert,tremove,UnitGUID,UnitClass,GetUnitIsUnit = getDistance,tinsert,tremove,UnitGUID,UnitClass,GetUnitIsUnit
+	local getDistance,tinsert,tremove,UnitClass,GetUnitIsUnit = getDistance,tinsert,tremove,UnitClass,GetUnitIsUnit
 	local UnitDebuff,UnitExists,UnitHealth,UnitHealthMax = UnitDebuff,UnitExists,UnitHealth,UnitHealthMax
 	local GetSpellInfo,GetTime,UnitDebuffID,getBuffStacks = GetSpellInfo,GetTime,UnitDebuffID,getBuffStacks
 	br.friend = {} -- This is our main Table that the world will see
@@ -90,7 +90,8 @@ if not metaTable1 then
 			and GetUnitReaction("player",tar) > 4
 			and not UnitIsDeadOrGhost(tar)
 			and UnitIsConnected(tar))
-			or novaEngineTables.SpecialHealUnitList[tonumber(select(2,getGUID(tar)))] ~= nil	or (getOptionCheck("Heal Pets") == true and UnitIsOtherPlayersPet(tar) or UnitGUID(tar) == UnitGUID("pet")))
+			and ((UnitIsOtherPlayersPet(tar) and getOptionCheck("Heal Pets")) or not UnitIsOtherPlayersPet(tar)))
+			or novaEngineTables.SpecialHealUnitList[tonumber(select(2,getGUID(tar)))] ~= nil
 			and CheckBadDebuff(tar)
 			and CheckCreatureType(tar)
 			and getLineOfSight("player", tar)
@@ -115,20 +116,26 @@ if not metaTable1 then
 			for i=1,40 do
 				local buffName,_,_,_,_,_,buffCaster,_,_,buffSpellID = UnitAura(o.unit,i,"HELPFUL|HARMFUL")
 				if buffName then
+					if (buffSpellID == 288388 and select(3,UnitDebuffID(o.unit,buffSpellID)) >= getOptionValue("Reaping")) or (buffSpellID == 282562 and select(3,UnitDebuffID(o.unit,buffSpellID)) >= getOptionValue("Promise of Power")) then
+						return true
+					end
 					if novaEngineTables.DispelID[buffSpellID] ~= nil then
-						if select(4,UnitDebuffID(o.unit,novaEngineTables.DispelID[buffSpellID])) >= novaEngineTables.DispelID[buffSpellID].stacks
+						if select(3,UnitDebuffID(o.unit,buffSpellID)) >= novaEngineTables.DispelID[buffSpellID].stacks
 						and (isChecked("Dispel delay") and
 						(getDebuffDuration(o.unit, novaEngineTables.DispelID[buffSpellID]) - getDebuffRemain(o.unit, novaEngineTables.DispelID[buffSpellID])) > (getDebuffDuration(o.unit, novaEngineTables.DispelID[buffSpellID]) * (math.random(getValue("Dispel delay")-2, getValue("Dispel delay")+2)/100) ))then -- Dispel Delay then
 							if novaEngineTables.DispelID[buffSpellID].range ~= nil then
 								if #getAllies(o.unit,novaEngineTables.DispelID[buffSpellID].range) > 1 then
 									return false
 								end
+								return true
 							end
+							return true
 						end
+						return false
 					end
 				end
 			end
-			return nil
+			return true
 		end
 		-- We are checking the HP of the person through their own function.
 		function o:CalcHP()
@@ -218,7 +225,7 @@ if not metaTable1 then
 		-- returns unit GUID
 		function o:nGUID()
 			local nShortHand = ""
-			if GetUnitExists(unit) then
+			if GetUnitIsVisible(unit) then
 				targetGUID = UnitGUID(unit)
 				nShortHand = UnitGUID(unit):sub(-5)
 			end
@@ -532,5 +539,5 @@ if not metaTable1 then
 		br.friend()
 	end
 	-- We are setting up the Tables for the first time
-	SetupTables()
+		SetupTables()
 end

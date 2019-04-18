@@ -401,11 +401,14 @@ function br.read.combatLog()
         if isInCombat("player") then
             if param == "SPELL_CAST_START" then
                 if spell == 281936 or spell == 282399 then
-                    print("Tantrum Detected")
                     if burstCount == nil then burstCount = 0 end
                     burstCount = burstCount + 1
                     raidBurstInc = true
                 elseif spell == 284941 then
+                    if burstCount == nil then burstCount = 0 end
+                    burstCount = burstCount + 1
+                    raidBurstInc = true
+                elseif spell == 282742 then
                     if burstCount == nil then burstCount = 0 end
                     burstCount = burstCount + 1
                     raidBurstInc = true
@@ -414,6 +417,12 @@ function br.read.combatLog()
                 if spell == 281936 or spell == 282399 then
                     raidBurstInc = false
                 elseif spell == 284941 then
+                    raidBurstInc = false
+                end
+            elseif param == "SPELL_CAST_SUCCESS" then
+                if spell == 282742 then
+                    raidBurstInc = false
+                elseif spell == 282742 then
                     raidBurstInc = false
                 end
             end

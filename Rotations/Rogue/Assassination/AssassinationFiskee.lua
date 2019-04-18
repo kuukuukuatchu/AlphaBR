@@ -6,6 +6,7 @@ rogueTables.enemyTable5, rogueTables.enemyTable10, rogueTables.enemyTable30 = {}
 local enemyTable5, enemyTable10, enemyTable30 = rogueTables.enemyTable5, rogueTables.enemyTable10, rogueTables.enemyTable30
 local resetButton
 local garrotePrioList = ""
+local fhbossPool = false
 local dotBlacklist = "135824|139057|129359|129448|134503|137458|139185|120651"
 local stunSpellList = "274400|274383|257756|276292|268273|256897|272542|272888|269266|258317|258864|259711|258917|264038|253239|269931|270084|270482|270506|270507|267433|267354|268702|268846|268865|258908|264574|272659|272655|267237|265568|277567|265540"
 ---------------
@@ -72,12 +73,14 @@ local function createOptions()
             br.ui:createDropdown(section, "Auto Stealth", {"|cff00FF00Always", "|cffFF000020 Yards"},  1, "Auto stealth mode.")
             br.ui:createDropdown(section, "Auto Tricks", {"|cff00FF00Focus", "|cffFF0000Tank"},  1, "Tricks of the Trade target." )
             br.ui:createCheckbox(section, "Auto Target", "|cffFFFFFF Will auto change to a new target, if current target is dead")
+            br.ui:createCheckbox(section, "Auto Target Burn Units", "|cffFFFFFF Will auto change target to high prio units if they are in range")
             br.ui:createCheckbox(section, "Auto Garrote HP Limit", "|cffFFFFFF Will try to calculate if we should garrote from stealth on units, based on their HP")
             br.ui:createCheckbox(section, "Disable Auto Combat", "|cffFFFFFF Will not auto attack out of stealth, don't use with vanish CD enabled, will pause rotation after vanish")
             br.ui:createCheckbox(section, "Dot Blacklist", "|cffFFFFFF Check to ignore certain units when multidotting")
             br.ui:createSpinnerWithout(section,  "Multidot Limit",  3,  0,  8,  1,  "|cffFFFFFF Max units to dot with garrote.")
             br.ui:createCheckbox(section, "Ignore Blacklist for FoK and CT", "|cffFFFFFF Ignore blacklist for Fan of Knives and Crimson Tempest usage")
             br.ui:createSpinner(section,  "Disable Garrote on # Units",  10,  1,  20,  1,  "|cffFFFFFF Max units within 10 yards for garrote usage outside stealth (FoK spam)")
+            br.ui:createCheckbox(section, "Dot Players", "|cffFFFFFF Check to dot player targets (MC ect.)")
         br.ui:checkSectionState(section)
         ------------------------
         --- COOLDOWN OPTIONS --- -- Define Cooldown Options
@@ -201,6 +204,7 @@ local function runRotation()
     if profileStop == nil then profileStop = false end
 
     if not UnitAffectingCombat("player") then
+        if fhbossPool then fhbossPool = false end
         if not talent.exsanguinate then
             if talent.toxicBlade then
                 buttonTB:Show()
@@ -215,6 +219,9 @@ local function runRotation()
     local garroteCount = 0
 
     units.get(5)
+    if isChecked("Auto Target Burn Units") then
+        enemies.get(5)
+    end
     enemies.get(20)
     enemies.get(20,"player",true)
     enemies.get(30)
@@ -298,6 +305,42 @@ local function runRotation()
         for i=0, count do t[i]=nil end
     end
 
+    --YOINK @IMMY
+    function getapdmg(offHand)
+        local useOH = offHand or false
+        local wdpsCoeff = 6
+        local ap = UnitAttackPower("player")
+        local minDamage, maxDamage, minOffHandDamage, maxOffHandDamage, physicalBonusPos, physicalBonusNeg, percent = UnitDamage("player")
+        local speed, offhandSpeed = UnitAttackSpeed("player")
+            if useOH and offhandSpeed then
+                local wSpeed = offhandSpeed * (1 + GetHaste() / 100)
+                local wdps = (minOffHandDamage + maxOffHandDamage) / wSpeed / percent - ap / wdpsCoeff
+            return (ap + wdps * wdpsCoeff) * 0.5
+            else
+                local wSpeed = speed * (1 + GetHaste() / 100)
+                local wdps = (minDamage + maxDamage) / 2 / wSpeed / percent - ap / wdpsCoeff
+            return ap + wdps * wdpsCoeff
+        end
+    end
+    function getmutidamage()
+        return            
+        (getapdmg() + getapdmg(true) * 0.5) * 0.35 * 1.27 * 
+        (1 + ((GetCombatRatingBonus(CR_VERSATILITY_DAMAGE_DONE) + GetVersatilityBonus(CR_VERSATILITY_DAMAGE_DONE)) / 100))
+    end
+    --YOINK @IMMY
+    function getenvdamage(unit)
+        if unit == nil then unit = "target" end
+        local apMod         = getapdmg()
+        local envcoef       = 0.16
+        local auramult      = 1.27
+        local masterymult   = (1 + (GetMasteryEffect("player") / 100))
+        local versmult      = (1 + ((GetCombatRatingBonus(CR_VERSATILITY_DAMAGE_DONE) + GetVersatilityBonus(CR_VERSATILITY_DAMAGE_DONE)) / 100))
+        local dsmod, tbmod
+        if talent.DeeperStratagem then dsmod = 1.05 else dsmod = 1 end 
+        if debuff.toxicBlade.exists(unit) then tbmod = 1.3 else tbmod = 1 end
+        return (apMod * combo * envcoef * auramult * tbmod * dsmod * masterymult * versmult)
+    end
+
     clearTable(enemyTable5)
     clearTable(enemyTable10)
     clearTable(enemyTable30)
@@ -347,7 +390,9 @@ local function runRotation()
         for i = 1, #enemyTable30 do
             local thisUnit = enemyTable30[i]
             local fokIgnore = {
-                [120651]=true -- Explosive
+                [120651]=true, -- Explosive
+                [136330]=true, -- Soul Thorns Waycrest Manor
+                [134388]=true -- A Knot of Snakes ToS
             }
 
             if thisUnit.distance <= 10 then
@@ -363,6 +408,21 @@ local function runRotation()
         end
         if isChecked("Auto Target") and inCombat and #enemyTable30 > 0 and ((GetUnitExists("target") and UnitIsDeadOrGhost("target") and not GetUnitIsUnit(enemyTable30[1].unit, "target")) or not GetUnitExists("target")) then
             TargetUnit(enemyTable30[1].unit)
+        end
+        local autoTargetUnits = {
+            [120651]=true, -- Explosive
+            [136330]=true -- Soul Thorns Waycrest Manor
+        }
+        if isChecked("Auto Target Burn Units") and inCombat and not stealthedRogue and #enemies.yards5 > 0 and ((UnitIsVisible("target") and autoTargetUnits[GetObjectID("target")] == nil) or not UnitIsVisible("target")) then
+            for i = 1, #enemies.yards5 do
+                local thisUnit = enemies.yards5[i]
+                local objID = GetObjectID(thisUnit)
+                if autoTargetUnits[objID] ~= nil and (isChecked("Auto Facing") or getFacing("player", thisUnit)) then                    
+                    if (objID == 120651 and getCastTimeRemain(thisUnit) > 0 and getCastTimeRemain(thisUnit) < 5) or objID ~= 120651 then
+                        TargetUnit(thisUnit)
+                    end
+                end
+            end
         end
     end
     --Just nil fixes
@@ -381,8 +441,7 @@ local function runRotation()
     end
 
     -- actions+=/variable,name=energy_regen_combined,value=energy.regen+poisoned_bleeds*7%(2*spell_haste)
-    local energyRegenCombined = energyRegen + ((garroteCount + debuff.rupture.count()) * 7 / (2 * (GetHaste()/100)))
-
+    local energyRegenCombined = energyRegen + ((garroteCount + debuff.rupture.count()) * 7 / (2 * (1 / (1 + (GetHaste()/100)))))
     if not inCombat and mode.open ~= 1 and opener == true and not cast.last.kidneyShot(1) and not cast.last.kidneyShot(2) then
         opener, opn1, opn2, opn3, opn4, opn5, opn6 = false, false, false, false, false, false, false
     end
@@ -423,13 +482,21 @@ local function runRotation()
         --Burn Units
         local burnUnits = {
             [120651]=true, -- Explosive
-            [141851]=true -- Infested
+            [136330]=true, -- Soul Thorns Waycrest Manor
+            [134388]=true -- A Knot of Snakes
         }
-        if GetObjectExists("target") and burnUnits[GetObjectID("target")] ~= nil then
+        if UnitIsVisible("target") and inCombat and (burnUnits[GetObjectID("target")] ~= nil or (not isChecked("Dot Players") and UnitIsFriend("target", "player") and validTarget)) and targetDistance < 5 then
+            if combo > 0 and GetObjectID("target") == 134388 then
+                if cast.kidneyShot("target") then return true end
+            end
+            if getenvdamage() >= UnitHealth("target") then
+                if cast.envenom("target") then return true end
+            end
             if cast.mutilate("target") then return true end
             if combo >= 4 then
                 if cast.envenom("target") then return true end
             end
+            return true
         end
     end
     local function actionList_Defensive()
@@ -437,20 +504,31 @@ local function runRotation()
             if isChecked("Auto Defensive Unavoidables") then
                 --Powder Shot (2nd boss freehold)
                 local bossID = GetObjectID("boss1")
-                if bossID == 126848 and br.DBM:getTimer(256979) <= 1 and not isCastingSpell(256979, "boss1") then -- pause 1 sec before cast for pooling
-                    return true
+                local boss2ID = GetObjectID("boss2")
+                local boss3ID = GetObjectID("boss2")
+                local boss = "boss1"
+                if boss2ID == 126848 then 
+                    bossID = 126848
+                    boss = "boss2"
                 end
-                if bossID == 126848 and isCastingSpell(256979, "boss1") and GetUnitIsUnit("player", UnitTarget("boss1")) then
+                if bossID == 126848 and isCastingSpell(256979, boss) and GetUnitIsUnit("player", UnitTarget(boss)) then
                     if talent.elusiveness then
                         if cast.feint() then return true end
                     elseif getOptionValue("Evasion Unavoidables HP Limit") >= php then
                         if cast.evasion() then return true end
                     end
-                end
+                end                
                 --Azerite Powder Shot (1st boss freehold)
-                if bossID == 126832 and isCastingSpell(256106, "boss1") and GetUnitIsUnit("player", UnitTarget("boss1")) then
-                    if cast.feint() then return true end
+                if not fhbossPool and bossID == 126832 and br.DBM:getTimer(256106) <= 1 then -- pause 1 sec before cast for pooling
+                    fhbossPool = true
                 end
+                if bossID == 126832 and isCastingSpell(256106, "boss1") then
+                    fhbossPool = false
+                    if GetUnitIsUnit("player", UnitTarget("boss1")) then
+                        if cast.feint() then return true end
+                    end
+                end
+                if fhbossPool then return true end
                 --Spit gold (1st boss KR)
                 if bossID == 135322 and isCastingSpell(265773, "boss1") and GetUnitIsUnit("player", UnitTarget("boss1")) and isChecked("Cloak Unavoidables") then
                     if cast.cloakOfShadows() then return true end
@@ -470,6 +548,19 @@ local function runRotation()
                 --Noxious Breath (2nd boss temple)
                 if bossID == 133384 and isCastingSpell(263912, "boss1") and (select(5,UnitCastingInfo("boss1"))/1000-GetTime()) < 1.5 then
                     if cast.feint() then return true end
+                end
+                --Severing Axe(King's Rest)
+                if getSpellCD(spell.evasion) == 0 then
+                    if boss2ID == 135475 then
+                        bossID = boss2ID
+                        boss = "boss2"
+                    elseif boss3ID == 135475 then
+                        bossID = boss3ID
+                        boss = "boss3"
+                    end
+                    if bossID == 135475 and UnitCastID(boss) == 266231 and GetUnitIsUnit("player", select(3,UnitCastID(boss))) then
+                        if cast.evasion() then return true end
+                    end
                 end
             end
             if isChecked("Heirloom Neck") and php <= getOptionValue("Heirloom Neck") and not inCombat then
@@ -508,11 +599,11 @@ local function runRotation()
         for i in string.gmatch(getOptionValue("Stun Spells"), "%d+") do
             stunList[tonumber(i)] = true
         end
-        if useInterrupts() and not stealthedRogue then
+        if not stealthedRogue then
             for i=1, #enemies.yards20 do
                 local thisUnit = enemies.yards20[i]
                 local distance = getDistance(thisUnit)
-                if canInterrupt(thisUnit,getOptionValue("Interrupt %")) then
+                if useInterrupts() and canInterrupt(thisUnit,getOptionValue("Interrupt %")) then
                     if isChecked("Kick") and distance < 5 then
                         if cast.kick(thisUnit) then return end
                     end
@@ -868,7 +959,7 @@ local function runRotation()
 -----------------------------
 --- In Combat - Rotations --- 
 -----------------------------
-        if (inCombat or (not isChecked("Disable Auto Combat") and (cast.last.vanish(1) or (validTarget and targetDistance < 5)))) and opener == true then
+        if (inCombat or (not isChecked("Disable Auto Combat") and (cast.last.vanish(1) or cast.last.vanish(2) or (validTarget and targetDistance < 5)))) and opener == true then
             if cast.last.vanish(1) then StopAttack() end
             if actionList_Defensive() then return true end
             if actionList_Interrupts() then return true end

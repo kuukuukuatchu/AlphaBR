@@ -22,21 +22,24 @@ end
 
 --[[This function is refired everytime wow ticks. This frame is located at the top of Core.lua]]
 function getUpdateRate()
-	local updateRate = updateRate or 0.1
+	local updateRate = updateRate or 0.2
 
 	local FrameRate = GetFramerate() or 0
 	if isChecked("Auto Delay") then
 		if FrameRate >= 0 and FrameRate < 60 then
 			updateRate = (60 - FrameRate) / 60
+			if updateRate < 0.2 then
+				updateRate = 0.2
+		   end
 		else
-			updateRate = 0.1
+			updateRate = 0.2
 		end
 	elseif getOptionValue("Bot Update Rate") == nil then
-		updateRate = 0.1
+		updateRate = 0.2
 	else
 		updateRate = getOptionValue("Bot Update Rate")
 		if updateRate < 0.2 then
-			updateRate = 0.2
+		 	updateRate = 0.2
 		end
 	end
 
@@ -75,25 +78,24 @@ local function testKeys(self, key)
 	local ignorePause = ignoreKeys
 	-- iterate over a list to ignore pause
 	if not isChecked("Disable Key Pause Queue") then
-		for i = 1, #actionBarKeys do
-			if string.find(key,actionBarKeys[i]) and not IsLeftShiftKeyDown() and not IsLeftAltKeyDown() and not IsLeftControlKeyDown() and not IsRightShiftKeyDown() and not IsRightAltKeyDown() and not IsRightControlKeyDown() and (UnitAffectingCombat("player") or isChecked("Ignore Combat")) and not isChecked("Queue Casting") then
-				buttonName = "ActionButton"..i
-				local button = _G[buttonName]
-				local slot = i
-				if HasAction(slot) then
-					local actionType, id = GetActionInfo(slot)
-					if actionType == "spell" then
-						pauseSpellId = id
-						if not isChecked("Queue Casting") and GetSpellInfo(pauseSpellId) and pauseSpellId ~= 0 then
-							ChatOverlay("Spell "..GetSpellInfo(pauseSpellId).." queued. Found on "..buttonName..".")
-						end
-					end
-				end
-			end
-		end
-	elseif isChecked("Disable Key Pause Queue") then
-		pauseSpellId = nil
-	end
+        for i = 1, #actionBarKeys do
+            if string.find(key,actionBarKeys[i]) and not IsLeftShiftKeyDown() and not IsLeftAltKeyDown() and not IsLeftControlKeyDown() and not IsRightShiftKeyDown() and not IsRightAltKeyDown() and not IsRightControlKeyDown() and (UnitAffectingCombat("player") or isChecked("Ignore Combat")) and not isChecked("Queue Casting") then
+                buttonName = GetBindingAction(actionBarKeys[i])
+                local slot = buttonName:match("ACTIONBUTTON(%d+)") or buttonName:match("BT4Button(%d+)")
+                if HasAction(slot) then       
+                    local actionType, id = GetActionInfo(slot)
+                    if actionType == "spell" then
+                        pauseSpellId = id
+                        if not isChecked("Queue Casting") and GetSpellInfo(pauseSpellId) and pauseSpellId ~= 0 then
+                            ChatOverlay("Spell "..GetSpellInfo(pauseSpellId).." queued. Found on "..buttonName..".")
+                        end
+                    end
+                end
+            end
+        end
+    elseif isChecked("Disable Key Pause Queue") then
+        pauseSpellId = nil
+    end
 	for i = 1, #ignorePause do
 		if string.find(key, ignorePause[i]) then
 			return
