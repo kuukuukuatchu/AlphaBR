@@ -109,34 +109,40 @@ if not metaTable1 then
 			o.unit = unit
 		end
 		-- This is the function for Dispel checking built into the player itself.
-		function o:Dispel()
-			if not UnitInPhase(o.unit) then
-				return false
-			end
-			for i=1,40 do
-				local buffName,_,_,_,_,_,buffCaster,_,_,buffSpellID = UnitAura(o.unit,i,"HELPFUL|HARMFUL")
-				if buffName then
-					if (buffSpellID == 288388 and select(3,UnitDebuffID(o.unit,buffSpellID)) >= getOptionValue("Reaping")) or (buffSpellID == 282562 and select(3,UnitDebuffID(o.unit,buffSpellID)) >= getOptionValue("Promise of Power")) then
-						return true
-					end
-					if novaEngineTables.DispelID[buffSpellID] ~= nil then
-						if select(3,UnitDebuffID(o.unit,buffSpellID)) >= novaEngineTables.DispelID[buffSpellID].stacks
-						and (isChecked("Dispel delay") and
-						(getDebuffDuration(o.unit, novaEngineTables.DispelID[buffSpellID]) - getDebuffRemain(o.unit, novaEngineTables.DispelID[buffSpellID])) > (getDebuffDuration(o.unit, novaEngineTables.DispelID[buffSpellID]) * (math.random(getValue("Dispel delay")-2, getValue("Dispel delay")+2)/100) ))then -- Dispel Delay then
-							if novaEngineTables.DispelID[buffSpellID].range ~= nil then
-								if #getAllies(o.unit,novaEngineTables.DispelID[buffSpellID].range) > 1 then
-									return false
-								end
-								return true
-							end
-							return true
-						end
-						return false
-					end
-				end
-			end
-			return true
-		end
+		-- function o:Dispel()
+		-- 	if not UnitInPhase(o.unit) then
+		-- 		return false
+		-- 	end
+		-- 	for i=1,40 do
+		-- 		local buffName,_,_,_,_,_,buffCaster,_,_,buffSpellID = UnitAura(o.unit,i,"HELPFUL|HARMFUL")
+		-- 		if buffName then
+		-- 			if (buffSpellID == 288388 and select(3,UnitDebuffID(o.unit,buffSpellID)) >= getOptionValue("Reaping")) or (buffSpellID == 282562 and select(3,UnitDebuffID(o.unit,buffSpellID)) >= getOptionValue("Promise of Power")) then
+		-- 				return true
+		-- 			end
+		-- 			if novaEngineTables.DispelID[buffSpellID] ~= nil then
+		-- 				if select(3,UnitDebuffID(o.unit,buffSpellID)) >= novaEngineTables.DispelID[buffSpellID].stacks
+		-- 				then
+		-- 					if novaEngineTables.DispelID[buffSpellID].stacks ~= 0 and novaEngineTables.DispelID[buffSpellID].range == nil then
+		-- 						return true
+		-- 					else
+		-- 						if (isChecked("Dispel delay") and
+		-- 						(getDebuffDuration(o.unit, buffSpellID) - getDebuffRemain(o.unit,buffSpellID)) > (getDebuffDuration(o.unit, buffSpellID) * (math.random(getValue("Dispel delay")-2, getValue("Dispel delay")+2)/100) )) then -- Dispel Delay then
+		-- 							if novaEngineTables.DispelID[buffSpellID].range ~= nil then
+		-- 								if #getAllies(o.unit,novaEngineTables.DispelID[buffSpellID].range) > 1 then
+		-- 									return false
+		-- 								end
+		-- 								return true
+		-- 							end
+		-- 							return true
+		-- 						end
+		-- 						return false
+		-- 					end
+		-- 				end
+		-- 			end
+		-- 		end
+		-- 		return nil
+		-- 	end
+		-- end
 		-- We are checking the HP of the person through their own function.
 		function o:CalcHP()
 			-- Darkness phase of Kil'Jaeden. basically blacklists all friends if I have this debuff, since I can't heal.
@@ -191,27 +197,26 @@ if not metaTable1 then
 					PercentWithIncoming = PercentWithIncoming - getOptionValue("Prioritize Tank")
 				end
 			end
-			if getOptionCheck("Prioritize Debuff") then
-				-- Using Dispel Check to see if we should give bonus weight
-				if o.dispel then
-					PercentWithIncoming = PercentWithIncoming - getOptionValue("Prioritize Debuff")
-				end
-			end
-			local ActualWithIncoming = ( UnitHealthMax(o.unit) - ( UnitHealth(o.unit) + incomingheals ) )
-			-- Debuffs HP compensation
-			-- local debugTimerStartTime = GetTime()
-			-- local HpDebuffs = novaEngineTables.SpecificHPDebuffs
-			-- for i = 1, #HpDebuffs do
-			-- 	local _,_,count,_,_,_,_,_,_,spellID = UnitDebuffID(o.unit,HpDebuffs[i].debuff)
-			-- 	if spellID ~= nil and (HpDebuffs[i].stacks == nil or (count and count >= HpDebuffs[i].stacks)) then
-			-- 		PercentWithIncoming = PercentWithIncoming - HpDebuffs[i].value
-			-- 		break
+			-- if getOptionCheck("Prioritize Debuff") then
+			-- 	-- Using Dispel Check to see if we should give bonus weight
+			-- 	if o.dispel then
+			-- 		PercentWithIncoming = PercentWithIncoming - getOptionValue("Prioritize Debuff")
 			-- 	end
 			-- end
-			-- local elapsedDebugTime = GetTime() - debugTimerStartTime
-			-- if elapsedDebugTime > 0.5 then
-			-- 	Print("WARNING: Debuff Scan took a long time: "..elapsedDebugTime.." Seconds")
-			-- end
+			local ActualWithIncoming = ( UnitHealthMax(o.unit) - ( UnitHealth(o.unit) + incomingheals ) )
+			-- Debuffs HP compensation
+			local debugTimerStartTime = GetTime()
+			for i=1,40 do
+				local _,_,count,_,_,_,_,_,_,SpellID = UnitAura(o.unit,i,"HELPFUL|HARMFUL")
+				if novaEngineTables.SpecificHPDebuffs[SpellID] ~= nil and (novaEngineTables.SpecificHPDebuffs[SpellID].stacks == nil or (count and count >= novaEngineTables.SpecificHPDebuffs[SpellID].stacks)) then
+			 		PercentWithIncoming = PercentWithIncoming - novaEngineTables.SpecificHPDebuffs[SpellID].value
+			 		break
+			 	end
+			end
+			local elapsedDebugTime = GetTime() - debugTimerStartTime
+			if elapsedDebugTime > 0.5 then
+				Print("WARNING: Debuff Scan took a long time: "..elapsedDebugTime.." Seconds")
+			end
 			if getOptionCheck("Blacklist") == true and br.data.blackList ~= nil then
 				for i = 1, #br.data.blackList do
 					if o.guid == br.data.blackList[i].guid then
@@ -312,7 +317,7 @@ if not metaTable1 then
 
                 -- set to true if unit should be dispelled
                 startTime = debugprofilestop()
-                o.dispel = o:Dispel(o.unit)
+                --o.dispel = o:Dispel(o.unit)
                 br.debug.cpu.healingEngine.Dispel = debugprofilestop()-startTime
 
                 -- distance to player
@@ -374,7 +379,7 @@ if not metaTable1 then
                 -- subgroup number
                 o.subgroup = o:getUnitGroupNumber()
                 -- set to true if unit should be dispelled
-                o.dispel = o:Dispel(o.unit)
+                --o.dispel = o:Dispel(o.unit)
                 -- distance to player
                 o.distance = o:getUnitDistance()
                 -- Unit's threat situation(1-4)

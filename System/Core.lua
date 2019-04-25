@@ -28,9 +28,6 @@ function getUpdateRate()
 	if isChecked("Auto Delay") then
 		if FrameRate >= 0 and FrameRate < 60 then
 			updateRate = (60 - FrameRate) / 60
-			if updateRate < 0.2 then
-				updateRate = 0.2
-		   end
 		else
 			updateRate = 0.2
 		end
@@ -38,11 +35,10 @@ function getUpdateRate()
 		updateRate = 0.2
 	else
 		updateRate = getOptionValue("Bot Update Rate")
-		if updateRate < 0.2 then
-		 	updateRate = 0.2
-		end
 	end
-
+	if updateRate < 0.2 then
+		updateRate = 0.2
+   	end
 	return updateRate
 end
 
@@ -122,20 +118,20 @@ function BadRotationsUpdate(self)
 		return false
 	else 
 		if EWT and GetObjectCount() ~= nil then
-			if brcurrVersion == nil or not brUpdateTimer or (GetTime() - brUpdateTimer) > 300  then
-				SendHTTPRequest('https://raw.githubusercontent.com/CuteOne/BadRotations/master/BadRotations.toc', nil, function(body) brcurrVersion =(string.match(body, "(%d+%p%d+%p%d+)")) end)
-				if brlocVersion and brcurrVersion then
-					brcleanCurr = gsub(tostring(brcurrVersion),"%p","")
-					brcleanLoc = gsub(tostring(brlocVersion),"%p","")
-					if tonumber(brcleanCurr) ~= tonumber(brcleanLoc) then 
-						if isChecked("Overlay Messages") then
-							ChatOverlay("BadRotations is currently out of date.")
-						else
-							 Print("BadRotations is currently out of date.  Please download latest version for best performance.")
-						end
-					end
-					brUpdateTimer = GetTime()
-				end
+			if (brcurrVersion == nil or not brUpdateTimer or (GetTime() - brUpdateTimer) > 300) and EasyWoWToolbox ~= nil then
+			 	SendHTTPRequest('https://raw.githubusercontent.com/CuteOne/BadRotations/master/BadRotations.toc', nil, function(body) brcurrVersion =(string.match(body, "(%d+%p%d+%p%d+)")) end)
+			 	if brlocVersion and brcurrVersion then
+			 		brcleanCurr = gsub(tostring(brcurrVersion),"%p","")
+			 		brcleanLoc = gsub(tostring(brlocVersion),"%p","")
+			 		if tonumber(brcleanCurr) ~= tonumber(brcleanLoc) then 
+			 			if isChecked("Overlay Messages") then
+			 				ChatOverlay("BadRotations is currently out of date.")
+			 			else
+			 				 Print("BadRotations is currently out of date.  Please download latest version for best performance.")
+			 			end
+			 		end
+			 		brUpdateTimer = GetTime()
+			 	end
 			end
 			if br.data.settings ~= nil then
 				if br.data.settings[br.selectedSpec].toggles["Power"] ~= nil and br.data.settings[br.selectedSpec].toggles["Power"] ~= 1 then
@@ -156,7 +152,7 @@ function BadRotationsUpdate(self)
 
 					--Quaking helper
 					if getOptionCheck("Quaking Helper") then
-						if UnitChannelInfo("player") and getDebuffRemain("player", 240448) < 0.5 and getDebuffRemain("player", 240448) > 0 then
+						if (UnitChannelInfo("player") or UnitCastingInfo("player")) and getDebuffRemain("player", 240448) < 0.5 and getDebuffRemain("player", 240448) > 0 then
 							SpellStopCasting()
 						end
 					end
@@ -236,6 +232,17 @@ function BadRotationsUpdate(self)
 					-- Healing Engine
 					if isChecked("HE Active") then
 						br.friend:Update()
+						local groupSize
+						groupSize = GetNumGroupMembers()
+						if groupSize == 0 then
+							groupSize = 1
+						end
+						if #br.friend < groupSize then
+							br.addonDebug("Group size does not match #br.friend. Recreating br.friend.")
+							table.wipe(br.memberSetup.cache)
+							table.wipe(br.friend)
+							SetupTables()
+						end
 					end
 					-- Auto Loot
 					autoLoot()
