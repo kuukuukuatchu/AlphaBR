@@ -153,7 +153,7 @@ function BadRotationsUpdate(self)
 					--Quaking helper
 					if getOptionCheck("Quaking Helper") then
 						if (UnitChannelInfo("player") or UnitCastingInfo("player")) and getDebuffRemain("player", 240448) < 0.5 and getDebuffRemain("player", 240448) > 0 then
-							SpellStopCasting()
+							RunMacroText("/stopcasting")
 						end
 					end
 					-- Pause if key press that is not ignored
@@ -225,6 +225,10 @@ function BadRotationsUpdate(self)
 							if not UnitAffectingCombat("player") then Print("No Combat Detected! - Queue Cleared.") end
 						end
 					end 
+					--Smart Queue
+					if EasyWoWToolbox ~= nil and isChecked("Smart Queue") then
+						br.smartQueue()
+					end
 					-- Update Player
 					if br.player ~= nil and not CanExitVehicle() then --br.debug.cpu.pulse.currentTime/10) then
 						br.player:update()
@@ -237,7 +241,7 @@ function BadRotationsUpdate(self)
 						if groupSize == 0 then
 							groupSize = 1
 						end
-						if #br.friend < groupSize then
+						if #br.friend < groupSize and br.timer:useTimer("Reform", 3) then
 							br.addonDebug("Group size does not match #br.friend. Recreating br.friend.")
 							table.wipe(br.memberSetup.cache)
 							table.wipe(br.friend)

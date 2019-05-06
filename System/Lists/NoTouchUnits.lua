@@ -3,6 +3,10 @@ if br.lists == nil then
 end
 -- No Touch Units = List of units that we should not attack for any reason
 br.lists.noTouchUnits = {
+    -- Jade Temple
+    {unitID = 56448, buff = 106062}, -- Wise Mari with Bubble
+    --Shadopan Monastery
+    {unitID = 56747, buff = 110945}, -- Gu Cloudstrike with Charging Soul
     -- Iron Docks
     {unitID = 87451, buff = 164504, spell = 164426}, --Fleshrender Nok'gar, do not attack during defensive stance buff, Todo: Should stop when he cast 164504
     {unitID = 1, buff = 163689}, -- Never attack Sanguine Sphere
@@ -27,5 +31,7 @@ br.lists.noTouchUnits = {
     {unitID = 144683, buff = 284436}, -- Champion of the Light (A), Ra'wani Kanae, Seal of Reckoning
     {unitID = 144680, buff = 284436}, -- Champion of the Light (H), Frida Ironbellows, Seal of Reckoning
     {unitID = 144942, buff = 289644}, -- Spark Bot,High Tinker Mekkatorque, Mythic 
-    {unitID = 145644, buff = 284337}, -- Bwonsamdi with Unliving buff
+    {unitID = 145644, buff = 284377}, -- Bwonsamdi with Unliving buff
+    -- Underrot
+    {unitID = 137458}, -- Rotting Spore
 }

@@ -796,6 +796,7 @@ br.lists.spells = {
                 thrashBear                  = 77758,
                 thrashCat                   = 106830,
                 travelForm                  = 783,
+                treantForm                  = 114282,
                 wildGrowth                  = 48438,
             },
             artifacts                       = {
@@ -2867,6 +2868,7 @@ br.lists.spells = {
                 demonicEmpowerment          = 193396,
                 demonicPower                = 265273,
                 demonwrath                  = 193440,
+                explosivePotential          = 275398,
                 forbiddenKnowledge          = 278738,
                 netherPortal                = 267218,
                 shadowyInspiration          = 196269,
@@ -2888,6 +2890,9 @@ br.lists.spells = {
                 summonVilefiend             = 264119,
 
             },
+            traits                          = {
+                explosivePotential          = 275395,
+            }
         },
         -- Destruction
         [267] = {

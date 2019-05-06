@@ -51,6 +51,8 @@ function br.ui:createConfigWindow()
         br.ui:createCheckbox(section, "Safe Damage Check", "Check to prevent damage to targets you dont want to attack.")
         br.ui:createCheckbox(section, "Don't break CCs", "Check to prevent damage to targets that are CC.")
         br.ui:createCheckbox(section, "Skull First", "Check to enable focus skull dynamically.")
+        br.ui:createCheckbox(section, "Dispel Only Whitelist", "Check to only dispel debuffs listed on the whitelist.")
+        br.ui:createCheckbox(section, "Purge Only Whitelist", "Check to only purge buffs listed on the whitelist.")
         br.ui:createCheckbox(section, "Interrupt Only Whitelist", "Check to only interrupt casts listed on the whitelist.")
         br.ui:createDropdownWithout(section, "Interrupt Target", {"All", "Target", "Focus", "Marked"},  1, "Interrupt target settings.")
         br.ui:createDropdownWithout(section, "Interrupt Mark", {"|cffffff00Star", "|cffffa500Circle", "|cff800080Diamond", "|cff008000Triangle", "|cffffffffMoon", "|cff0000ffSquare", "|cffff0000Cross", "|cffffffffSkull"},  8, "Mark to interrupt if Marked is selected in Interrupt Target.")
@@ -67,7 +69,6 @@ function br.ui:createConfigWindow()
         --br.ui:createCheckbox(section, "Disable Object Manager", "Check to disable OM. Will disable dynamic targetting. Will prevent all spells that require OM from working correctly.")
         br.ui:createCheckbox(section, "Heal Pets", "Check this to Heal Pets.")
         br.ui:createDropdown(section, "Special Heal", {"Target", "T/M", "T/M/F", "T/F"}, 1, "Check this to Heal Special Whitelisted Units.", "Choose who you want to Heal.")
-        br.ui:createCheckbox(section, "Sorting with Role", "Sorting with Role")
         br.ui:createDropdown(section, "Prioritize Special Targets", {"Special", "All"}, 1, "Prioritize Special targets(mouseover/target/focus).", "Choose Which Special Units to consider.")
         br.ui:createSpinner(section, "Blacklist", 95, nil, nil, nil, "|cffFFBB00How much |cffFF0000%HP|cffFFBB00 do we want to add to |cffFFDD00Blacklisted |cffFFBB00units. Use /Blacklist while mouse-overing someone to add it to the black list.")
         br.ui:createSpinner(section, "Prioritize Tank", 5, 0, 100, 1, "Check this to give tanks more priority")
@@ -78,7 +79,7 @@ function br.ui:createConfigWindow()
         --healingDebug = br.ui:createCheckbox(section, "Healing Debug", "Check to display Healing Engine Debug.")
         --br.ui:createSpinner(section, "Debug Refresh", 500, 0, 1000, 25, "Set desired Healing Engine Debug Table refresh for rate in ms.")
         br.ui:createSpinnerWithout(section, "Reaping", 20, 1, 100, 5, "Set how many stacks of reaping needed to dispel.")
-        br.ui:createSpinnerWithout(section, "Promise of Power", 8, 1, 100, 5, "Set how many stacks of promise of power needed to dispel.")
+        br.ui:createSpinnerWithout(section, "Promise of Power", 8, 1, 10, 1, "Set how many stacks of promise of power needed to dispel.")
         br.ui:createSpinner(section, "Dispel delay", 1.5, 0, 5, 0.1, "Set desired dispel delay in seconds of debuff duration.\n|cffFF0000Will randomise around the value you set.")
         br.ui:createCheckbox(section, "Healer Line of Sight Indicator", "Draws a line to healers. Green In Line of Sight / Red Not In Line of Sight")
         br.ui:checkSectionState(section)
@@ -107,6 +108,33 @@ function br.ui:createConfigWindow()
         br.ui:checkSectionState(section)
     end
 
+    local function callQueueEngine()
+        local function pairsByKeys (t, f)
+            local a = {}
+            for n in pairs(t) do table.insert(a, n) end
+                table.sort(a, f)
+                local i = 0      -- iterator variable
+                local iter = function ()   -- iterator function
+                i = i + 1
+                if a[i] == nil then 
+                    return nil
+                else return a[i], t[a[i]]
+                end
+            end
+            return iter
+        end
+        section = br.ui:createSection(br.ui.window.config, "Smart Queue")
+        br.ui:createSpinner(section,  "Smart Queue", 2, 0.5, 3, 0.1, "Auto cast spells you press (Only EWT support)", "Seconds to attempt cast")
+        if br.player ~= nil and br.player.spell ~= nil and br.player.spell.abilities ~= nil then
+            for k, v in pairsByKeys(br.player.spell.abilities) do
+                local spellName = GetSpellInfo(v)
+                if v ~= 61304 and spellName ~= nil then
+                    br.ui:createDropdown(section, spellName .. " (Queue)", {"Normal", "Cursor", "Cursor (No Cast)", "Mouseover"}, 1, "Active Queueing Of " .. spellName .. " (ID: " .. v .. ")", "Select cast mode")
+                end
+            end
+        end
+        br.ui:checkSectionState(section)
+    end
 
     -- Add Page Dropdown
     br.ui:createPagesDropdown(br.ui.window.config, {
@@ -121,6 +149,10 @@ function br.ui:createConfigWindow()
         {
             [1] = "Healing Engine",
             [2] = callHealingEngine,
+        },
+        {
+            [1] = "Queue Engine",
+            [2] = callQueueEngine,
         },
         {
             [1] = "Other Features",
