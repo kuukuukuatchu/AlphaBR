@@ -203,6 +203,7 @@ function hasNoControl(spellID,unit)
 end
 -- if hasThreat("target") then
 function hasThreat(unit,playerUnit)
+	local unitID = getUnitID(unit)
 	local instance = select(2,IsInInstance())
 	if playerUnit == nil then playerUnit = "player" end
 	local targetUnit, targetFriend
@@ -216,11 +217,23 @@ function hasThreat(unit,playerUnit)
 	if targetUnit == "None" then targetFriend = false
 	else targetFriend = (UnitName(targetUnit) == UnitName("player") or (UnitExists("pet") and UnitName(targetUnit) == UnitName("pet")) or UnitInParty(targetUnit) or UnitInRaid(targetUnit))
 	end
+	local function threatSituation(friendlyUnit,enemyUnit)
+		local _,_,threatPct = UnitDetailedThreatSituation(friendlyUnit,enemyUnit)
+		if threatPct ~= nil then 
+			if threatPct > 0 then
+				if isChecked("Cast Debug") and not UnitExists("target") then Print(UnitName(enemyUnit).." is threatening "..UnitName(friendlyUnit).."."); end
+				return true
+			end
+		end	 
+		return false
+	end
 	-- Print(tostring(unit).." | "..tostring(GetUnit(unit)).." | "..tostring(targetUnit).." | "..tostring(targetFriend))
-	if unit == nil or not GetObjectExists(targetUnit) then return false end
+	if unit == nil or (not GetObjectExists(targetUnit) and br.lists.threatBypass[unitID] == nil) then return false end
 	if targetFriend then
 		if isChecked("Cast Debug") and not GetObjectExists("target") then Print(UnitName(GetUnit(unit)).." is targetting "..UnitName(targetUnit)) end
 		return targetFriend
+	elseif UnitAffectingCombat("player") and br.lists.threatBypass[unitID] ~= nil then
+		return true
 	elseif UnitDetailedThreatSituation(playerUnit, unit)~=nil then
 		if select(5,UnitDetailedThreatSituation(playerUnit, unit)) > 0 then
 			if isChecked("Cast Debug") and not UnitExists("target") then Print(UnitName(unit).." is threatening you."); end
@@ -241,9 +254,10 @@ function hasThreat(unit,playerUnit)
 	-- elseif UnitAffectingCombat(unit) and UnitDetailedThreatSituation(thisUnit,unit) == nil then
 	-- 	return true
 	end
+	return false
 end
 function isTanking(unit)
-	return UnitDetailedThreatSituation("player",unit) ~= nil
+	return UnitThreatSituation("player", unit) ~= nil and UnitThreatSituation("player", unit) >= 2
 end
 -- if isAggroed("target") then
 function isAggroed(unit)

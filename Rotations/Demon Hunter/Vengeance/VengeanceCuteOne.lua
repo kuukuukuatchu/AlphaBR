@@ -157,7 +157,7 @@ local function runRotation()
 --- Locals ---
 --------------
         local buff                                          = br.player.buff
-        local canFlask                                      = canUse(br.player.flask.wod.agilityBig)
+        local canFlask                                      = canUseItem(br.player.flask.wod.agilityBig)
         local cast                                          = br.player.cast
         local combatTime                                    = getCombatTime()
         local cd                                            = br.player.cd
@@ -178,8 +178,6 @@ local function runRotation()
         local spell                                         = br.player.spell
         local talent                                        = br.player.talent
         local units                                         = br.player.units
-        iStrikeDelay                                        = iStrikeDelay or 0
-
 
         units.get(5)
         units.get(8,true)
@@ -187,42 +185,8 @@ local function runRotation()
         enemies.get(5)
         enemies.get(8)
         enemies.get(30)
-        enemies.get(40)
 
-        if profileStop == nil then profileStop = false end
-        
-        local function iStrike(unit)
-            if getDistance("player",unit) < 40 then
-              local wasMouseLooking = false
-              if IsMouselooking() then
-                  wasMouseLooking = true
-                  MouselookStop()
-              end
-              if getDistance("player",unit) <= 6 then
-                if cast.infernalStrike("player","ground") then
-                    iStrikeDelay = GetTime()
-                    if wasMouseLooking then
-                        MouselookStart()
-                    end 
-                    return 
-                end
-              end
-              local combatRange = max(5, UnitCombatReach("player") + UnitCombatReach(unit))
-              local X,Y,Z = GetPositionBetweenObjects(unit, "player", combatRange)
-              CastSpellByName(GetSpellInfo(spell.infernalStrike))
-              ClickPosition(X,Y,Z)
-              iStrikeDelay = GetTime()
-              if IsAoEPending() then
-                CancelPendingSpell()
-                return false
-              end
-              if wasMouseLooking then
-                  MouselookStart()
-              end
-              return true
-            end
-            return false
-          end
+	    if profileStop == nil then profileStop = false end
 
 --------------------
 --- Action Lists ---
@@ -241,7 +205,7 @@ local function runRotation()
 				end
 			end -- End Dummy Test
         -- Torment
-            if isChecked("Torment") then
+            if isChecked("Torment") and cast.able.torment() then
                 for i = 1, #enemies.yards30 do
                     local thisUnit = enemies.yards30[i]
                     if not isTanking(thisUnit) and hasThreat(thisUnit) then
@@ -254,19 +218,19 @@ local function runRotation()
 		local function actionList_Defensive()
 			if useDefensive() then
         -- Soul Barrier
-                if isChecked("Soul Barrier") and inCombat and php < getOptionValue("Soul Barrier") then
+                if isChecked("Soul Barrier") and inCombat and cast.able.soulBarrier() and php < getOptionValue("Soul Barrier") then
                     if cast.soulBarrier() then return end
                 end
         -- Demon Spikes
                 -- demon_spikes
-                if isChecked("Demon Spikes") and inCombat and charges.demonSpikes.count() > getOptionValue("Hold Demon Spikes") and php <= getOptionValue("Demon Spikes") then
+                if isChecked("Demon Spikes") and inCombat and cast.able.demonSpikes() and charges.demonSpikes.count() > getOptionValue("Hold Demon Spikes") and php <= getOptionValue("Demon Spikes") then
                     if (charges.demonSpikes.count() == 2 or not buff.demonSpikes.exists()) and not debuff.fieryBrand.exists(units.dyn5) and not buff.metamorphosis.exists() then
                         if cast.demonSpikes() then return end
                     end
                 end
         -- Metamorphosis
 				-- metamorphosis
-				if isChecked("Metamorphosis") and inCombat and not buff.demonSpikes.exists()
+				if isChecked("Metamorphosis") and inCombat and cast.able.metamorphosis() and not buff.demonSpikes.exists()
                     and not debuff.fieryBrand.exists(units.dyn5) and not buff.metamorphosis.exists() and php <= getOptionValue("Metamorphosis")
                 then
 					if cast.metamorphosis() then return end
@@ -282,11 +246,11 @@ local function runRotation()
 	            if isChecked("Pot/Stoned") and php <= getOptionValue("Pot/Stoned")
 	            	and inCombat and (hasHealthPot() or hasItem(5512))
 	            then
-                    if canUse(5512) then
+                    if canUseItem(5512) then
                         useItem(5512)
-                    elseif canUse(129196) then --Legion Healthstone
+                    elseif canUseItem(129196) then --Legion Healthstone
                         useItem(129196)
-                    elseif canUse(healPot) then
+                    elseif canUseItem(healPot) then
                         useItem(healPot)
                     end
 	            end
@@ -299,11 +263,13 @@ local function runRotation()
 	    			end
 	    		end
         -- Sigil of Misery
-                if isChecked("Sigil of Misery - HP") and php <= getOptionValue("Sigil of Misery - HP") and inCombat and #enemies.yards8 > 0
+                if isChecked("Sigil of Misery - HP") and cast.able.sigilOfMisery()
+                    and php <= getOptionValue("Sigil of Misery - HP") and inCombat and #enemies.yards8 > 0
                 then
                     if cast.sigilOfMisery("player","ground") then return end
                 end
-                if isChecked("Sigil of Misery - AoE") and #enemies.yards8 >= getOptionValue("Sigil of Misery - AoE") and inCombat
+                if isChecked("Sigil of Misery - AoE") and cast.able.sigilOfMisery()
+                    and #enemies.yards8 >= getOptionValue("Sigil of Misery - AoE") and inCombat
                 then
                     if cast.sigilOfMisery("best",false,getOptionValue("Sigil of Misery - AoE"),8) then return end
                 end
@@ -316,15 +282,16 @@ local function runRotation()
                     thisUnit = enemies.yards30[i]
                      -- Disrupt
                     if canInterrupt(thisUnit,getOptionValue("Interrupt At")) then
-                        if isChecked("Disrupt") and getDistance(thisUnit) < 20 then
+                        if isChecked("Disrupt") and cast.able.disrupt(thisUnit) and getDistance(thisUnit) < 20 then
                             if cast.disrupt(thisUnit) then return end
                         end
                         -- Sigil of Silence
-                        if isChecked("Sigil of Silence") and cd.disrupt.remain() > 0 then
+                        if isChecked("Sigil of Silence") and cast.able.sigilOfSilence(thisUnit) and cd.disrupt.remain() > 0 then
                             if cast.sigilOfSilence(thisUnit,"ground",1,8) then return end
                         end
                         -- Sigil of Misery
-                        if isChecked("Sigil of Misery") and cd.disrupt.remain() > 0 and cd.sigilOfSilence.remain() > 0 and cd.sigilOfSilence.remain() < 45
+                        if isChecked("Sigil of Misery") and cast.able.sigilOfMisery(thisUnit)
+                            and cd.disrupt.remain() > 0 and cd.sigilOfSilence.remain() > 0 and cd.sigilOfSilence.remain() < 45
                         then
                             if cast.sigilOfMisery(thisUnit,"ground",1,8) then return end
                         end
@@ -337,10 +304,10 @@ local function runRotation()
 			if useCDs() and getDistance(units.dyn5) < 5 then
             -- Trinkets
                 if isChecked("Trinkets") and not isChecked("Power Reactor") and getDistance("target") < 5 then
-                    if canUse(13) then
+                    if canUseItem(13) then
                         useItem(13)
                     end
-                    if canUse(14) and getNumEnemies("player",12) >= 1 then
+                    if canUseItem(14) and getNumEnemies("player",12) >= 1 then
                         useItem(14)
                     end
                 end
@@ -365,11 +332,11 @@ local function runRotation()
                         return true
                     end
                     if flaskBuff==0 then
-                        if not UnitBuffID("player",188033) and canUse(118922) then --Draenor Insanity Crystal
+                        if not UnitBuffID("player",188033) and canUseItem(118922) then --Draenor Insanity Crystal
                             useItem(118922)
                             return true
                         end
-                        if not UnitBuffID("player",193456) and not UnitBuffID("player",188033) and canUse(129192) then -- Gaze of the Legion
+                        if not UnitBuffID("player",193456) and not UnitBuffID("player",188033) and canUseItem(129192) then -- Gaze of the Legion
                             useItem(129192)
                             return true
                         end
@@ -378,8 +345,8 @@ local function runRotation()
                 if isChecked("Pre-Pull Timer") and pullTimer <= getOptionValue("Pre-Pull Timer") then
 
                 end -- End Pre-Pull
-                if GetObjectExists("target") and not UnitIsDeadOrGhost("target") and UnitCanAttack("target", "player") and getDistance("target") < 5 then        
-                    -- Start Attack
+                if GetObjectExists("target") and not UnitIsDeadOrGhost("target") and UnitCanAttack("target", "player") and getDistance("target") < 5 then
+            -- Start Attack
                     StartAttack()
                 end
             end -- End No Combat
@@ -387,36 +354,34 @@ local function runRotation()
     -- Action List - FieryBrand
         local function actionList_FieryBrand()
             -- actions.brand=sigil_of_flame,if=cooldown.fiery_brand.remains<2
-            if isChecked("Sigil of Flame") and not isMoving(units.dyn5)
+            if isChecked("Sigil of Flame") and cast.able.sigilOfFlame() and not isMoving(units.dyn5)
                 and getDistance(units.dyn5) < 5 and #enemies.yards5 > 0 and cd.fieryBrand.remain() < 2
             then
                 if cast.sigilOfFlame("best",false,1,8) then return end
 			end
 			-- actions.brand+=/infernal_strike,if=cooldown.fiery_brand.remains=0
-			if mode.mover == 1 and not cast.last.infernalStrike(1) and charges.infernalStrike.count() == 2 and not cd.fieryBrand.exists() and #enemies.yards40 > 0 and C_LossOfControl.GetNumEvents() == 0 and GetTime() - iStrikeDelay > 2 then
-                --if cast.infernalStrike("targetGround","ground",1,6) then return end
-                if iStrike("target") then return true end
+			if mode.mover == 1 and cast.able.infernalStrike() and charges.infernalStrike.count() == 2 and not cd.fieryBrand.exists() and #enemies.yards5 > 0 then
+                if cast.infernalStrike("player","ground",1,6) then return end
             end
 			-- actions.brand+=/fiery_brand (ignore if checked for defensive use)
-            if cd.fieryBrand.remains() <= gcd then
+            if cast.able.fieryBrand() then
 	             if cast.fieryBrand() then return end
             end
 			if debuff.fieryBrand.exists(units.dyn5) then
 				-- actions.brand+=/immolation_aura,if=dot.fiery_brand.ticking
-				if isChecked("Immolation Aura") and #enemies.yards5 > 0 then
+				if isChecked("Immolation Aura") and cast.able.immolationAura() and #enemies.yards5 > 0 then
                     if cast.immolationAura() then return end
                 end
 				-- actions.brand+=/fel_devastation,if=dot.fiery_brand.ticking
-				if getDistance(units.dyn20) < 20 then
+				if cast.able.felDevastation() and getDistance(units.dyn20) < 20 then
 					if cast.felDevastation() then return end
 				end
 				-- actions.brand+=/infernal_strike,if=dot.fiery_brand.ticking
-				if mode.mover == 1 and not cast.last.infernalStrike(1) and charges.infernalStrike.count() == 2 and #enemies.yards40 > 0 and C_LossOfControl.GetNumEvents() == 0 and GetTime() - iStrikeDelay > 2 then
-                    --if cast.infernalStrike("player","ground",1,6) then return end
-                    if iStrike("target") then return true end
+				if mode.mover == 1 and cast.able.infernalStrike() and charges.infernalStrike.count() == 2 and #enemies.yards5 > 0 then
+					if cast.infernalStrike("player","ground",1,6) then return end
 				end
 				-- actions.brand+=/sigil_of_flame,if=dot.fiery_brand.ticking
-				if isChecked("Sigil of Flame") and not isMoving(units.dyn5) and getDistance(units.dyn5) < 5 and #enemies.yards5 > 0 then
+				if isChecked("Sigil of Flame") and cast.able.sigilOfFlame() and not isMoving(units.dyn5) and getDistance(units.dyn5) < 5 and #enemies.yards5 > 0 then
 					if cast.sigilOfFlame("best",false,1,8) then return end
 				end
             end
@@ -445,12 +410,7 @@ local function runRotation()
 --------------------------
 --- In Combat Rotation ---
 --------------------------
-            if inCombat and isValidUnit("target")  then
-                -- if br.timer:useTimer("facingdelay", 0.5) then
-                --     if not getFacing("player","target") then
-                --         FaceDirection(GetAnglesBetweenObjects ("player", "target"),true)
-                --     end
-                -- end
+            if inCombat and profileStop==false and isValidUnit("target") then
                 ChatOverlay("In-Combat!")
     ------------------------------
     --- In Combat - Interrupts ---
@@ -461,11 +421,11 @@ local function runRotation()
     ---------------------------
     -- Start Attack
                 -- auto_attack
-                 if getDistance(units.dyn5) < 5 then
-                     StartAttack()
-                 end
+                if getDistance(units.dyn5) < 5 then
+                    StartAttack()
+                end
 				-- Consume Magic
-				if isChecked("Consume Magic") and canDispel("target",spell.consumeMagic) and not isBoss() and GetObjectExists("target") then
+				if isChecked("Consume Magic") and cast.able.consumeMagic("target") and canDispel("target",spell.consumeMagic) and not isBoss() and GetObjectExists("target") then
 					if cast.consumeMagic("target") then return end
                 end
                 --CDs
@@ -475,48 +435,47 @@ local function runRotation()
 	                if actionList_FieryBrand() then return end
                 end
 				-- actions.normal=infernal_strike
-				if mode.mover == 1 and not cast.last.infernalStrike(1) and charges.infernalStrike.count() == 2 and #enemies.yards40 > 0 and C_LossOfControl.GetNumEvents() == 0 and GetTime() - iStrikeDelay > 2  then
-                    --if cast.infernalStrike("player","ground",1,6) then return end
-                    if iStrike("target") then return true end
+				if mode.mover == 1 and cast.able.infernalStrike() and charges.infernalStrike.count() == 2 and #enemies.yards5 > 0 then
+                    if cast.infernalStrike("player","ground",1,6) then return end
                 end
 				-- actions.normal+=/spirit_bomb,if=soul_fragments>=4
-				if buff.soulFragments.stack() >= 4 then
+				if cast.able.spiritBomb() and buff.soulFragments.stack() >= 4 then
                     if cast.spiritBomb() then return end
                 end
                 -- actions.normal+=/soul_cleave,if=!talent.spirit_bomb.enabled
-                if not talent.spiritBomb and buff.soulFragments.stack() >= 2 then
+                if cast.able.soulCleave() and not talent.spiritBomb then
                     if cast.soulCleave() then return end
                 end
                 -- actions.normal+=/soul_cleave,if=talent.spirit_bomb.enabled&soul_fragments=0
-                if talent.spiritBomb and buff.soulFragments.stack() == 2 then
+                if cast.able.soulCleave() and talent.spiritBomb and buff.soulFragments.stack() == 0 then
                     if cast.soulCleave() then return end
                 end
 				-- actions.normal+=/immolation_aura,if=pain<=90
-				if isChecked("Immolation Aura") and pain <= 90 and #enemies.yards5 > 0 then
+				if isChecked("Immolation Aura") and cast.able.immolationAura("player") and pain <= 90 and #enemies.yards5 > 0 then
                     if cast.immolationAura("player") then return end
                 end
 				-- actions.normal+=/felblade,if=pain<=70
-				if pain <= 70 then
+				if cast.able.felblade() and pain <= 70 then
                     if cast.felblade() then return end
                 end
 				-- actions.normal+=/fracture,if=soul_fragments<=3
-				if buff.soulFragments.stack() <= 3 and talent.fracture then
+				if cast.able.fracture() and buff.soulFragments.stack() <= 3 and talent.fracture then
                     if cast.fracture() then return end
                 end
 				-- fel_devastation
-                if getDistance(units.dyn20) < 20 then
+                if cast.able.felDevastation() and getDistance(units.dyn20) < 20 then
 					if cast.felDevastation() then return end
 				end
 				-- actions.normal+=/sigil_of_flame
-				if isChecked("Sigil of Flame") and not isMoving(units.dyn5) and #enemies.yards5 > 0 then
+				if isChecked("Sigil of Flame") and cast.able.sigilOfFlame() and not isMoving(units.dyn5) and #enemies.yards5 > 0 then
                     if cast.sigilOfFlame("best",false,1,8) then return end
 				end
 				-- actions.normal+=/shear
-                if not talent.fracture then
+                if cast.able.shear() and not talent.fracture then
 	                if cast.shear() then return end
                 end
 				-- actions.normal+=/throw_glaive
-                if isChecked("Throw Glaive") then
+                if isChecked("Throw Glaive") and cast.able.throwGlaive() then
                     if cast.throwGlaive() then return end
                 end
 			end --End In Combat

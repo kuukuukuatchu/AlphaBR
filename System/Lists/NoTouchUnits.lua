@@ -32,6 +32,16 @@ br.lists.noTouchUnits = {
     {unitID = 144680, buff = 284436}, -- Champion of the Light (H), Frida Ironbellows, Seal of Reckoning
     {unitID = 144942, buff = 289644}, -- Spark Bot,High Tinker Mekkatorque, Mythic 
     {unitID = 145644, buff = 284377}, -- Bwonsamdi with Unliving buff
+    -- The Motherlode!
+    {unitID = 131227, buff = 260189}, -- Mogul Razdunk with Configuration: Drill buff
     -- Underrot
     {unitID = 137458}, -- Rotting Spore
+    -- Siege of Boralus
+    {unitID = 128652}, -- Viq'Goth
+    -- Atal'Dazar
+    {unitID = 129399 , buff =250192}, -- Vol'kaal with Bad Voodoo buff
+    -- Mechagon
+    {unitID = 152703}, -- Walkie Shockie X1
+    -- M+ Beguiling
+    {unitID = 155432}, -- Enchanted Emissary
 }

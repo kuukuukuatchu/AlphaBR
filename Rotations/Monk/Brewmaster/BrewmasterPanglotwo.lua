@@ -90,7 +90,7 @@ local function createOptions()
         -------------------------
         section = br.ui:createSection(br.ui.window.profile, "Defensive")
         -- Healthstone
-            br.ui:createSpinner(section, "Healthstone",  60,  0,  100,  5,  "|cffFFBB00Health Percentage to use at.")
+            br.ui:createSpinner(section, "Healthstone/Potion",  60,  0,  100,  5,  "|cffFFBB00Health Percentage to use at.")
         -- Healing Elixir
             br.ui:createSpinner(section, "Healing Elixir", 50, 0, 100, 5, "|cffFFFFFFHealth Percent to Cast At")
         -- Fortifying Brew
@@ -163,7 +163,7 @@ local function runRotation()
         local baseAgility       = 0
         local baseMultistrike   = 0
         local buff              = br.player.buff
-        local canFlask          = canUse(br.player.flask.wod.agilityBig)
+        local canFlask          = canUseItem(br.player.flask.wod.agilityBig)
         local cast              = br.player.cast
         local castable          = br.player.cast.debug
         local cd                = br.player.cd
@@ -177,6 +177,7 @@ local function runRotation()
         local hasPet            = IsPetActive()
         local glyph             = br.player.glyph
         local healthPot         = getHealthPot() or 0
+        local healPot           = getHealthPot()
         local inCombat          = br.player.inCombat
         local inRaid            = select(2,IsInInstance())=="raid"
         local inInstance        = br.player.instance=="party"
@@ -267,11 +268,13 @@ local function runRotation()
                     if cast.expelHarm() then return true end
                 end
         -- Pot/Stoned
-                if isChecked("Pot/Stoned") and getHP("player") <= getValue("Pot/Stoned") and inCombat then
-                    if canUse(5512) then
+                if isChecked("Healthstone/Potion") and php <= getOptionValue("Healthstone/Potion") and inCombat and (hasHealthPot() or hasItem(5512) or hasItem(166799)) then
+                    if canUseItem(5512) then
                         useItem(5512)
-                    elseif canUse(healthPot) then
-                        useItem(healthPot)
+                    elseif canUseItem(healPot) then
+                        useItem(healPot)
+                    elseif hasItem(166799) and canUseItem(166799) then
+                        useItem(166799)
                     end
                 end
         -- Dampen Harm

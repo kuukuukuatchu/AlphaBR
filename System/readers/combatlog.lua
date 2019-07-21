@@ -3,6 +3,7 @@ br.guid = UnitGUID("player")
 -- specific reader location
 br.read = {}
 br.read.combatLog = {}
+br.read.debuffTracker = {}
 br.read.enraged = {}
 local cl = br.read
 -- will update the br.read.enraged list
@@ -80,43 +81,9 @@ function br.read.combatLog()
         br.read.enrageReader(...)
         local timeStamp, param, hideCaster, source, sourceName, sourceFlags, sourceRaidFlags, destination, destName, destFlags, destRaidFlags, spell, spellName, _, spellType = CombatLogGetCurrentEventInfo()
         br.guid = UnitGUID("player")
-        -- Last Cast Success for Spec Abilities Only
-        local castTime = select(4, GetSpellInfo(spell))
-        if castTime == nil then castTime = 0 end
-        if (castTime == 0 and param == "SPELL_CAST_SUCCESS") or (castTime > 0 and param == "SPELL_CAST_START") then
-            if sourceName ~= nil then
-                if --[[isInCombat("player") and ]]GetUnitIsUnit(sourceName, "player") then
-                    if br.player ~= nil then
-                    -- Last Cast
-                        for k, v in pairs(br.player.spell.abilities) do
-                            if v == spell then
-                                lastCast5 = lastCast4
-                                lastCast4 = lastCast3
-                                lastCast3 = lastCast2
-                                lastCast2 = lastCast
-                                lastCast = spell
-                            end
-                        end
-                    end
-                end
-            end
-        end
-        if (param == "SPELL_MISSED" or param == "SPELL_CAST_FAILED") and
-            ((lastSucceeded == lastCast and lastStarted ~= lastCast) or
-            (lastSucceeded == lastCast and lastStarted == lastCast and lastFinished == lastCast))
-         then
-            -- Print(tostring(param).." | "..tostring(sourceName).." | "..tostring(spellName).."("..spell..")".." | "..tostring(destName))
-            if sourceName ~= nil then
-                if --[[isInCombat("player") and ]]GetUnitIsUnit(sourceName, "player") then
-                    if spell == lastCast then
-                        lastCast = lastCast2
-                        lastCast2 = lastCast3
-                        lastCast3 = lastCast4
-                        lastCast4 = lastCast5
-                        lastCast5 = 6603
-                    end
-                end
-            end
+        --In flight
+        if source == br.guid and param == "SPELL_CAST_SUCCESS" and EasyWoWToolbox ~= nil then
+            br.InFlight.Add(spell, destination)
         end
         -- br.tracker.handleEvent(...)
         ----------------
@@ -227,12 +194,13 @@ function br.read.combatLog()
             end
             ------------------
             --[[Queue Casted]]
-            if (castTime == 0 and param == "SPELL_CAST_SUCCESS") or (castTime > 0 and param == "SPELL_CAST_START") or spell == lastCast then
-                if botCast == true then
-                    botCast = false
-                end
-                if sourceName ~= nil then
-                    if isInCombat("player") and GetUnitIsUnit(sourceName, "player") then
+            if sourceName ~= nil then
+                if isInCombat("player") and GetUnitIsUnit(sourceName, "player") then
+                    local castTime = select(4, GetSpellInfo(spell)) or 0
+                    if (param == "SPELL_CAST_SUCCESS" and castTime == 0) or (param == "SPELL_CAST_START" and castTime > 0) or spell == lastCast then
+                        if botCast == true then
+                            botCast = false
+                        end
                         if br.player ~= nil and br.player.queue ~= nil and #br.player.queue ~= 0 then
                             for i = 1, #br.player.queue do
                                 if spell == br.player.queue[i].id then
@@ -245,6 +213,22 @@ function br.read.combatLog()
                             end
                         end
                     end
+                end
+            end
+        end
+        ---------------------
+        --[[Debuff Tracking]]
+        if destination ~= nil and destination ~= "" then
+            if EWT then
+                if param == "SPELL_AURA_APPLIED" and spellType == "DEBUFF" then
+                    local destination = GetObjectWithGUID(destination)
+                    local source = GetObjectWithGUID(source)
+                    if UnitName(source) == UnitName("player") then source = "player" end
+                    if br.read.debuffTracker[destination] == nil then br.read.debuffTracker[destination] = {} end
+                    if br.read.debuffTracker[destination][spell] == nil then br.read.debuffTracker[destination][spell] = {} end
+                    br.read.debuffTracker[destination][spell][1] = source
+                    br.read.debuffTracker[destination][spell][2] = spell
+                    br.read.debuffTracker[destination][spell][3] = destination
                 end
             end
         end
@@ -400,30 +384,22 @@ function br.read.combatLog()
         -- Big Raid Damage Tracker
         if isInCombat("player") then
             if param == "SPELL_CAST_START" then
-                if spell == 281936 or spell == 282399 then
+                if spell == 281936 or spell == 282399 or spell == 284941 or spell == 282742 then
                     if burstCount == nil then burstCount = 0 end
                     burstCount = burstCount + 1
                     raidBurstInc = true
-                elseif spell == 284941 then
+                elseif spell == 282107 then
                     if burstCount == nil then burstCount = 0 end
                     burstCount = burstCount + 1
                     raidBurstInc = true
-                elseif spell == 282742 then
-                    if burstCount == nil then burstCount = 0 end
-                    burstCount = burstCount + 1
-                    raidBurstInc = true
+                    pakuWrath = true
                 end
             elseif param == "SPELL_CAST_SUCCESS" then
-                if spell == 281936 or spell == 282399 then
+                if spell == 281936 or spell == 282399 or spell == 284941 or spell == 282742 then
                     raidBurstInc = false
-                elseif spell == 284941 then
+                elseif spell == 282107 then
                     raidBurstInc = false
-                end
-            elseif param == "SPELL_CAST_SUCCESS" then
-                if spell == 282742 then
-                    raidBurstInc = false
-                elseif spell == 282742 then
-                    raidBurstInc = false
+                    pakuWrath = false
                 end
             end
         else
@@ -548,6 +524,8 @@ function cl:Hunter(...)
             br.data.settings[br.selectedSpec]["1stFocus"] = false
         end
     end
+    --[[ Dead Pet Reset ]]
+    if deadPet and UnitHealth("pet") > 0 then deadPet = false end
 end
 function cl:Mage(...)
     local timeStamp, param, hideCaster, source, sourceName, sourceFlags, sourceRaidFlags, destination, destName, destFlags, destRaidFlags, spell, spellName, _, spellType = CombatLogGetCurrentEventInfo()
@@ -751,6 +729,16 @@ function cl:Rogue(...)
             end
         end
     end
+    -- OUTLAW
+    if GetSpecialization() == 2 then
+        if source == UnitGUID("player") then
+            if spell == 287916 then
+                br.vigorstacks = getBuffStacks("player",287916) or 0
+                br.vigorupdate = GetTime()
+                --print(br.vigorstacks..", "..br.vigorupdate)
+            end
+        end
+    end
 end
 function cl:Shaman(...) -- 7
     local timeStamp, param, hideCaster, source, sourceName, sourceFlags, sourceRaidFlags, destination, destName, destFlags, destRaidFlags, spell, spellName, _, spellType = CombatLogGetCurrentEventInfo()
@@ -766,10 +754,47 @@ function cl:Shaman(...) -- 7
 end
 function cl:Warlock(...) -- 9
     local timeStamp, param, hideCaster, source, sourceName, sourceFlags, sourceRaidFlags, destination, destName, destFlags, destRaidFlags, spell, spellName, _, spellType = CombatLogGetCurrentEventInfo()
-    -- last Immolate
-    if param == "SPELL_CAST_SUCCESS" and spell == 348 then
-        lastImmolateTarget = destination
-        lastImmolateTime = GetTime()
+    if GetSpecialization() == 1 then
+        if source == br.guid and param == "SPELL_CAST_SUCCESS" then
+            -- Line CD
+            if not br.lastCast.line_cd then br.lastCast.line_cd = {} end
+            if spell == 980 or spell == 172 or spell == 63106 then
+                br.lastCast.line_cd[spell] = GetTime()
+            end
+        end
+    end
+    if GetSpecialization() == 2 then
+        -- if source == br.guid and param == "SPELL_CAST_SUCCESS" then
+        --     -- Hand of Guldan
+        --     if spell == 105174 then
+        --         if not br.lastCast.hog then br.lastCast.hog = {} end
+        --         if br.lastCast then
+        --             tinsert(br.lastCast.hog, 1, GetTime())
+        --             if #br.lastCast.hog == 5 then
+        --                 br.lastCast.hog[5] = nil
+        --             end
+        --         end
+        --     end
+        --     -- Line CD
+        --     if not br.lastCast.line_cd then br.lastCast.line_cd = {} end
+        --     br.lastCast.line_cd[spell] = GetTime()
+        -- end
+        -- -- Demonology Manager
+        -- -- Imps are summoned
+        -- if param == "SPELL_SUMMON" and source == br.guid and (spell == 104317 or spell == 279910) then
+        --     print("Imp SUMMON") 
+        -- end
+        -- -- Other Demons are summoned
+        -- if param == "SPELL_SUMMON" and source == br.guid and not (spell == 104317 or spell == 279910) then
+        --     print("Demon SUMMON") 
+        -- end
+    end
+    if GetSpecialization() == 3 then
+        -- last Immolate
+        if param == "SPELL_CAST_SUCCESS" and spell == 348 then
+            lastImmolateTarget = destination
+            lastImmolateTime = GetTime()
+        end
     end
     ---------------------
     --[[ Pet Manager --]]

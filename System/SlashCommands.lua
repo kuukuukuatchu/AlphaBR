@@ -34,7 +34,7 @@ local function toggleUI()
 	end
 end
 
-function toggle(name, index, check)
+local function toggle(name, index, check)
 	if check == nil then
 		check = false
 	end
@@ -330,11 +330,7 @@ function handler(message, editbox)
 -- Other
 		if msg2 == "main" then
 			-- Show/Hide Bot Options
-			if br.ui.window.config.parent == nil then
-				br.ui:createConfigWindow()
-			else
-				br.ui:toggleWindow("config")
-			end
+			br.ui:toggleWindow("config")
 		elseif msg2 == "profile" then
 			-- Show/Hide Profile Option
 			br.ui:toggleWindow("profile")

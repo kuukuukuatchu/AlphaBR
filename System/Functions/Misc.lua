@@ -211,10 +211,8 @@ function isGarrMCd(Unit)
 end
 -- if isInCombat("target") then
 function isInCombat(Unit)
-	if UnitAffectingCombat(Unit) or isChecked("Ignore Combat") then
-		return true
-	else
-		return false
+	if br.player ~= nil then
+		return br.player.inCombat
 	end
 end
 -- if isInDraenor() then
@@ -402,7 +400,7 @@ function isValidUnit(Unit)
 	local reaction = GetUnitReaction(Unit, "player") or 10
 	local targeting = isTargeting(Unit)
 	local dummy = isDummy(Unit)
-	local threatBypassUnit = validUnitBypassList[GetObjectID(Unit)] ~= nil
+	local threatBypassUnit = br.lists.threatBypass[GetObjectID(Unit)] ~= nil
 	local burnUnit = getOptionCheck("Forced Burn") and isBurnTarget(Unit) > 0
 	local isCC = getOptionCheck("Don't break CCs") and isLongTimeCCed(Unit) or false
 	local mcCheck = (isChecked("Attack MC Targets") and	(not GetUnitIsFriend(Unit, "player") or (UnitIsCharmed(Unit) and UnitCanAttack("player", Unit)))) or not GetUnitIsFriend(Unit, "player")
@@ -418,12 +416,12 @@ function isValidUnit(Unit)
 		local distanceToTarget = getDistance("target",Unit)
 		local distanceToPlayer = getDistance("player",Unit)
 		local inCombat = UnitAffectingCombat("player") or (GetObjectExists("pet") and UnitAffectingCombat("pet"))
-		local hasThreat = hasThreat(Unit) or targeting or isInProvingGround() or burnUnit or threatBypassUnit
-		return hasThreat or (not hasThreat and (
+		local unitThreat = hasThreat(Unit) or targeting or isInProvingGround() or burnUnit or threatBypassUnit
+		return unitThreat or ((not instance and (playerTarget or distanceToTarget < 8)) or (instance and (#br.friend == 1 or (UnitAffectingCombat(Unit) and distanceToPlayer < 40)))) -- (not hasThreat and (
 			-- Not In Instance
-			(not instance and (playerTarget or distanceToTarget < 8)) or
+			-- (not instance and (playerTarget or distanceToTarget < 8)) or
 			-- In Instance 
-			(instance and playerTarget and ((distanceToPlayer < 20 or (UnitAffectingCombat(Unit) and distanceToPlayer < 40)) or #br.friend == 1))))
+			-- (instance and playerTarget and ((distanceToPlayer < 20 or (UnitAffectingCombat(Unit) and distanceToPlayer < 40)) or #br.friend == 1))))
 	end
 	return false
 end
@@ -517,6 +515,17 @@ function pause(skipCastingCheck)
 		pausekey = IsLeftAltKeyDown()
 	else
 		pausekey = SpecificToggle("Pause Mode")
+	end
+	-- Focused Azerite Beam / Cyclotronic Blast
+	local lastCast = br.lastCast.tracker[1]
+	if br.pauseCast - GetTime() <= 0 then
+		if lastCast == 295258 and getSpellCD(295258) == 0 then br.pauseCast = GetTime() + getCastTime(295258) + getCastTime(295261) end
+		if lastCast == 293491 and GetItemCooldown(167555) == 0 then br.pauseCast = GetTime() + getCastTime(293491) + 2.5 end
+	end
+	if GetTime() < br.pauseCast then
+		return true
+	elseif GetTime() >= br.pauseCast then 
+		br.pauseCast = GetTime()
 	end
 	-- DPS Testing
 	if isChecked("DPS Testing") then

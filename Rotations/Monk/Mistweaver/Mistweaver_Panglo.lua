@@ -270,6 +270,11 @@ local function runRotation()
 		enemies.yards30 = enemies.get(30)
 		enemies.yards40 = enemies.get(40)
 
+		--wipe timers table
+		if timersTable then
+			wipe(timersTable)
+		end
+
 
 
 		---Making Lunch
@@ -277,10 +282,10 @@ local function runRotation()
 			local hamName = UnitName("mouseover")
 			local msg = "Saving your ass " .. hamName
 
-			if getBuffRemain("mouseover", spell.soothingMist, "player") == 0 and not isMoving("player") then
+			if getBuffRemain("mouseover", spell.soothingMist, "EXACT") == 0 and not isMoving("player") then
 				if cast.soothingMist("mouseover") then return end
 			end
-			if getBuffRemain("mouseover", spell.soothingMist, "player") > 1 and getBuffRemain("mouseover", spell.envelopingMist, "player") < 2 then
+			if getBuffRemain("mouseover", spell.soothingMist, "EXACT") > 1 and getBuffRemain("mouseover", spell.envelopingMist, "player") < 2 then
 				if cast.envelopingMist("mouseover") then return end
 			end
 			if getBuffRemain("mouseover", spell.envelopingMist, "player") >= 2 then
@@ -292,11 +297,11 @@ local function runRotation()
 		-- ---Making Lunch
 		-- if SpecificToggle("Ham Sandwich (AoE)") then
 		-- 	for i = 1, #br.friend do
-		-- 		if getBuffRemain("target", spell.soothingMist, "player") == 0 and not isMoving("player") then
+		-- 		if getBuffRemain("target", spell.soothingMist, "EXACT") == 0 and not isMoving("player") then
 		-- 			if cast.soothingMist("target") then return end
 		-- 		end
 
-		-- 		if getBuffRemain("target", spell.soothingMist, "player") > 1 and getBuffRemain("target", spell.envelopingMist, "player") < 2 then
+		-- 		if getBuffRemain("target", spell.soothingMist, "EXACT") > 1 and getBuffRemain("target", spell.envelopingMist, "player") < 2 then
 		-- 			if cast.envelopingMist("target") then return end
 		-- 		end
 
@@ -339,7 +344,7 @@ local function runRotation()
 					local endtime,_,_,_,spellID = select(5,UnitCastingInfo(thisUnit))	
 						if spellID == 263307 then
 							if ((endtime/1000) - GetTime()) < 0.5 then
-								SpellStopCasting() return 
+								SpellStopCasting() return true
 							end
 						end
 					
@@ -353,7 +358,7 @@ local function runRotation()
 					elseif getBuffRemain("target",115175,"EXACT") > 1 and getBuffRemain("target",124682) < 1 then
 						CastSpellByName(GetSpellInfo(124682),"target") return true
 					elseif getBuffRemain("target",115175,"EXACT") > 1 and getBuffRemain("target",124682) > 1 then
-						CastSpellByName(GetSpellInfo(116670),"target") return 
+						CastSpellByName(GetSpellInfo(116670),"target") return true
 					end
 				end
 			end	
@@ -387,21 +392,21 @@ local function runRotation()
 				if isChecked("OOC Healing") and not inCombat and not UnitIsDeadOrGhost("player") and not IsMounted() then
 					--EM OoC
 					if not buff.lifeCyclesVivify.exists("player") then
-						if br.friend[i].hp <= getValue("OOC Healing") and getBuffRemain(br.friend[i].unit, spell.envelopingMist, "player") < 2 and getBuffRemain(br.friend[i].unit,115175,"EXACT") > 1 then
-							if getBuffRemain(br.friend[i].unit,115175,"EXACT") == 0 and not isMoving("player") then
+						if br.friend[i].hp <= getValue("OOC Healing") and getBuffRemain(br.friend[i].unit, spell.envelopingMist, "player") < 2 then
+							if getBuffRemain(br.friend[i].unit, spell.soothingMist, "EXACT") == 0 and not isMoving("player") then
 								if cast.soothingMist(br.friend[i].unit) then return end
 							end
-							if getBuffRemain(br.friend[i].unit, spell.soothingMist, "player") > 1 then
+							if getBuffRemain(br.friend[i].unit, spell.soothingMist, "EXACT") > 1 then
 								if cast.envelopingMist(br.friend[i].unit) then return end
 							end
 						end
 					end
 					-- Vivify OoC
-					if br.friend[i].hp <= getValue("OOC Healing") and getBuffRemain(br.friend[i].unit, spell.envelopingMist, "player") > 2 and not isMoving("player") then
-						if getBuffRemain(br.friend[i].unit,115175,"EXACT") == 0 and not isMoving("player") then
-							if cast.soothingMist(br.friend[1].unit) then return end
+					if br.friend[i].hp <= getValue("OOC Healing") and not isMoving("player") then
+						if getBuffRemain(br.friend[i].unit, spell.soothingMist, "EXACT") == 0 and not isMoving("player") then
+							if cast.soothingMist(br.friend[i].unit) then return end
 						end
-						if getBuffRemain(br.friend[i].unit,115175,"EXACT") > 1 then
+						if getBuffRemain(br.friend[i].unit, spell.soothingMist, "EXACT") > 1 then
 							if cast.vivify(br.friend[i].unit) then return end 
 						end
 					end
@@ -460,10 +465,10 @@ local function runRotation()
 				if isChecked("Thunder Focus Tea") and GetSpellCooldown(spell.thunderFocusTea) == 0 then
 					--Envoloping Mist
 					if getOptionValue("Thunder Focus Tea Options") == 1 and br.friend[1].hp <= getValue("TFT EM") then
-						if isChecked("Soothing Mist Instant Cast") and getBuffRemain(br.friend[1].unit,115175,"EXACT") == 0 and not isMoving("player") then
-							if cast.soothingMist(br.friend[1].unit) then return end
+						if isChecked("Soothing Mist Instant Cast") and getBuffRemain(br.friend[1].unit, spell.soothingMist, "EXACT") == 0 and not isMoving("player") then
+							if cast.soothingMist(br.friend[1].unit) then return true end
 						end
-						if isChecked("Soothing Mist Instant Cast") and getBuffRemain(br.friend[1].unit, spell.soothingMist, "player") > 1 and buff.thunderFocusTea.remain("player") >= 1 then
+						if isChecked("Soothing Mist Instant Cast") and getBuffRemain(br.friend[1].unit, spell.soothingMist, "EXACT") > 1 and buff.thunderFocusTea.remain("player") >= 1 then
 							if cast.envelopingMist(br.friend[1].unit) then return end
 						end
 						if not isChecked("Soothing Mist Instant Cast") and buff.thunderFocusTea.remain("player") >= 1 then
@@ -491,28 +496,43 @@ local function runRotation()
 			end
 			for i = 1, #br.friend do
 				if isChecked("Use Trinkets With Values below") then
-					if br.friend[1].hp < getValue("Use Trinket 1") and canUse(13) then
-						useItem(13) return
+					if br.friend[i].hp < getValue("Use Trinket 1") and canUseItem(13) and getDistance(br.friend[i].unit) < 40 then
+						if hasEquiped(167865,13) and getDistance(br.friend[i].unit) < 40 then
+							UseItemByName(167865,br.friend[i].unit)
+						else
+							useItem(13) return
+						end
 					end
-					if br.friend[1].hp < getValue("Use Trinket 2") and canUse(14) then
-						useItem(14) return
+					if br.friend[i].hp < getValue("Use Trinket 2") and canUseItem(14) and getDistance(br.friend[i].unit) < 40 then
+						if hasEquiped(167865,14) then
+							UseItemByName(167865,br.friend[i].unit)
+						else
+							useItem(14) return
+						end
 					end
 				end
 			end
-			for i = 1, #br.friend do
-				if isChecked("Use Inoculating Extract") and hasEquiped(160649) then
-					if getOptionValue("Target for Inoculating Extract") == 1 then
-						if br.friend[1].hp <= getValue("Use Inoculating Extract") then
-							UseItemByName(160649,br.friend[1].unit)
+			if isChecked("Use Inoculating Extract") and hasEquiped(160649) then
+				if getOptionValue("Target for Inoculating Extract") == 1 then
+					for i = 1, #br.friend do
+						if br.friend[i].hp <= getValue("Use Inoculating Extract") then
+							UseItemByName(160649,br.friend[i].unit)
 						end
-						if getOptionValue("Target for Inoculating Extract") == 2 and #tanks > 0 and tanks[1].hp <= getValue("Use Inoculating Extract") then
-							UseItemByName(160649,tanks[1].unit)
+					end
+				elseif getOptionValue("Target for Inoculating Extract") == 2 and #tanks > 0 then
+					for i = 1, #tanks do
+						if tanks[i].hp <= getValue("Use Inoculating Extract") then
+							UseItemByName(160649,tanks[i].unit)
 						end
 					end
 				end
-				if isChecked("Revitalizing Voodoo Totem") and #tanks > 0 and tanks[1].hp <= getValue("Revitalizing Voodoo Totem") then 
-					if hasEquiped(158320) and canUse(158320) then
-						UseItemByName(158320,tanks[1].unit)
+			end
+			if isChecked("Revitalizing Voodoo Totem") and #tanks > 0 then
+				for i = 1, #tanks do
+					if tanks[i].hp <= getValue("Revitalizing Voodoo Totem") then 
+						if hasEquiped(158320) and canUseItem(158320) then
+							UseItemByName(158320,tanks[i].unit)
+						end
 					end
 				end
 			end
@@ -541,24 +561,16 @@ local function runRotation()
 							end
 						end
 						if not isChecked("EM Tanks Only") and br.friend[1].hp <= getValue("Enveloping Mist") then
-							if isChecked("Soothing Mist Instant Cast") and getBuffRemain(br.friend[1].unit, spell.soothingMist, "player") == 0 then
+							if isChecked("Soothing Mist Instant Cast") and getBuffRemain(br.friend[1].unit, spell.soothingMist, "EXACT") == 0 then
 								if cast.soothingMist(br.friend[1].unit) then return end
 							end
-							if isChecked("Soothing Mist Instant Cast") and getBuffRemain(br.friend[1].unit, spell.soothingMist, "player") > 1 and getBuffRemain(br.friend[1].unit, spell.envelopingMist, "player") < 2  then
+							if isChecked("Soothing Mist Instant Cast") and getBuffRemain(br.friend[1].unit, spell.soothingMist, "EXACT") > 1 and getBuffRemain(br.friend[1].unit, spell.envelopingMist, "player") < 2  then
 								if cast.envelopingMist(br.friend[1].unit) then return end
 							end
 							if not isChecked("Soothing Mist Instant Cast") and getBuffRemain(br.friend[1].unit, spell.envelopingMist, "player") < 2  then
 								if cast.envelopingMist(br.friend[1].unit) then return end
 							end
 						end
-					end
-				end
-			end
-			-- Soothing Mist 2
-			for i = 1, #br.friend do
-				if isChecked("Soothing Mist") then
-					if br.friend[1].hp <= getValue("Soothing Mist") and getBuffRemain(br.friend[1].unit,115175,"EXACT") == 0 and not isMoving("player") then
-						if cast.soothingMist(br.friend[1].unit) then return end
 					end
 				end
 			end
@@ -571,8 +583,16 @@ local function runRotation()
 			-- Vivify 
 			if not talent.lifecycles then
 				for i = 1, #br.friend do
-					if br.friend[1].hp <= getValue("Vivify") then
+					if br.friend[1].hp <= getValue("Vivify") and (isCastingSpell(spell.soothingMist) or not (cast.active.vivify() or cast.last.vivify(br.friend[1].unit))) then
 						if cast.vivify(br.friend[1].unit) then return end
+					end
+				end
+			end
+			-- Soothing Mist 2
+			for i = 1, #br.friend do
+				if isChecked("Soothing Mist") then
+					if br.friend[1].hp <= getValue("Soothing Mist") and getBuffRemain(br.friend[1].unit, spell.soothingMist, "EXACT") == 0 and not isMoving("player") then
+						if cast.soothingMist(br.friend[1].unit) then return true end
 					end
 				end
 			end
@@ -641,7 +661,7 @@ local function runRotation()
 				if br.friend[1].hp <= getValue("Enveloping Mist Lifecycles") and buff.lifeCyclesEnvelopingMist.exists() then
 					if isChecked("EM Tanks Only") and #tanks > 0 and tanks[1].hp <= getValue("Enveloping Mist Lifecycles") then
 						if isChecked("Soothing Mist Instant Cast") and getBuffRemain(tanks[1].unit,115175,"EXACT") == 0 and not isMoving("player") then
-							if cast.soothingMist(tanks[1].unit) then return end
+							if cast.soothingMist(tanks[1].unit) then return true end
 						end
 						if isChecked("Soothing Mist Instant Cast") and getBuffRemain(tanks[1].unit,115175,"EXACT") > 1 and getBuffRemain(br.friend[1].unit, spell.envelopingMist, "player") < 2 then
 							if cast.envelopingMist(tanks[1].unit) then return end
@@ -651,10 +671,10 @@ local function runRotation()
 						end
 					end
 					if not isChecked("EM Tanks Only") and br.friend[1].hp <= getValue("Enveloping Mist Lifecycles") then
-						if isChecked("Soothing Mist Instant Cast") and getBuffRemain(br.friend[1].unit,115175,"EXACT") == 0 and not isMoving("player") then
-							if cast.soothingMist(br.friend[1].unit) then return end
+						if isChecked("Soothing Mist Instant Cast") and getBuffRemain(br.friend[1].unit, spell.soothingMist, "EXACT") == 0 and not isMoving("player") then
+							if cast.soothingMist(br.friend[1].unit) then return true end
 						end
-						if isChecked("Soothing Mist Instant Cast") and getBuffRemain(br.friend[1].unit, spell.soothingMist, "player") > 1 and getBuffRemain(br.friend[1].unit, spell.envelopingMist, "player") < 2 then
+						if isChecked("Soothing Mist Instant Cast") and getBuffRemain(br.friend[1].unit, spell.soothingMist, "EXACT") > 1 and getBuffRemain(br.friend[1].unit, spell.envelopingMist, "player") < 2 then
 							if cast.envelopingMist(br.friend[1].unit) then return end
 						end
 						if not isChecked("Soothing Mist Instant Cast") and getBuffRemain(br.friend[1].unit, spell.envelopingMist, "player") < 2 then
@@ -665,7 +685,7 @@ local function runRotation()
 			end
 			-- Vivify Lifecycles
 			for i = 1, #br.friend do
-				if br.friend[1].hp <= getValue("Vivify Lifecycles") and (isCastingSpell(spell.soothingMist) or not (isCastingSpell(spell.vivify) or cast.last.vivify(br.friend[1].unit))) then
+				if br.friend[1].hp <= getValue("Vivify Lifecycles") and (isCastingSpell(spell.soothingMist) or not (cast.active.vivify() or cast.last.vivify(br.friend[1].unit))) then
 					if cast.vivify(br.friend[1].unit) then return end
 				end
 			end
@@ -704,7 +724,7 @@ local function runRotation()
 					if br.friend[1].hp <= (getValue("Enveloping Mist") *1.1) and not talent.lifecycles then
 						if isChecked("EM Tanks Only") and #tanks > 0 and tanks[1].hp <= getValue("Enveloping Mist") then
 							if isChecked("Soothing Mist Instant Cast") and getBuffRemain(tanks[1].unit,115175,"EXACT") == 0 and not isMoving("player") then
-								if cast.soothingMist(tanks[1].unit) then return end
+								if cast.soothingMist(tanks[1].unit) then return true end
 							end
 							if isChecked("Soothing Mist Instant Cast") and getBuffRemain(tanks[1].unit,115175,"EXACT") > 1 and getBuffRemain(br.friend[1].unit, spell.envelopingMist, "player") < 2 then
 								if cast.envelopingMist(tanks[1].unit) then return end
@@ -714,10 +734,10 @@ local function runRotation()
 							end
 						end
 						if not isChecked("EM Tanks Only") and br.friend[1].hp <= (getValue("Enveloping Mist") * 1.1) then
-							if isChecked("Soothing Mist Instant Cast") and getBuffRemain(br.friend[1].unit,115175,"EXACT") == 0 and not isMoving("player") then
-								if cast.soothingMist(br.friend[1].unit) then return end
+							if isChecked("Soothing Mist Instant Cast") and getBuffRemain(br.friend[1].unit, spell.soothingMist, "EXACT") == 0 and not isMoving("player") then
+								if cast.soothingMist(br.friend[1].unit) then return true end
 							end
-							if isChecked("Soothing Mist Instant Cast") and getBuffRemain(br.friend[1].unit, spell.soothingMist, "player") > 1 and getBuffRemain(br.friend[1].unit, spell.envelopingMist, "player") < 2 then
+							if isChecked("Soothing Mist Instant Cast") and getBuffRemain(br.friend[1].unit, spell.soothingMist, "EXACT") > 1 and getBuffRemain(br.friend[1].unit, spell.envelopingMist, "player") < 2 then
 								if cast.envelopingMist(br.friend[1].unit) then return end
 							end
 							if not isChecked("Soothing Mist Instant Cast") and getBuffRemain(br.friend[1].unit, spell.envelopingMist, "player") < 2 then
@@ -729,7 +749,7 @@ local function runRotation()
 				-- Vivify 
 				for i = 1, #br.friend do
 					if br.friend[1].hp <= (getValue("Vivify") *1.1) and not talent.lifecycles then
-						if br.friend[1].hp <= getValue("Vivify") then
+						if br.friend[1].hp <= getValue("Vivify") and (isCastingSpell(spell.soothingMist) or not (cast.active.vivify() or cast.last.vivify(br.friend[1].unit))) then
 								if cast.vivify(br.friend[1].unit) then return end
 						end
 					end
@@ -749,21 +769,24 @@ local function runRotation()
 		local function dps_actionlist() -- Very secret function for Mistweavers only
 			if br.player.mode.dps == 1 then
 				if br.friend[1].hp >= getValue("DPS Mode") then
-					if talent.risingThunder then
-						if cast.risingSunKick() then return end
-					end
-					if talent.spiritOfTheCrane or buff.teachingsOfTheMonastery.stack() == 3 then
-						if cast.blackoutKick() then return end
-					end
-					if isChecked("Spinning Crane Kick") and #enemies.yards8 >= 3 and not isCastingSpell(spell.spinningCraneKick) then
-						if cast.spinningCraneKick("player") then return end
-					end
-					if isChecked("Rising Sun Kick") then 
-						if cast.risingSunKick() then return end
-					end
-					if cast.tigerPalm() then return end
-					if #enemies.yards10 == 0 and not isCastingSpell(spell.cracklingJadeLightning) and isChecked("Crackling Jade Lightning") and not isMoving("player") then
-						if cast.cracklingJadeLightning() then return end
+					if #enemies.yards5 >= 1 then
+						if talent.risingThunder then
+							if cast.risingSunKick() then return end
+						end
+						if talent.spiritOfTheCrane or buff.teachingsOfTheMonastery.stack() == 3 then
+							if cast.blackoutKick() then return end
+						end
+						if isChecked("Spinning Crane Kick") and #enemies.yards8 >= 3 and not isCastingSpell(spell.spinningCraneKick) then
+							if cast.spinningCraneKick("player") then return end
+						end
+						if isChecked("Rising Sun Kick") then 
+							if cast.risingSunKick() then return end
+						end
+						if cast.tigerPalm() then return true end
+					else
+						if not isCastingSpell(spell.cracklingJadeLightning) and isChecked("Crackling Jade Lightning") and not isMoving("player") then
+							if cast.cracklingJadeLightning() then return true end
+						end
 					end
 				end
 			end
@@ -801,10 +824,11 @@ local function runRotation()
 				end
 				--Healthstone
 				if isChecked("Healthstone") and php <= getValue("Healthstone") and inCombat and (hasHealthPot() or hasItem(5512)) then
-					if canUse(5512) then
-						useItem(5512) return 
-					elseif canUse(healPot) then
-						useItem(healPot) return end
+					if canUseItem(5512) then
+						useItem(5512) return true
+					elseif canUseItem(healPot) then
+						useItem(healPot) return true 
+					end
 				end
 			end--End defensive check
 		end-- end defensives
@@ -828,11 +852,11 @@ local function runRotation()
 						if buff.manaTea.exists() then
 							if manaTea() then return end
 						end
-						if talent.lifecycles then
-							if lifecycles() then return end
-						end
 						if not buff.manaTea.exists() then
 							if AoE_Healing() then return end
+							if talent.lifecycles then
+								if lifecycles() then return end
+							end
 							if Single_Target() then return end
 						end
 					end

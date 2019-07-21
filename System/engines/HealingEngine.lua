@@ -85,19 +85,18 @@ if not metaTable1 then
 	end
 	-- Verifying the target is a Valid Healing target
 	function HealCheck(tar)
-		if UnitIsVisible(tar)
+		if ((UnitIsVisible(tar)
 			and not UnitIsCharmed(tar)
 			and GetUnitReaction("player",tar) > 4
-			and not UnitIsDeadOrGhost(tar)
 			and UnitIsConnected(tar)
-			and ((UnitIsOtherPlayersPet(tar) and getOptionCheck("Heal Pets")) or not UnitIsOtherPlayersPet(tar))
+			and not UnitIsDeadOrGhost(tar))
+			or novaEngineTables.SpecialHealUnitList[tonumber(select(2,getGUID(tar)))] ~= nil or (getOptionCheck("Heal Pets") and UnitIsOtherPlayersPet(tar) or UnitGUID(tar) == UnitGUID("pet")))
 			and CheckBadDebuff(tar)
 			and CheckCreatureType(tar)
 			and getLineOfSight("player", tar)
 			and UnitInPhase(tar)
 		then return true
 		else return false end
-
 	end
 	function br.memberSetup:new(unit)
 		-- Seeing if we have already cached this unit before
@@ -144,9 +143,37 @@ if not metaTable1 then
 		-- end
 		-- We are checking the HP of the person through their own function.
 		function o:CalcHP()
+			local toxicBrand = getOptionValue("Toxic Brand")
+			local necroRot = getOptionValue("Necrotic Rot")
+			if toxicBrand == 0 or toxicBrand == nil then toxicBrand = 10 end
+			if necroRot == 0  or necroRot == nil then necroRot = 40 end
 			-- Darkness phase of Kil'Jaeden. basically blacklists all friends if I have this debuff, since I can't heal.
 			-- but once I have Illidan's Sightless Gaze (241721), I can hea
 			if select(9,GetInstanceInfo()) == 1676 and UnitDebuffID("player",236555) and not UnitDebuffID("player",241721) then
+				return 250,250,250
+			end
+			if isChecked("Toxic Brand") and br.player.eID and br.player.eID == 2298 then
+				if getDebuffStacks(o.unit,294715) > 0 and getDebuffStacks(o.unit, 294715) >= toxicBrand then
+					return 250,250,250
+				end
+			end
+			if isChecked("Necrotic Rot") and getDebuffStacks(o.unit,209858) > 0 and getDebuffStacks(o.unit,209858) >= necroRot then
+				return 250,250,250
+			end
+			local chiJiSong = {
+				286367,
+				286369,
+				284453,
+				284451,
+			}
+			if (br.player.eID == 2266 or br.player.eID == 2285) or (GetUnitExists("target") and (GetObjectID("target") == 144691 or GetObjectID("target") == 144690)) then -- Jadefire Masters
+				for i = 1, #chiJiSong do
+					if UnitDebuffID(o.unit,chiJiSong[i]) and not UnitDebuffID("player",chiJiSong[i]) then
+						return 250,250,250
+					end
+				end
+			end
+			if UnitBuffID(o.unit,295271) then
 				return 250,250,250
 			end
 			-- Place out of range players at the end of the list -- replaced range to 40 as we should be using lib range
@@ -181,7 +208,7 @@ if not metaTable1 then
 				nAbsorbs = 0
 			end
 			-- calc base + absorbs + incomings
-			local PercentWithIncoming = 100 * ( UnitHealth(o.unit) + incomingheals + nAbsorbs ) / UnitHealthMax(o.unit)
+			local PercentWithIncoming = (100 * ( UnitHealth(o.unit) + incomingheals + nAbsorbs ) / UnitHealthMax(o.unit)) - (5 *getDebuffStacks(o.unit, 240559))
 			if getOptionCheck("Prioritize Tank") then
 				-- Using the group role assigned to the Unit
 				if o.role == "TANK" then

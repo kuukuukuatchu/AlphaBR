@@ -209,9 +209,11 @@ local function createOptions()
 		br.ui:createCheckbox(section, "Racial")
 		-- Trinkets
 		br.ui:createSpinner(section, "Trinket 1", 70, 0, 100, 5, "Health Percent to Cast At")
-		br.ui:createSpinnerWithout(section, "Min Trinket 1 Targets", 4, 1, 40, 1, "Minimum Trinket 1 Targets(This includes you)")
+		br.ui:createSpinnerWithout(section, "Min Trinket 1 Targets", 3, 1, 40, 1, "", "Minimum Trinket 1 Targets(This includes you)", true)
+		br.ui:createDropdownWithout(section, "Trinket 1 Mode", { "|cffFFFFFFNormal", "|cffFFFFFFTarget", "|cffFFFFFFGround" }, 1, "", "")
 		br.ui:createSpinner(section, "Trinket 2", 70, 0, 100, 5, "Health Percent to Cast At")
-		br.ui:createSpinnerWithout(section, "Min Trinket 2 Targets", 4, 1, 40, 1, "Minimum Trinket 2 Targets(This includes you)")
+		br.ui:createSpinnerWithout(section, "Min Trinket 2 Targets", 3, 1, 40, 1, "", "Minimum Trinket 2 Targets(This includes you)", true)
+		br.ui:createDropdownWithout(section, "Trinket 2 Mode", { "|cffFFFFFFNormal", "|cffFFFFFFTarget", "|cffFFFFFFGround" }, 1, "", "")
 		br.ui:createSpinner(section, "Revitalizing Voodoo Totem", 75, 0 , 100, 5, "|cffFFFFFFHealth Percent to Cast At. Default: 75")
         br.ui:createSpinner(section, "Inoculating Extract", 75, 0 , 100, 5, "|cffFFFFFFHealth Percent to Cast At. Default: 75")
         br.ui:createSpinner(section,"Ward of Envelopment", 75, 0 , 100, 5, "|cffFFFFFFHealth Percent to Cast At. Default: 75")
@@ -225,6 +227,13 @@ local function createOptions()
 		br.ui:createSpinner(section, "Tranquility", 50, 0, 100, 5, "Health Percent to Cast At")
 		br.ui:createSpinnerWithout(section, "Tranquility Targets", 3, 0, 40, 1, "Minimum Tranquility Targets")
 		br.ui:checkSectionState(section)
+		 -- Essence Options
+		 section = br.ui:createSection(br.ui.window.profile, "Essence Options")
+		 --Concentrated Flame
+			 br.ui:createSpinner(section, "Concentrated Flame", 75, 0, 100, 5, colorWhite.."Will cast Concentrated Flame if party member is below value. Default: 75")
+		 --Memory of Lucid Dreams
+			 br.ui:createCheckbox(section, "Lucid Dreams")
+		 br.ui:checkSectionState(section)
 		-- Defensive Options
 		section = br.ui:createSection(br.ui.window.profile, "Defensive")
 		-- Rebirth
@@ -357,20 +366,6 @@ end
 local function runRotation()
 	-- if br.timer:useTimer("debugRestoration", 0.1) then
 	--print("Running: "..rotationName)
-
-	---------------
-	--- Toggles --- -- List toggles here in order to update when pressed
-	---------------
-	UpdateToggle("Rotation", 0.25)
-	UpdateToggle("Cooldown", 0.25)
-	UpdateToggle("Defensive", 0.25)
-	UpdateToggle("Decurse", 0.25)
-	UpdateToggle("Interrupt", 0.25)
-	UpdateToggle("DPS", 0.25)
-	UpdateToggle("Rejuvenation", 0.25)
-	br.player.mode.decurse = br.data.settings[br.selectedSpec].toggles["Decurse"]
-	br.player.mode.dps = br.data.settings[br.selectedSpec].toggles["DPS"]
-	br.player.mode.rejuvenation = br.data.settings[br.selectedSpec].toggles["Rejuvenation"]
 	--------------
 	--- Locals ---
 	--------------
@@ -389,6 +384,7 @@ local function runRotation()
 	local drinking = getBuffRemain("player", 192002) ~= 0 or getBuffRemain("player", 167152) ~= 0 or getBuffRemain("player", 192001) ~= 0
 	local resable = UnitIsPlayer("target") and UnitIsDeadOrGhost("target") and GetUnitIsFriend("target", "player") and UnitInRange("target")
 	local deadtar = UnitIsDeadOrGhost("target") or isDummy()
+	local essence = br.player.essence
 	local hastar = hastar or GetObjectExists("target")
 	local enemies = br.player.enemies
 	local friends = friends or {}
@@ -552,7 +548,7 @@ local function runRotation()
 
 	local function BossEncounterCase()
 		-- Temple of Sethraliss
-		if lowest.hp > getOptionValue("Temple of Seth Heal") then
+		if lowest.hp > getOptionValue("Temple of Seth Heal") and br.player.eID and br.player.eID == 2127 then
 			for i = 1, GetObjectCount() do
 				local thisUnit = GetObjectWithIndex(i)
 				if GetObjectID(thisUnit) == 133392 then
@@ -629,57 +625,34 @@ local function runRotation()
 	local function actionList_Extras()
 		if isChecked("Auto Shapeshifts") and (getOptionValue("Auto Shapeshifts") == 1 or getOptionValue("Auto Shapeshifts") == 2) then --and br.timer:useTimer("debugShapeshift", 0.25) then
 			-- Flight Form
-			if not inCombat and canFly() and not swimming and br.fallDist > 90 --[[falling > getOptionValue("Fall Timer")]] and level >= 58 and not buff.prowl.exists() then
-				if GetShapeshiftForm() ~= 0 and not cast.last.travelForm() then
-					-- CancelShapeshiftForm()
-					RunMacroText("/CancelForm")
-					CastSpellByID(783, "player")
-					br.addonDebug("Casting Travelform")
-					return true
-				else
-					CastSpellByID(783, "player")
-					br.addonDebug("Casting Travelform")
-					return true
-				end
+			if not inCombat and canFly() and br.fallDist > 90 --[[falling > getOptionValue("Fall Timer")]] and level >= 58 and not buff.prowl.exists() then
+				CastSpellByID(783, "player")
+				br.addonDebug("Casting Travelform")
+				return true
 			end
 			-- Aquatic Form
 			if (not inCombat) --[[or getDistance("target") >= 10--]] and swimming and not travel and not buff.prowl.exists() and moving then
-				if GetShapeshiftForm() ~= 0 and not cast.last.travelForm() then
-					-- CancelShapeshiftForm()
-					RunMacroText("/CancelForm")
-					CastSpellByID(783, "player")
-					br.addonDebug("Casting Travelform")
-					return true
-				else
-					CastSpellByID(783, "player")
-					br.addonDebug("Casting Travelform")
-					return true
-				end
+				CastSpellByID(783, "player")
+				br.addonDebug("Casting Travelform")
+				return true
 			end
 			-- Travel Form
 			if not inCombat and not swimming and level >= 58 and not buff.prowl.exists() and not travel and not IsIndoors() and IsMovingTime(1) and br.timer:useTimer("Travel shift",3) then
-				if GetShapeshiftForm() ~= 0 and not cast.last.travelForm() then
-					RunMacroText("/CancelForm")
-					CastSpellByID(783, "player")
-					br.addonDebug("Casting Travelform")
-					return true
-				else
-					CastSpellByID(783, "player")
-					br.addonDebug("Casting Travelform")
-					return true
-				end
+				CastSpellByID(783, "player")
+				br.addonDebug("Casting Travelform")
+				return true
 			end
 			-- Cat Form
-			if not cat and not IsMounted() and not flying and IsIndoors() then
+			if not cat and not IsMounted() and not flying then
 				-- Cat Form when not swimming or flying or stag and not in combat
-				if moving and not swimming and not flying and not travel then
+				if moving and not swimming and not travel and IsIndoors() then
 					if cast.catForm("player") then
 						br.addonDebug("Casting Catform")
 						return true
 					end
 				end
 				-- Cat Form - Less Fall Damage
-				if (not canFly() or inCombat or level < 58) and (not swimming or (not moving and swimming and #enemies.yards5 > 0)) and br.fallDist > 90 then --falling > getOptionValue("Fall Timer") then
+				if (not canFly() or inCombat or level < 58) and br.fallDist > 90 then --falling > getOptionValue("Fall Timer") then
 					if cast.catForm("player") then
 						br.addonDebug("Casting Catform")
 						return true
@@ -719,7 +692,11 @@ local function runRotation()
 		-- Pre-Pull Timer
 		if isChecked("Pre-Pull Timer") then
 			if PullTimerRemain() <= getOptionValue("Pre-Pull Timer") then
-				if canUse(142117) and not buff.prolongedPower.exists() then
+				if hasItem(166801) and canUseItem(166801) then
+					br.addonDebug("Using Sapphire of Brilliance")
+					useItem(166801)
+				end
+				if canUseItem(142117) and not buff.prolongedPower.exists() then
 					br.addonDebug("Using Prolonged Power Pot")
 					useItem(142117)
 				end
@@ -739,13 +716,16 @@ local function runRotation()
 				end
 			end
 			-- Healthstone
-			if isChecked("Healthstone") and php <= getOptionValue("Healthstone") and (hasHealthPot() or hasItem(5512)) then
-				if canUse(5512) then
+			if isChecked("Healthstone") and php <= getOptionValue("Healthstone") and (hasHealthPot() or hasItem(5512) or hasItem(166799)) then
+				if canUseItem(5512) then
 					br.addonDebug("Using Healthstone")
 					useItem(5512)
-				elseif canUse(healPot) then
+				elseif canUseItem(healPot) then
 					br.addonDebug("Using Health Pot")
 					useItem(healPot)
+				elseif hasItem(166799) and canUseItem(166799) then
+					br.addonDebug("Using Emerald of Vigor")
+					useItem(166799)
 				end
 			end
 			-- Renewal
@@ -858,6 +838,10 @@ local function runRotation()
 
 	local function actionList_Cooldowns()
 		if useCDs() then
+			if hasItem(166801) and canUseItem(166801) then
+				br.addonDebug("Using Sapphire of Brilliance")
+				useItem(166801)
+			end
 			-- Racial: Orc Blood Fury | Troll Berserking | Blood Elf Arcane Torrent
 			if isChecked("Racial") and (race == "Orc" or race == "Troll" or race == "BloodElf") then
 				if castSpell("player", racial, false, false, false) then
@@ -884,56 +868,135 @@ local function runRotation()
 					-- get the tank's target
 					local tankTarget = UnitTarget(tanks[i].unit)
 					if tankTarget ~= nil then
-					-- get players in melee range of tank's target
-					local meleeFriends = getAllies(tankTarget, 5)
-					-- get the best ground circle to encompass the most of them
-					local loc = nil
-					if #meleeFriends >= 8 then
-						loc = getBestGroundCircleLocation(meleeFriends, 4, 6, 10)
-					else
-						local meleeHurt = {}
-						for j = 1, #meleeFriends do
-						if meleeFriends[j].hp < 75 then
-							tinsert(meleeHurt, meleeFriends[j])
+						-- get players in melee range of tank's target
+						local meleeFriends = getAllies(tankTarget, 5)
+						-- get the best ground circle to encompass the most of them
+						local loc = nil
+						if #meleeFriends >= 8 then
+							loc = getBestGroundCircleLocation(meleeFriends, 4, 6, 10)
+						else
+							local meleeHurt = {}
+							for j = 1, #meleeFriends do
+								if meleeFriends[j].hp < 75 then
+									tinsert(meleeHurt, meleeFriends[j])
+								end
+							end
+							if #meleeHurt >= 2 then
+								loc = getBestGroundCircleLocation(meleeHurt, 2, 6, 10)
+							end
 						end
+						if loc ~= nil then
+							useItem(165569)
+							local px,py,pz = ObjectPosition("player")
+							   loc.z = select(3,TraceLine(loc.x, loc.y, loc.z+5, loc.x, loc.y, loc.z-5, 0x110)) -- Raytrace correct z, Terrain and WMO hit
+							   if loc.z ~= nil and TraceLine(px, py, pz+2, loc.x, loc.y, loc.z+1, 0x100010) == nil and TraceLine(loc.x, loc.y, loc.z+4, loc.x, loc.y, loc.z, 0x1) == nil then -- Check z and LoS, ignore terrain and m2 collisions 
+								ClickPosition(loc.x, loc.y, loc.z)
+								br.addonDebug("Using Ward of Envelopment")
+								return
+							end
 						end
-						if #meleeHurt >= 2 then
-						loc = getBestGroundCircleLocation(meleeHurt, 2, 6, 10)
-						end
-					end
-					if loc ~= nil then
-						useItem(165569)
-						ClickPosition(loc.x, loc.y, loc.z)
-						return true
-					end
 					end
 				end
 			end
 			--Pillar of the Drowned Cabal
-			if hasEquiped(167863) and canUse(16) then
-				for i = 1, #br.friend do
-					if not UnitBuffID(br.friend[i].unit,295411) and br.friend[i].hp < 75 then
-						UseItemByName(167863,br.friend[i].unit)
-						br.addonDebug("Using Pillar of Drowned Cabal")
-					end
+			if hasEquiped(167863) and canUseItem(16) then
+				if not UnitBuffID(lowest.unit,295411) and lowest.hp < 75 then
+					UseItemByName(167863,lowest.unit)
+					br.addonDebug("Using Pillar of Drowned Cabal")
 				end
 			end
 			if isChecked("Trinket 1") and canTrinket(13) and not hasEquiped(165569,13) and not hasEquiped(160649,13) and not hasEquiped(158320,13) then
-				if hasEquiped(167865,13) and (lowest.hp < getValue("Trinket 1") or burst == true) then
-					UseItemByName(167865,lowest.unit)
-					br.addonDebug("Using Void Stone")
-				elseif getLowAllies(getValue("Trinket 1")) >= getValue("Min Trinket 1 Targets") or burst == true then
-					useItem(13)
-					br.addonDebug("Using Trinket 1")
+				if getOptionValue("Trinket 1 Mode") == 1 then
+					if getLowAllies(getValue("Trinket 1")) >= getValue("Min Trinket 1 Targets") or burst == true then
+						useItem(13)
+						br.addonDebug("Using Trinket 1")
+						return true
+					end
+					elseif getOptionValue("Trinket 1 Mode") == 2 then
+						if (lowest.hp <= getValue("Trinket 1") or burst == true) and lowest.hp ~= 250 then
+						UseItemByName(GetInventoryItemID("player", 13), lowest.unit)
+						br.addonDebug("Using Trinket 1 (Target)")
+						return true
+						end
+					elseif getOptionValue("Trinket 1 Mode") == 3 and #tanks > 0 then
+						for i = 1, #tanks do
+							-- get the tank's target
+							local tankTarget = UnitTarget(tanks[i].unit)
+							if tankTarget ~= nil then
+							-- get players in melee range of tank's target
+							local meleeFriends = getAllies(tankTarget, 5)
+							-- get the best ground circle to encompass the most of them
+							local loc = nil
+							if #meleeFriends < 12 then
+								loc = getBestGroundCircleLocation(meleeFriends, 4, 6, 10)
+							else
+								local meleeHurt = {}
+								for j = 1, #meleeFriends do
+								if meleeFriends[j].hp < getValue("Trinket 1") then
+									tinsert(meleeHurt, meleeFriends[j])
+								end
+								end
+								if #meleeHurt >= getValue("Min Trinket 1 Targets") or burst == true then
+								loc = getBestGroundCircleLocation(meleeHurt, 2, 6, 10)
+								end
+							end
+							if loc ~= nil then
+								useItem(13)
+								br.addonDebug("Using Trinket 1 (Ground)")
+								local px,py,pz = ObjectPosition("player")
+								loc.z = select(3,TraceLine(loc.x, loc.y, loc.z+5, loc.x, loc.y, loc.z-5, 0x110)) -- Raytrace correct z, Terrain and WMO hit
+								if loc.z ~= nil and TraceLine(px, py, pz+2, loc.x, loc.y, loc.z+1, 0x100010) == nil and TraceLine(loc.x, loc.y, loc.z+4, loc.x, loc.y, loc.z, 0x1) == nil then -- Check z and LoS, ignore terrain and m2 collisions
+									ClickPosition(loc.x, loc.y, loc.z)
+									return true
+								end
+							end
+						end
+					end
 				end
 			end
 			if isChecked("Trinket 2") and canTrinket(14) and not hasEquiped(165569,14) and not hasEquiped(160649,14) and not hasEquiped(158320,14) then
-				if hasEquiped(167865,14) and (lowest.hp < getValue("Trinket 2") or burst == true) then
-					UseItemByName(167865,lowest.unit)
-					br.addonDebug("Using Void Stone")
-				elseif getLowAllies(getValue("Trinket 2")) >= getValue("Min Trinket 2 Targets") or burst == true then
-					useItem(14)
-					br.addonDebug("Using Trinket 2")
+				if getOptionValue("Trinket 2 Mode") == 1 then
+					if getLowAllies(getValue("Trinket 2")) >= getValue("Min Trinket 2 Targets") or burst == true then
+						useItem(14)
+						br.addonDebug("Using Trinket 2")
+						return true
+					end
+					elseif getOptionValue("Trinket 2 Mode") == 2 then
+						if (lowest.hp <= getValue("Trinket 2") or burst == true) and lowest.hp ~= 250 then
+						UseItemByName(GetInventoryItemID("player", 14), lowest.unit)
+						br.addonDebug("Using Trinket 2 (Target)")
+						return true
+						end
+					elseif getOptionValue("Trinket 2 Mode") == 3 and #tanks > 0 then
+						for i = 1, #tanks do
+							-- get the tank's target
+							local tankTarget = UnitTarget(tanks[i].unit)
+							if tankTarget ~= nil then
+							-- get players in melee range of tank's target
+							local meleeFriends = getAllies(tankTarget, 5)
+							-- get the best ground circle to encompass the most of them
+							local loc = nil
+							if #meleeFriends < 12  then
+								loc = getBestGroundCircleLocation(meleeFriends, 4, 6, 10)
+							else
+								local meleeHurt = {}
+								for j = 1, #meleeFriends do
+								if meleeFriends[j].hp < getValue("Trinket 2") then
+									tinsert(meleeHurt, meleeFriends[j])
+								end
+								end
+								if #meleeHurt >= getValue("Min Trinket 2 Targets") or burst == true then
+								loc = getBestGroundCircleLocation(meleeHurt, 2, 6, 10)
+								end
+							end
+							if loc ~= nil then
+								useItem(14)
+								br.addonDebug("Using Trinket 2 (Ground)")
+								ClickPosition(loc.x, loc.y, loc.z)
+								return true
+							end
+						end
+					end
 				end
 			end
 			-- Mana Potion
@@ -970,12 +1033,16 @@ local function runRotation()
 					end
 				end
 			end
+			--  Lucid Dream
+            if isChecked("Lucid Dreams") and essence.memoryOfLucidDreams.active and mana <= 85 and getSpellCD(298357) <= gcdMax then
+                if cast.memoryOfLucidDreams("player") then br.addonDebug("Casting Memory of Lucid Dreams") return end
+            end
 		end -- End useCooldowns check
 	end -- End Action List - Cooldowns
 
 	local function actionList_Decurse()
 		-- Soothe
-		if isChecked("Auto Soothe") and cast.able.soothe() then
+		if isChecked("Auto Soothe") then
 			for i = 1, #enemies.yards40 do
 				local thisUnit = enemies.yards40[i]
 				if canDispel(thisUnit, spell.soothe) then
@@ -1072,12 +1139,12 @@ local function runRotation()
 			end
 		end
 		-- Cultivation
-		if isChecked("Cultivation") and inRaid and talent.cultivation then
+		if isChecked("Cultivation") and inRaid and talent.cultivation and talent.germination then
 			for i = 1, #br.friend do
 				if getLowAllies(60) < 5 and br.friend[i].hp < 60 and not buff.rejuvenationGermination.exists(br.friend[i].unit) then
 					--clearform()
 					if cast.rejuvenation(br.friend[i].unit) then
-						br.addonDebug("Casting Rejuvenation")
+						br.addonDebug("Casting Rejuvenation (Cultivation)")
 						return true
 					end
 				end
@@ -1403,7 +1470,7 @@ local function runRotation()
 							br.addonDebug("Casting Lifebloom")
 							return true
 						end
-					elseif bloomCount == 1 and buff.lifebloom.remains(br.friend[i].unit) < 4.5 and buff.lifebloom.remain(tanks[i].unit) > 0 and getDistance(br.friend[i].unit) <= 40 then
+					elseif bloomCount == 1 and buff.lifebloom.remains(br.friend[i].unit) < 4.5 and buff.lifebloom.remain(br.friend[i].unit) > 0 and getDistance(br.friend[i].unit) <= 40 then
 						--clearform()
 						if cast.lifebloom(br.friend[i].unit) then 
 							br.addonDebug("Casting Lifebloom")
@@ -1475,10 +1542,16 @@ local function runRotation()
 				if br.friend[i].hp < 60 and not buff.rejuvenation.exists(br.friend[i].unit) then
 					--clearform()
 					if cast.rejuvenation(br.friend[i].unit) then
-						br.addonDebug("Casting Rejuvenation")
+						br.addonDebug("Casting Rejuvenation (Cultivation)")
 						return true
 					end
 				end
+			end
+		end
+		-- Concentrated Flame
+		if isChecked("Concentrated Flame") and essence.concentratedFlame.active and getSpellCD(295373) <= gcdMax then
+			if lowest.hp <= getValue("Concentrated Flame") then
+				if cast.concentratedFlame(lowest.unit) then br.addonDebug("Casting Concentrated Flame") return end
 			end
 		end
 		-- Rejuvenation
@@ -1487,13 +1560,13 @@ local function runRotation()
 				if talent.germination and tanks[i].hp <= getValue("Germination Tank") and not buff.rejuvenationGermination.exists(tanks[i].unit) and getDistance(tanks[i].unit) <= 40 then
 					--clearform()
 					if cast.rejuvenation(tanks[i].unit) then
-						br.addonDebug("Casting Rejuvenation")
+						br.addonDebug("Casting Rejuvenation (Germinate Tank)")
 						return true
 					end
 				elseif not talent.germination and tanks[i].hp <= getValue("Rejuvenation Tank") and not buff.rejuvenation.exists(tanks[i].unit) and getDistance(tanks[i].unit) <= 40 then
 					--clearform()
 					if cast.rejuvenation(tanks[i].unit) then
-						br.addonDebug("Casting Rejuvenation")
+						br.addonDebug("Casting Rejuvenation (Tank Rejuv)")
 						return true
 					end
 				end
@@ -1502,13 +1575,13 @@ local function runRotation()
 				if talent.germination and br.friend[i].hp <= getValue("Germination") and (rejuvCount < getValue("Max Rejuvenation Targets")) and not buff.rejuvenationGermination.exists(br.friend[i].unit) then
 					--clearform()
 					if cast.rejuvenation(br.friend[i].unit) then
-						br.addonDebug("Casting Rejuvenation")
+						br.addonDebug("Casting Rejuvenation (Germinate Party)")
 						return true
 					end
 				elseif br.friend[i].hp <= getValue("Rejuvenation") and not buff.rejuvenation.exists(br.friend[i].unit) and (rejuvCount < getValue("Max Rejuvenation Targets")) then
 					--clearform()
 					if cast.rejuvenation(br.friend[i].unit) then
-						br.addonDebug("Casting Rejuvenation")
+						br.addonDebug("Casting Rejuvenation (Rejuv Party)")
 						return true
 					end
 				end
@@ -1650,7 +1723,7 @@ local function runRotation()
 						if getDebuffRemain(br.friend[i].unit, v.spellID) > v.secs and getDebuffStacks(br.friend[i].unit, v.spellID) >= v.stacks and not buff.rejuvenation.exists(br.friend[i].unit) then
 							--clearform()
 							if cast.rejuvenation(br.friend[i].unit) then
-								br.addonDebug("Casting Rejuvenation")
+								br.addonDebug("Casting Rejuvenation (DOT Rejuv)")
 								return true
 							end
 						end
@@ -1681,47 +1754,33 @@ local function runRotation()
 				{233264, 5, "Embrace of the Eclipse"},
 				{236542, 5, "Sundering Doom"},
 				{236544, 5, "Doomed Sundering"},
-				{235059, 5, "Rupturing Singularity"}
+				{235059, 5, "Rupturing Singularity"},
+				{196587, 5, "Soul Burst"}, --Amalgam of Souls
+				{211464, 5, "Fel Detonation"}, --Advisor Melandrus
+				{237276, 5, "Pulverizing Cudgel"}, --Thrashbite the Scornful
+				{193611, 5, "Focused Lightning"}, --Lady Hatecoil
+				{192305, 5, "Eye of the Storm"}, --Hyrja
+				{239132, 5, "Rupture Realities"}, --Fallen Avatar
+				{281936, 5, "Tantrum"}, -- Grong
+				{282399, 5, "Death Knell"}, --Grong(Revenant)
+				{284941, 5, "Wail of Greed"}, -- Opulence
+				{282107, 5, "Paku's Wrath"}, -- Conclave
+				{282742, 5, "Storm of Annihilation"}, -- Crucible of Storms
 			}
-			for i = 1, #precast_spell_list do
-				local boss_spell_id = precast_spell_list[i][1]
-				local precast_time = precast_spell_list[i][2]
-				local spell_name = precast_spell_list[i][3]
-				local time_remain = br.DBM:getPulltimer_fix(nil, boss_spell_id)
-				if time_remain < precast_time then
-					for j = 1, #br.friend do
-						if UnitInRange(br.friend[j].unit) then
+			for j = 1, #br.friend do
+				if UnitInRange(br.friend[j].unit) then
+					for i = 1, #precast_spell_list do
+						local boss_spell_id = precast_spell_list[i][1]
+						local precast_time = precast_spell_list[i][2]
+						local spell_name = precast_spell_list[i][3]
+						local time_remain = br.DBM:getPulltimer(nil, boss_spell_id)
+						if time_remain < precast_time then
 							if not buff.rejuvenation.exists(br.friend[j].unit) then
 								--clearform()
 								if cast.rejuvenation(br.friend[j].unit) then
-									br.addonDebug("Casting Rejuvenation")
+									br.addonDebug("Casting Rejuvenation (DBM Rejuv)")
 									return true
 								end
-							end
-						end
-					end
-				end
-			end
-			local Casting = {
-				--spell_id	, spell_name
-				{196587, "Soul Burst"}, --Amalgam of Souls
-				{211464, "Fel Detonation"}, --Advisor Melandrus
-				{237276, "Pulverizing Cudgel"}, --Thrashbite the Scornful
-				{193611, "Focused Lightning"}, --Lady Hatecoil
-				{192305, "Eye of the Storm"}, --Hyrja
-				{239132, "Rupture Realities"} --Fallen Avatar
-			}
-			for i = 1, #Casting do
-				local spell_id = Casting[i][1]
-				local spell_name = Casting[i][2]
-				for j = 1, #br.friend do
-					if UnitInRange(br.friend[j].unit) then
-						if UnitCastingInfo("boss1") == GetSpellInfo(spell_id) and not buff.rejuvenation.exists(br.friend[j].unit) then
-							--clearform()
-							if cast.rejuvenation(br.friend[j].unit) then
-								br.addonDebug("Casting Rejuvenation")
-								Print("DBM cast Rejuvenation--" .. spell_name)
-								return true
 							end
 						end
 					end
@@ -1734,7 +1793,7 @@ local function runRotation()
 				if not buff.rejuvenation.exists(br.friend[i].unit) then
 					--clearform()
 					if cast.rejuvenation(br.friend[i].unit) then
-						br.addonDebug("Casting Rejuvenation")
+						br.addonDebug("Casting Rejuvenation(Innervate Rejuv)")
 						return true
 					end
 				end
@@ -1746,7 +1805,7 @@ local function runRotation()
 				if not travel and mana >= 99 and not buff.rejuvenation.exists(br.friend[i].unit) then
 					--clearform()
 					if cast.rejuvenation(br.friend[i].unit) then
-						br.addonDebug("Casting Rejuvenation")
+						br.addonDebug("Casting Rejuvenation (100% Rejuv)")
 						return true
 					end
 				end
@@ -1760,7 +1819,7 @@ local function runRotation()
 				if not buff.rejuvenation.exists(br.friend[i].unit) then
 					--clearform()
 					if cast.rejuvenation(br.friend[i].unit) then
-						br.addonDebug("Casting Rejuvenation")
+						br.addonDebug("Casting Rejuvenation (All Player Rejuv)")
 						return true
 					end
 				end
@@ -1770,7 +1829,7 @@ local function runRotation()
 				if talent.germination and not buff.rejuvenationGermination.exists(br.friend[i].unit) then
 					--clearform()
 					if cast.rejuvenation(br.friend[i].unit) then
-						br.addonDebug("Casting Rejuvenation")
+						br.addonDebug("Casting Rejuvenation (All Player Double Rejuv)")
 						return true
 					end
 				end
@@ -1786,7 +1845,7 @@ local function runRotation()
 			if mana >= getOptionValue("DPS Save mana") and debuff.sunfire.count() < getOptionValue("Max Sunfire Targets") then
 				for i = 1, #enemies.yards40 do
 					local thisUnit = enemies.yards40[i]
-					if not debuff.sunfire.exists(thisUnit) then
+					if not debuff.sunfire.exists(thisUnit) and not isExplosive(thisUnit) then
 						if cast.sunfire(thisUnit) then
 							br.addonDebug("Casting Sunfire")
 							return true
@@ -1799,7 +1858,7 @@ local function runRotation()
 				if mana >= getOptionValue("DPS Save mana") and debuff.moonfire.count() < getOptionValue("Max Moonfire Targets") then
 					for i = 1, #enemies.yards40 do
 						local thisUnit = enemies.yards40[i]
-						if not debuff.moonfire.exists(thisUnit) and ttd(thisUnit) > 10 then
+						if not debuff.moonfire.exists(thisUnit) and ttd(thisUnit) > 10 and not isExplosive(thisUnit) then
 							if cast.moonfire(thisUnit) then
 								br.addonDebug("Casting Moonfire")
 								return true
@@ -1823,7 +1882,7 @@ local function runRotation()
 				if mana >= getOptionValue("DPS Save mana") and debuff.moonfire.count() < getOptionValue("Max Moonfire Targets") then
 					for i = 1, #enemies.yards40 do
 						local thisUnit = enemies.yards40[i]
-						if not debuff.moonfire.exists(thisUnit) and ttd(thisUnit) > 10 then
+						if not debuff.moonfire.exists(thisUnit) and ttd(thisUnit) > 10 and not isExplosive(thisUnit) then
 							if cast.moonfire(thisUnit) then
 								br.addonDebug("Casting Moonfire")
 								return true
@@ -1857,7 +1916,7 @@ local function runRotation()
 				end
 			end
 			-- Solar Wrath
-			if not moving and GetUnitExists("target") and mana >= getOptionValue("DPS Save mana") then
+			if not moving and GetUnitExists("target") then
 				if (isChecked("Auto Shapeshifts") and (getOptionValue("Auto Shapeshifts") == 1 or getOptionValue("Auto Shapeshifts") == 3)) or isChecked("DPS Key") then
 					if getDistance("target", "player") > 5 or not bear and getFacing("player","target") then
 						if cast.solarWrath("target") then
@@ -1865,7 +1924,7 @@ local function runRotation()
 							return true
 						end
 					end
-				elseif mana >= getOptionValue("DPS Save mana")and (not isChecked("Auto Shapeshifts") or (isChecked("Auto Shapeshifts") and getOptionValue("Auto Shapeshifts") == 2)) and getFacing("player","target")then
+				elseif (not isChecked("Auto Shapeshifts") or (isChecked("Auto Shapeshifts") and getOptionValue("Auto Shapeshifts") == 2)) and getFacing("player","target")then
 					if cast.solarWrath("target") then
 						br.addonDebug("Casting Solar Wrath")
 						return true
@@ -1908,7 +1967,7 @@ local function runRotation()
 					end
 					if buff.rejuvenation.remains(tanks[i].unit) < 4.5 then
 						if cast.rejuvenation(tanks[i].unit) then
-							br.addonDebug("Casting Rejuvenation")
+							br.addonDebug("Casting Rejuvenation (DPS Mode Tank Rejuv)")
 							return true
 						end
 					end
@@ -1922,7 +1981,7 @@ local function runRotation()
 				if mana >= getOptionValue("DPS Save mana") and debuff.moonfire.count() < getOptionValue("Max Moonfire Targets") then
 					for i = 1, #enemies.yards40 do
 						local thisUnit = enemies.yards40[i]
-						if not debuff.moonfire.exists(thisUnit) and ttd(thisUnit) > 10 then
+						if not debuff.moonfire.exists(thisUnit) and ttd(thisUnit) > 10 and not isExplosive(thisUnit) then
 							if cast.moonfire(thisUnit) then
 								br.addonDebug("Casting Moonfire")
 								return true
@@ -1934,7 +1993,7 @@ local function runRotation()
 				if mana >= getOptionValue("DPS Save mana") and debuff.sunfire.count() < getOptionValue("Max Sunfire Targets") then
 					for i = 1, #enemies.yards40 do
 						local thisUnit = enemies.yards40[i]
-						if not debuff.sunfire.exists(thisUnit) then
+						if not debuff.sunfire.exists(thisUnit) and not isExplosive(thisUnit) then
 							if cast.sunfire(thisUnit) then
 								br.addonDebug("Casting Sunfire")
 								return true
@@ -1943,7 +2002,7 @@ local function runRotation()
 					end
 				end
 				-- Solar Wrath
-				if not moving and getFacing("player","target") and mana >= getOptionValue("DPS Save mana") then
+				if not moving and getFacing("player","target") then
 					if cast.solarWrath("target") then
 						br.addonDebug("Casting Solar Wrath")
 						return true
@@ -1951,14 +2010,14 @@ local function runRotation()
 				end
 			elseif nearEnemies == 1 then
 				-- Moonfire
-				if not debuff.moonfire.exists("target") and mana >= getOptionValue("DPS Save mana") and debuff.moonfire.count() < getOptionValue("Max Moonfire Targets") then
+				if not debuff.moonfire.exists("target") and mana >= getOptionValue("DPS Save mana") and debuff.moonfire.count() < getOptionValue("Max Moonfire Targets") and not isExplosive("target") then
 					if cast.moonfire("target") then
 						br.addonDebug("Casting Moonfire")
 						return true
 					end
 				end
 				-- Sunfire
-				if not debuff.sunfire.exists("target") and mana >= getOptionValue("DPS Save mana") and debuff.sunfire.count() < getOptionValue("Max Sunfire Targets") then
+				if not debuff.sunfire.exists("target") and mana >= getOptionValue("DPS Save mana") and debuff.sunfire.count() < getOptionValue("Max Sunfire Targets") and not isExplosive("target") then
 					if cast.sunfire("target") then
 						br.addonDebug("Casting Sunfire")
 						return true
@@ -2006,7 +2065,7 @@ local function runRotation()
 				end
 			elseif nearEnemies > 1 and nearEnemies < 4 then
 				-- Sunfire
-				if #enemies.yards8t > 1 and not debuff.sunfire.exists("target") and mana >= getOptionValue("DPS Save mana") then
+				if #enemies.yards8t > 1 and not debuff.sunfire.exists("target") and mana >= getOptionValue("DPS Save mana") and not isExplosive("target") then
 					if cast.sunfire("target") then
 						br.addonDebug("Casting Sunfire")
 						return true
@@ -2016,7 +2075,7 @@ local function runRotation()
 				if mana >= getOptionValue("DPS Save mana") and debuff.moonfire.count() < getOptionValue("Max Moonfire Targets") then
 					for i = 1, #enemies.yards40 do
 						local thisUnit = enemies.yards8[i]
-						if not debuff.moonfire.exists(thisUnit) and ttd(thisUnit) > 10 then
+						if not debuff.moonfire.exists(thisUnit) and ttd(thisUnit) > 10 and not isExplosive(thisUnit) then
 							if cast.moonfire(thisUnit) then
 								br.addonDebug("Casting Moonfire")
 								return true
@@ -2025,7 +2084,7 @@ local function runRotation()
 					end
 				end
 				-- Sunfire
-				if mana >= getOptionValue("DPS Save mana") and debuff.sunfire.count() < getOptionValue("Max Sunfire Targets") then
+				if mana >= getOptionValue("DPS Save mana") and debuff.sunfire.count() < getOptionValue("Max Sunfire Targets") and not isExplosive(thisUnit) then
 					for i = 1, #enemies.yards40 do
 						local thisUnit = enemies.yards40[i]
 						if not debuff.sunfire.exists(thisUnit) then
@@ -2086,7 +2145,7 @@ local function runRotation()
 				end
 			elseif nearEnemies >= 4 then
 				--Sunfire
-				if mana >= getOptionValue("DPS Save mana") and debuff.sunfire.count() < getOptionValue("Max Sunfire Targets") then
+				if mana >= getOptionValue("DPS Save mana") and debuff.sunfire.count() < getOptionValue("Max Sunfire Targets") and not isExplosive(thisUnit) then
 					for i = 1, #enemies.yards40 do
 						local thisUnit = enemies.yards40[i]
 						if not debuff.sunfire.exists(thisUnit) then
@@ -2155,7 +2214,7 @@ local function runRotation()
 				end
 				-- Lunar Strike 3 charges
 				if moonkin and buff.lunarEmpowerment.stack() == 3 then
-					if cast.lunarStrike() then
+					if cast.lunarStrikeAff() then
 						br.addonDebug("Casting Lunar Strike")
 						return true
 					end
@@ -2168,7 +2227,7 @@ local function runRotation()
 					end
 				end
 				-- Sunfire
-				if mana >= getOptionValue("DPS Save mana") and debuff.sunfire.count() < getOptionValue("Max Sunfire Targets") then
+				if mana >= getOptionValue("DPS Save mana") and debuff.sunfire.count() < getOptionValue("Max Sunfire Targets") and not isExplosive(thisUnit) then
 					for i = 1, #enemies.yards40 do
 						local thisUnit = enemies.yards40[i]
 						if not debuff.sunfire.exists(thisUnit) then
@@ -2183,7 +2242,7 @@ local function runRotation()
 				if mana >= getOptionValue("DPS Save mana") and debuff.moonfire.count() < getOptionValue("Max Moonfire Targets") then
 					for i = 1, #enemies.yards40 do
 						local thisUnit = enemies.yards40[i]
-						if not debuff.moonfire.exists(thisUnit) and ttd(thisUnit) > 10 then
+						if not debuff.moonfire.exists(thisUnit) and ttd(thisUnit) > 10 and not isExplosive(thisUnit) then
 							if cast.moonfire(thisUnit) then
 								br.addonDebug("Casting Moonfire")
 								return true
@@ -2193,7 +2252,7 @@ local function runRotation()
 				end
 				-- Lunar Strike charged
 				if moonkin and buff.lunarEmpowerment.exists() then
-					if cast.lunarStrike() then
+					if cast.lunarStrikeAff() then
 						br.addonDebug("Casting Lunar Strike")
 						return true
 					end
@@ -2214,7 +2273,7 @@ local function runRotation()
 				end
 				-- Lunar Strike uncharged
 				if moonkin then
-					if cast.lunarStrike() then
+					if cast.lunarStrikeAff() then
 						br.addonDebug("Casting Lunar Strike")
 						return true
 					end
@@ -2268,11 +2327,11 @@ local function runRotation()
 		-----------------------------
 		if inCombat then
 			if not isChecked("DPS Key") then
-				if (restoDPS and lowest.hp <= getOptionValue("Critical Heal")) or buff.incarnationTreeOfLife.exists() or mode.dps == 1 then
+				if (restoDPS and lowest.hp <= getOptionValue("Critical Heal")) or buff.incarnationTreeOfLife.exists() or mode.dPS == 1 then
 					ChatOverlay("Healing Engaged")
 					br.addonDebug("Healing Engaged")
 					restoDPS = false
-				elseif not restoDPS and lowest.hp > getOptionValue("DPS") and not buff.incarnationTreeOfLife.exists() and mode.dps == 2 then
+				elseif not restoDPS and lowest.hp > getOptionValue("DPS") and not buff.incarnationTreeOfLife.exists() and mode.dPS == 2 then
 					ChatOverlay("DPS Engaged")
 					br.addonDebug("DPS Engaged")
 					restoDPS = true
@@ -2309,12 +2368,12 @@ local function runRotation()
 						return
 					end
 				end
-				if #enemies.yards5 < 1 and mode.dps == 2 and isChecked("DPS Key") and not SpecificToggle("DPS Key") and not GetCurrentKeyBoardFocus() then
+				if #enemies.yards5 < 1 and mode.dPS == 2 and isChecked("DPS Key") and not SpecificToggle("DPS Key") and not GetCurrentKeyBoardFocus() then
 					-- Moonfire
 					if mana >= getOptionValue("DPS Save mana") and debuff.moonfire.count() < getOptionValue("Max Moonfire Targets") then
 						for i = 1, #enemies.yards40 do
 							local thisUnit = enemies.yards40[i]
-							if not debuff.moonfire.exists(thisUnit) then
+							if not debuff.moonfire.exists(thisUnit) and not isExplosive(thisUnit) then
 								if cast.moonfire(thisUnit) then
 									br.addonDebug("Casting Moonfire")
 									return true
@@ -2323,10 +2382,10 @@ local function runRotation()
 						end
 					end
 					-- Sunfire
-					if mana >= getOptionValue("DPS Save mana") then
+					if mana >= getOptionValue("DPS Save mana")  then
 						for i = 1, #enemies.yards40 do
 							local thisUnit = enemies.yards40[i]
-							if not debuff.sunfire.exists(thisUnit) then
+							if not debuff.sunfire.exists(thisUnit) and not isExplosive(thisUnit) then
 								if cast.sunfire(thisUnit) then
 									br.addonDebug("Casting Sunfire")
 									return true
@@ -2335,11 +2394,14 @@ local function runRotation()
 						end
 					end
 				end
-				if not isChecked("DPS Key") and mode.dps == 2 and GetUnitExists("target") 
-					and	not GetUnitIsFriend("target") and restoDPS
-				then
-					if actionList_DPS() then
-						return
+				if not isChecked("DPS Key") and mode.dPS == 2 and restoDPS then
+					if not GetUnitExists("target") or (UnitIsDeadOrGhost("target") and not GetUnitIsFriend("target")) and #enemies.yards40 ~= 0 and getOptionValue("Target Dynamic Target") then
+						TargetUnit(enemies.yards40[1])
+					end
+					if GetUnitExists("target") and not GetUnitIsFriend("target") then
+						if actionList_DPS() then
+							return
+						end
 					end
 				end
 				if  (not restoDPS and not isChecked("DPS Key")) or isChecked("DPS Key") then
@@ -2349,7 +2411,7 @@ local function runRotation()
 					if actionList_RejuvenationMode() then
 						return
 					end
-					if (isChecked("DPS Key") and SpecificToggle("DPS Key") and not GetCurrentKeyBoardFocus()) or (not isChecked("DPS Key") and mode.dps == 2) then
+					if (isChecked("DPS Key") and SpecificToggle("DPS Key") and not GetCurrentKeyBoardFocus()) or (not isChecked("DPS Key") and mode.dPS == 2) then
 						if actionList_DPS() then
 							return 
 						end

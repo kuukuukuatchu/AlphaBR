@@ -139,25 +139,6 @@ local function createToggles()
         }
     }
     CreateButton("Taunt", 6, 0)
-    HoldcdModes = {
-        [1] = {
-            mode = "ON",
-            value = 1,
-            overlay = "CDs will not be held",
-            tip = "CDs will not be held",
-            highlight = 1,
-            icon = br.player.spell.avatar
-        },
-        [2] = {
-            mode = "OFF",
-            value = 2,
-            overlay = "CDs will be held",
-            tip = "CDs will be held",
-            highlight = 0,
-            icon = br.player.spell.avatar
-        }
-    }
-    CreateButton("Holdcd", 7, 0)
 end
 
 ---------------
@@ -171,6 +152,7 @@ local function createOptions()
         --- GENERAL OPTIONS ---
         -----------------------
         section = br.ui:createSection(br.ui.window.profile, "General")
+        -- br.ui:createDropdown(section,"leap test",{"behind","forward","random"}, 1)
         br.ui:createCheckbox(
             section,
             "Open World Defensives",
@@ -202,6 +184,7 @@ local function createOptions()
         )
         -- Shout Check
         br.ui:createCheckbox(section, "Battle Shout", "Enable automatic party buffing")
+        br.ui:createCheckbox(section, "Pig Catcher", "Catch the freehold Pig in the ring of booty")
 
         br.ui:checkSectionState(section)
         ------------------------
@@ -229,7 +212,7 @@ local function createOptions()
             "|cffFFFFFFEnemies to cast Avatar when using AUTO CDS"
         )
         -- Demoralizing Shout
-        br.ui:createCheckbox(section, "Demoralizing Shout - CD")
+        br.ui:createDropdownWithout(section, "Demoralizing Shout - CD", {"Always", "When CDs are enabled", "Never"}, 1)
         -- Ravager
         br.ui:createCheckbox(section, "Ravager")
         -- Dragons Roar
@@ -243,6 +226,7 @@ local function createOptions()
         section = br.ui:createSection(br.ui.window.profile, "Defensive")
         --Smart Spell reflect
         br.ui:createCheckbox(section, "Smart Spell Reflect", "Auto reflect spells in instances")
+        br.ui:createSpinnerWithout(section,"Smart Spell Reflect Percent", 65, 0, 95, 5, "Spell reflect when spell is X % complete, ex. 90 = 90% complete")
         -- Engi Belt stuff thanks to Lak
         br.ui:createSpinner(section, "Engineering Belt", 60, 0, 100, 5, "|cffFFBB00Health Percentage to use at.")
         -- Healthstone
@@ -268,6 +252,8 @@ local function createOptions()
         --- INTERRUPT OPTIONS ---
         -------------------------
         section = br.ui:createSection(br.ui.window.profile, "Interrupts")
+        -- Feng is a god
+        br.ui:createCheckbox(section, "Storm Bolt Logic", "Stun specific Spells and Mobs")
         -- Pummel
         br.ui:createCheckbox(section, "Pummel")
         -- Intimidating Shout
@@ -306,7 +292,6 @@ local function runRotation()
         UpdateToggle("Mover", 0.25)
         UpdateToggle("Taunt", 0.25)
         UpdateToggle("Holdcd", 0.25)
-        br.player.mode.holdcd = br.data.settings[br.selectedSpec].toggles["Holdcd"]
         br.player.mode.mover = br.data.settings[br.selectedSpec].toggles["Mover"]
         br.player.mode.taunt = br.data.settings[br.selectedSpec].toggles["Taunt"]
         --------------
@@ -374,6 +359,102 @@ local function runRotation()
             profileStop = false
         end
 
+        local reflectID = {
+            --Battle of Dazar'alor
+            [283572] = "Sacred Blade",
+            [284449] = "Reckoning",
+            [286988] = "Divine Burst",
+            [282036] = "Fireball",
+            [286988] = "Searing Embers",
+            [286646] = "Gigavolt Charge",
+            [282182] = "Buster Cannon",
+            --Uldir
+            [279669] = "Bacterial Outbreak",
+            [279660] = "Endemic Virus",
+            [274262] = "Explosive Corruption",
+            --Reaping
+            [288693] = "Grave Bolt",
+            --Atal'Dazar
+            [250096] = "Wracking Pain",
+            [253562] = "Wildfire",
+            [252923] = "Venom Blast",
+            --Kings Rest
+            [267618] = "Drain Fluids",
+            [267308] = "Lighting Bolt",
+            [270493] = "Spectral Bolt",
+            [269973] = "Deathly Chill",
+            [270923] = "Shadow Bolt",
+            --Free Hold
+            [259092] = "Lightning Bolt",
+            [281420] = "Water Bolt",
+            --Siege of Boralus
+            [272588] = "Rotting Wounds",
+            [272581] = "Water Spray",
+            [257063] = "Brackish Bolt",
+            [272571] = "Choking Waters",
+            -- Temple of Sethraliss
+            [263318] = "Jolt",
+            [263775] = "Gust",
+            [268061] = "Chain Lightning",
+            [272820] = "Shock",
+            [268013] = "Flame Shock",
+            [274642] = "Lava Burst",
+            [268703] = "Lightning Bolt",
+            [272699] = "Venomous Spit",
+            --Shrine of the Storm
+            [265001] = "Sea Blast",
+            [264560] = "Choking Brine",
+            [264144] = "Undertow",
+            [268347] = "Void Bolt",
+            [267969] = "Water Blast",
+            [268233] = "Electrifying Shock",
+            [268315] = "Lash",
+            [268177] = "Windblast",
+            [268273] = "Deep Smash",
+            [268317] = "Rip Mind",
+            [265001] = "Sea Blast",
+            [274703] = "Void Bolt",
+            [268214] = "Carve Flesh",
+            --Motherlode
+            [259856] = "Chemical Burn",
+            [260318] = "Alpha Cannon",
+            [262794] = "Energy Lash",
+            [263202] = "Rock Lance",
+            [262268] = "Caustic Compound",
+            [263262] = "Shale Spit",
+            [263628] = "Charged Claw",
+            --Underrot
+            [260879] = "Blood Bolt",
+            [265084] = "Blood Bolt",
+            --Tol Dagor
+            [257777] = "Crippling Shiv",
+            [257033] = "Fuselighter",
+            [258150] = "Salt Blast",
+            [258869] = "Blaze",
+            --Waycrest Manor
+            [260701] = "Bramble Bolt",
+            [260700] = "Ruinous Bolt",
+            [260699] = "Soul Bolt",
+            [268271] = "Wracking Chord",
+            [261438] = "Wasting Strike",
+            [261440] = "Virulent Pathogen",
+            [266225] = "Darkened Lightning",
+            [273653] = "Shadow Claw",
+            [265881] = "Decaying Touch",
+            [264153] = "Spit",
+            [278444] = "Infest",
+			--Operation: Mechagn
+			[298669] = "Taze",
+			[300764] = "slimebolt",
+			[300650] = "suffocating smog",
+			[294195] = "arcing zap",
+			[291878] = "pulse blast"
+        }
+        local Storm_unitList={
+			[131009] = "Spirit of Gold",
+			[134388] = "A Knot of Snakes",
+			[129758] = "Irontide Grenadier",
+        }
         --- Quick maths ---
         local function mainTank()
             if (#enemies.yards30 >= 1 and (hasAggro >= 2)) or isChecked("Open World Defensives") then
@@ -469,7 +550,7 @@ local function runRotation()
                     local thisUnit = br.friend[i].unit
                     if
                         not UnitIsDeadOrGhost(thisUnit) and getDistance(thisUnit) < 100 and
-                            not buff.battleShout.exists(thisUnit)
+                            getBuffRemain(thisUnit, spell.battleShout) < 60
                      then
                         if cast.battleShout() then
                             return
@@ -479,8 +560,7 @@ local function runRotation()
             end
             if
                 inCombat and
-                    (getOptionValue("Trinkets") == 1 or (buff.avatar.exists() and getOptionValue("Trinkets") == 4)) and
-                    br.player.mode.holdcd == 1
+                    (getOptionValue("Trinkets") == 1 or (buff.avatar.exists() and getOptionValue("Trinkets") == 4))
              then
                 if canTrinket(13) then
                     useItem(13)
@@ -493,6 +573,23 @@ local function runRotation()
 
         local function actionList_Interrupts()
             if useInterrupts() then
+                if isChecked("Storm Bolt Logic") then
+                    if cast.able.stormBolt() then
+                        local Storm_list={
+                        274400,274383,257756,276292,268273,256897,272542,272888,269266,258317,258864,259711,258917,264038,253239,269931,270084,270482,270506,270507,267433,
+                        267354,268702,268846,268865,258908,264574,272659,272655,267237,265568,277567,265540,268202,258058,257739,
+                        }
+                        for i = 1, #enemies.yards20 do
+                            local thisUnit = enemies.yards20[i]
+                            local distance = getDistance(thisUnit)
+                            for k,v in pairs(Storm_list) do
+                                if (Storm_unitList[GetObjectID(thisUnit)]~=nil or UnitCastingInfo(thisUnit) == GetSpellInfo(v) or UnitChannelInfo(thisUnit) == GetSpellInfo(v)) and getBuffRemain(thisUnit,226510) == 0 and distance <= 20 then
+                                    if cast.stormBolt(thisUnit) then return end
+                                end
+                            end
+                        end
+                    end
+                end
                 for i = 1, #enemies.yards20 do
                     thisUnit = enemies.yards20[i]
                     unitDist = getDistance(thisUnit)
@@ -513,38 +610,63 @@ local function runRotation()
                                 return
                             end
                         end
-                        if isChecked("Storm Bolt - Int") and unitDist < 20 then
-                            if cast.stormBolt() then
-                                return
-                            end
-                        end
                     end
                 end
             end
         end
-
+        -- if isChecked("leap test") then
+        --     if cast.able.heroicLeap() and hastar then
+        --         local thisUnit = "target"
+        --         local sX, sY, sZ = GetObjectPosition(thisUnit)
+        --         local hitBoxCompensation = UnitCombatReach(thisUnit) / GetDistanceBetweenObjects("player",thisUnit)
+        --         local yards = math.random(12,22)
+        --         if getOptionValue("leap test") == 1 then
+        --             deg = math.random(0,10)
+        --         end
+        --         if getOptionValue("leap test") == 2 then
+        --             deg = math.random(170,190)
+        --         end
+        --         if getOptionValue("leap test") == 3 then
+        --             deg = math.random(0,359)
+        --         end
+        --         --for deg = 0, 180, 45 do
+        --             local dX, dY, dZ = GetPositionFromPosition(sX, sY, sZ, yards, deg, 0)
+        --             if TraceLine(sX, sY, sZ + 2.25, dX, dY, dZ + 2.25, 0x100111) == nil and cd.heroicLeap.remain() == 0 and charges.charge.count() > 0 then
+        --                 if not IsAoEPending() then
+        --                     CastSpellByName(GetSpellInfo(spell.heroicLeap))
+        --                     -- cast.heroicLeap("player")
+        --                 end
+        --                 if IsAoEPending() then
+        --                     ClickPosition(dX,dY,dZ)
+        --                 end
+        --             end
+        --         --end
+        --     end
+        --     if charges.intercept.count() >= 1 and getDistance("player", "target") >= 8 and getDistance("player", "target") <= 25 then
+        --         FaceDirection("target")
+        --         -- FaceDirection("player")
+        --         CastSpellByName(GetSpellInfo(spell.intercept))
+        --     end  
+        -- end
         local function actionList_Moving()
             if br.player.mode.mover == 1 then
                 if
-                    cast.able.intercept("target") and
-                        (getDistance("player", "target") >= 8 and getDistance("player", "target") <= 25)
+                    cast.able.intercept("target") and getDistance("player", "target") >= 8 and getDistance("player", "target") <= 25
                  then
-                    if cast.intercept("target") then
-                        return
-                    end
+                    CastSpellByName(GetSpellInfo(spell.intercept))
                 end
             end
         end
 
         local function actionList_Cooldowns()
             if useCDs() and #enemies.yards5 >= 1 then
-                if isChecked("Avatar") and br.player.mode.holdcd == 1 then
+                if isChecked("Avatar") then
                     --print("cd avatar")
                     if cast.avatar() then
                         return
                     end
                 end
-                if isChecked("Demoralizing Shout - CD") and rage <= 65 and not moving and br.player.mode.holdcd == 1 then
+                if rage <= 100 and not moving and getOptionValue("Demoralizing Shout - CD") == 2 then
                     if cast.demoralizingShout() then
                         return
                     end
@@ -557,8 +679,7 @@ local function runRotation()
                 if
                     isChecked("Racial") and (race == "Orc" or race == "Troll" or race == "LightforgedDraenei") and
                         useCDs() and
-                        buff.avatar.exists() and
-                        br.player.mode.holdcd == 1
+                        buff.avatar.exists()
                  then
                     if cast.racial("player") then
                         return
@@ -569,8 +690,7 @@ local function runRotation()
                 end
                 --Use Trinkets
                 if
-                    (getOptionValue("Trinkets") == 2 or (buff.avatar.exists() and getOptionValue("Trinkets") == 4)) and
-                        br.player.mode.holdcd == 1
+                    (getOptionValue("Trinkets") == 2 or (buff.avatar.exists() and getOptionValue("Trinkets") == 4))
                  then
                     if canTrinket(13) then
                         useItem(13)
@@ -585,91 +705,6 @@ local function runRotation()
         local function actionList_Defensives()
             if useDefensive() then
                 --Spell Reflect logic
-                local reflectID = {
-                    --Battle of Dazar'alor
-                    [283572] = "Sacred Blade",
-                    [284449] = "Reckoning",
-                    [286988] = "Divine Burst",
-                    [282036] = "Fireball",
-                    [286988] = "Searing Embers",
-                    [286646] = "Gigavolt Charge",
-                    [282182] = "Buster Cannon",
-                    --Uldir
-                    [279669] = "Bacterial Outbreak",
-                    [279660] = "Endemic Virus",
-                    [274262] = "Explosive Corruption",
-                    --Reaping
-                    [288693] = "Grave Bolt",
-                    --Atal'Dazar
-                    [250096] = "Wracking Pain",
-                    [253562] = "Wildfire",
-                    [252923] = "Venom Blast",
-                    --Kings Rest
-                    [267618] = "Drain Fluids",
-                    [267308] = "Lighting Bolt",
-                    [270493] = "Spectral Bolt",
-                    [269973] = "Deathly Chill",
-                    [270923] = "Shadow Bolt",
-                    --Free Hold
-                    [259092] = "Lightning Bolt",
-                    [281420] = "Water Bolt",
-                    --Siege of Boralus
-                    [272588] = "Rotting Wounds",
-                    [272581] = "Water Spray",
-                    [257063] = "Brackish Bolt",
-                    [272571] = "Choking Waters",
-                    -- Temple of Sethraliss
-                    [263318] = "Jolt",
-                    [263775] = "Gust",
-                    [268061] = "Chain Lightning",
-                    [272820] = "Shock",
-                    [268013] = "Flame Shock",
-                    [274642] = "Lava Burst",
-                    [268703] = "Lightning Bolt",
-                    [272699] = "Venomous Spit",
-                    --Shrine of the Storm
-                    [265001] = "Sea Blast",
-                    [264560] = "Choking Brine",
-                    [264144] = "Undertow",
-                    [268347] = "Void Bolt",
-                    [267969] = "Water Blast",
-                    [268233] = "Electrifying Shock",
-                    [268315] = "Lash",
-                    [268177] = "Windblast",
-                    [268273] = "Deep Smash",
-                    [268317] = "Rip Mind",
-                    [265001] = "Sea Blast",
-                    [274703] = "Void Bolt",
-                    [268214] = "Carve Flesh",
-                    --Motherlode
-                    [259856] = "Chemical Burn",
-                    [260318] = "Alpha Cannon",
-                    [262794] = "Energy Lash",
-                    [263202] = "Rock Lance",
-                    [262268] = "Caustic Compound",
-                    [263262] = "Shale Spit",
-                    [263628] = "Charged Claw",
-                    --Underrot
-                    [260879] = "Blood Bolt",
-                    [265084] = "Blood Bolt",
-                    --Told Dagor
-                    [257777] = "Crippling Shiv",
-                    [257033] = "Fuselighter",
-                    [258150] = "Salt Blast",
-                    [258869] = "Blaze",
-                    --Waycrest Manor
-                    [260701] = "Bramble Bolt",
-                    [260700] = "Ruinous Bolt",
-                    [260699] = "Soul Bolt",
-                    [268271] = "Wracking Chord",
-                    [261438] = "Wasting Strike",
-                    [261440] = "Virulent Pathogen",
-                    [266225] = "Darkened Lightning",
-                    [273653] = "Shadow Claw",
-                    [265881] = "Decaying Touch",
-                    [264153] = "Spit",
-                    [278444] = "Infest"
-                }
                 if isChecked("Smart Spell Reflect") then
                     for i = 1, #enemies.yards30 do
                         local thisUnit = enemies.yards30[i]
@@ -677,7 +712,7 @@ local function runRotation()
 
                         if
                             UnitTarget("player") and reflectID[spellcastID] and
-                                (((GetTime() * 1000) - startCast) / (endCast - startCast) * 100) > 50
+                                (((GetTime() * 1000) - startCast) / (endCast - startCast) * 100) > getOptionValue("Smart Spell Reflect Percent")
                          then
                             if cast.spellReflection() then
                                 return
@@ -722,22 +757,21 @@ local function runRotation()
                         end
                     end
                 end
-                if isChecked("Engineering Belt") and php <= getOptionValue("Engineering Belt") and canUse(6) then
+                if isChecked("Engineering Belt") and php <= getOptionValue("Engineering Belt") and canUseItem(6) then
                     useItem(6)
                 end
-                if
-                    isChecked("Healthstone/Potion") and php <= getOptionValue("Healthstone/Potion") and
-                        (hasItem(152494) or hasItem(5512))
-                 then
-                    if canUse(5512) then
+                if isChecked("Healthstone/Potion") and php <= getOptionValue("Healthstone/Potion") and inCombat and (hasHealthPot() or hasItem(5512) or hasItem(166799)) then
+                    if canUseItem(5512) then
                         useItem(5512)
-                    elseif canUse(152494) then
-                        useItem(152494)
+                    elseif canUseItem(healPot) then
+                        useItem(healPot)
+                    elseif hasItem(166799) and canUseItem(166799) then
+                        useItem(166799)
                     end
                 end
                 if
                     isChecked("Demoralizing Shout") and php <= getOptionValue("Demoralizing Shout") and
-                        br.player.mode.holdcd == 1
+                    getOptionValue("Demoralizing Shout - CD") == 1
                  then
                     if cast.demoralizingShout() then
                         return
@@ -787,7 +821,7 @@ local function runRotation()
             --Avatar units
             if
                 isChecked("Avatar") and (#enemies.yards8 >= getOptionValue("Avatar Mob Count")) and
-                    br.player.mode.holdcd == 1
+                    br.player.mode.cooldown == 1
              then
                 ---print("norm avatar")
                 if cast.avatar() then
@@ -803,7 +837,7 @@ local function runRotation()
             end
 
             --Use Demo Shout on CD
-            if isChecked("Demoralizing Shout - CD") and rage <= 65 and not moving and br.player.mode.holdcd == 1 then
+            if getOptionValue("Demoralizing Shout - CD") == 1 and rage <= 100 and not moving then
                 if cast.demoralizingShout() then
                     return
                 end
@@ -893,7 +927,7 @@ local function runRotation()
 
         local function technoViking()
             --Use Demo Shout on CD
-            if isChecked("Demoralizing Shout - CD") and rage <= 65 then
+            if isChecked("Demoralizing Shout - CD") and rage <= 100 then
                 if cast.demoralizingShout() then
                     return
                 end
@@ -955,6 +989,9 @@ local function runRotation()
         else
             -- combat check
             if not inCombat and not IsMounted() then
+                if isChecked("Pig Catcher") then
+                    bossHelper()
+                end
                 if actionList_Extras() then
                     return
                 end

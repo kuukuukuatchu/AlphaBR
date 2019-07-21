@@ -42,5 +42,8 @@ br.lists.los = {
 	[140286] = true, -- Uldir Defensive Beam *Uldir)
 	[138530] = true, -- Volatile Droplet (Uldir - Taloc's fight)
     [133392] = true, -- Sethraliss
-    [146256] = true -- Laminaria
+	[146256] = true, -- Laminaria
+	[150773] = true, -- Blackwater Behemoth Mob
+	[152364] = true, -- Radiance of Azshara
+	[152671] = true, -- Wekemara
 }

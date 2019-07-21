@@ -1,12 +1,15 @@
 -- define br global that will hold the bot global background features
 br = {}
 br.data = {}
+br.data.ui = {}
 br.dungeon = {}
 br.mdungeon = {}
 br.raid = {}
 br.mraid = {}
+br.settingsFile = "None.lua"
 br.selectedSpec = "None"
 br.selectedProfile = 1
+br.selectedProfileName = "None"
 br.dropOptions = {}
 --br.dropOptions.Toggle = {"LeftCtrl","LeftShift","RightCtrl","RightShift","RightAlt","None"}
 br.dropOptions.Toggle ={"LeftCtrl","LeftShift","RightCtrl","RightShift","RightAlt","None","MMouse","Mouse4","Mouse5" }
@@ -15,6 +18,8 @@ br.loadedIn = false
 br.rotations = {}
 -- developers debug, use /run br.data.settings[br.selectedSpec].toggles["isDebugging"] = true
 br.debug = {}
+
+br.pauseCast = GetTime()
 -- Cache all non-nil return values from GetSpellInfo in a table to improve performance
 local spellcache = setmetatable({}, {__index=function(t,v) local a = {GetSpellInfo(v)} if GetSpellInfo(v) then t[v] = a end return a end})
 local function GetSpellInfo(a)
@@ -63,7 +68,7 @@ function br:Run()
 		grey = "9d9d9d"
 	}
 	-- load common used stuff on first load
- 	br:loadSettings()
+	br:loadSettings()
 	-- add minimap fire icon
 	br:MinimapButton()
 	-- build up UI
@@ -97,6 +102,9 @@ function br:loadSettings()
 			wiped = true,
 		}
 	end
+	br.ui.window.config = {}
+	br.ui:createConfigWindow()
+	br.ui:toggleWindow("config")
 	-- Settings Per Spec
     if br.data.settings[br.selectedSpec] == nil then br.data.settings[br.selectedSpec] = {} end
 	if br.data.settings[br.selectedSpec].toggles == nil then br.data.settings[br.selectedSpec].toggles = {} end
@@ -105,7 +113,7 @@ function br:loadSettings()
     else
         br.selectedProfile = br.data.settings[br.selectedSpec]["RotationDrop"]
     end
-    if br.data.settings[br.selectedSpec][br.selectedProfile] == nil then br.data.settings[br.selectedSpec][br.selectedProfile] = {} end
+	if br.data.settings[br.selectedSpec][br.selectedProfile] == nil then br.data.settings[br.selectedSpec][br.selectedProfile] = {} end
 end
 local frame = CreateFrame("FRAME")
 frame:RegisterEvent("ADDON_LOADED");
@@ -123,7 +131,7 @@ function frame:OnEvent(event, arg1, arg2, arg3, arg4, arg5)
     if event == "PLAYER_LOGOUT" then
         br.ui:saveWindowPosition()
         if getOptionCheck("Reset Options") then
-        	-- Reset Settings
+			-- Reset Settings
 			brdata = {}
 			if getOptionCheck("Reset Saved Profiles") then
 				dungeondata = {}
@@ -137,30 +145,30 @@ function frame:OnEvent(event, arg1, arg2, arg3, arg4, arg5)
 			end
 		elseif getOptionCheck("Reset Saved Profiles") then
 			dungeondata = {}
-        	raiddata = {}
-        	mdungeondata = {}
-        	mraiddata = {}
-        	br.dungeon = {}
+			raiddata = {}
+			mdungeondata = {}
+			mraiddata = {}
+			br.dungeon = {}
 			br.mdungeon = {}
 			br.raid = {}
 			br.mraid = {}
         else
-        	-- Save Settings
-        	brdata = deepcopy(br.data)
-        	dungeondata = deepcopy(br.dungeon)
-        	mdungeondata = deepcopy(br.mdungeon)
-        	raiddata = deepcopy(br.raid)
-        	mraiddata = deepcopy(br.mraid)
+			-- Save Settings
+			brdata = deepcopy(br.data)
+			dungeondata = deepcopy(br.dungeon)
+			mdungeondata = deepcopy(br.mdungeon)
+			raiddata = deepcopy(br.raid)
+			mraiddata = deepcopy(br.mraid)
         end
     end
     if event == "PLAYER_ENTERING_WORLD" then
-    	-- Update Selected Spec
+		-- Update Selected Spec
         br.selectedSpec = select(2,GetSpecializationInfo(GetSpecialization()))
         br.activeSpecGroup = GetActiveSpecGroup()
 		br.equipHasChanged = true
-    	if not br.loadedIn then
-    		bagsUpdated = true
-        	br:Run()
+		if not br.loadedIn then
+			bagsUpdated = true
+			br:Run()
         end
     end
 end

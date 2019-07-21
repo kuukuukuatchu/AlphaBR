@@ -390,7 +390,7 @@ local function runRotation()
     local function actionList_Extra()
         if not inCombat then
             -- actions.precombat+=/stealth
-            if isChecked("Auto Stealth") and IsUsableSpell(spell.stealth) and not cast.last.vanish() and not IsResting() then
+            if isChecked("Auto Stealth") and IsUsableSpell(GetSpellInfo(spell.stealth)) and not cast.last.vanish() and not IsResting() then
                 if getOptionValue("Auto Stealth") == 1 then
                     if cast.stealth() then return end
                 end
@@ -454,12 +454,12 @@ local function runRotation()
                     end
                 end
             end
-            if isChecked("Health Pot / Healthstone") and (use.able.healthstone() or canUse(healPot))
+            if isChecked("Health Pot / Healthstone") and (use.able.healthstone() or canUseItem(healPot))
                 and php <= getOptionValue("Health Pot / Healthstone") and inCombat and (hasHealthPot() or has.healthstone())
             then
                 if use.able.healthstone() then
                     use.healthstone()
-                elseif canUse(healPot) then
+                elseif canUseItem(healPot) then
                     useItem(healPot)
                 end
             end
@@ -554,10 +554,10 @@ local function runRotation()
         end
         -- actions.cds+=/use_item,name=galecallers_boon,if=buff.symbols_of_death.up|target.time_to_die<20
         if cdUsage and isChecked("Trinkets") and (buff.symbolsOfDeath.exists() or not isChecked("Symbols of Death")) and ttd("target") > getOptionValue("CDs TTD Limit") then
-            if canUse(13) and not (hasEquiped(140808, 13) or hasEquiped(151190, 13)) then
+            if canUseItem(13) and not (hasEquiped(140808, 13) or hasEquiped(151190, 13)) then
                 useItem(13)
             end
-            if canUse(14) and not (hasEquiped(140808, 14) or hasEquiped(151190, 14)) then
+            if canUseItem(14) and not (hasEquiped(140808, 14) or hasEquiped(151190, 14)) then
                 useItem(14)
             end
         end
@@ -665,7 +665,7 @@ local function runRotation()
         end
         -- # Vanish unless we are about to cap on Dance charges. Only when Find Weakness is about to run out.
         -- actions.stealth_cds+=/vanish,if=!variable.shd_threshold&debuff.find_weakness.remains<1&combo_points.deficit>1
-        if not shdThreshold and cdUsage and comboDeficit > 1 and isChecked("Vanish") and ttd("target") > getOptionValue("CDs TTD Limit") and debuff.findWeakness.remains("target") < 1 and targetDistance < 5 then
+        if not shdThreshold and cdUsage and comboDeficit > 1 and targetDistance < 5 and isChecked("Vanish") and ttd("target") > getOptionValue("CDs TTD Limit") and debuff.findWeakness.remain("target") < 1 then
             if cast.vanish("player") then return true end
         end
         -- # Pool for Shadowmeld + Shadowstrike unless we are about to cap on Dance charges. Only when Find Weakness is about to run out.
@@ -768,7 +768,7 @@ local function runRotation()
             end
             -- # Restealth if possible (no vulnerable enemies in combat)
             -- actions=stealth
-            if IsUsableSpell(spell.stealth) and not cast.last.vanish(1) then
+            if IsUsableSpell(GetSpellInfo(spell.stealth)) and not cast.last.vanish(1) then
                 cast.stealth("player")
             end
             --start aa

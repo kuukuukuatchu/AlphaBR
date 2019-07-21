@@ -140,7 +140,7 @@ local function createOptions()
             -- Pummel
             br.ui:createCheckbox(section,"Pummel")
             -- Intimidating Shout
-            br.ui:createCheckbox(section,"Intimidating Shoult - Int")
+            br.ui:createCheckbox(section,"Intimidating Shout - Int")
             -- Storm Bolt
             br.ui:createCheckbox(section,"Storm Bolt - Int")
             -- Interrupt Percentage
@@ -225,12 +225,14 @@ local function runRotation()
         local thp                                           = getHP("target")
         local traits                                        = br.player.traits
         local units                                         = br.player.units
+        local ttd                                           = getTTD
 
         units.get(5)
         units.get(8)
+        units.get(8,true)
         enemies.get(8)
         enemies.get(20)
-	  enemies.yards8f   = getEnemiesInCone(180,8)
+	    enemies.yards8f   = getEnemiesInCone(180,8)
 
 
         if profileStop == nil then profileStop = false end
@@ -292,16 +294,16 @@ local function runRotation()
                 if isChecked("Healthstone/Potion") and php <= getOptionValue("Healthstone/Potion")
                     and inCombat and (hasHealthPot() or hasItem(5512))
                 then
-                    if canUse(5512) then
+                    if canUseItem(5512) then
                         useItem(5512)
-                    elseif canUse(getHealthPot()) then
+                    elseif canUseItem(getHealthPot()) then
                         useItem(getHealthPot())
                     end
                 end
             -- Heirloom Neck
                 if isChecked("Heirloom Neck") and php <= getOptionValue("Heirloom Neck") then
                     if hasEquiped(heirloomNeck) then
-                        if canUse(heirloomNeck) then
+                        if canUseItem(heirloomNeck) then
                             useItem(heirloomNeck)
                         end
                     end
@@ -373,10 +375,10 @@ local function runRotation()
             -- Potion
                 -- potion
                 if isChecked("Potion") and inRaid then
-                    if canUse(13) then
+                    if canUseItem(13) then
                         useItem(13)
                     end
-                    if canUse(14) then
+                    if canUseItem(14) then
                         useItem(14)
                     end
                 end
@@ -414,10 +416,10 @@ local function runRotation()
                 end
             -- Trinkets
                 if getOptionValue("Trinkets") ~= 4 then
-                    if (getOptionValue("Trinkets") == 1 or getOptionValue("Trinkets") == 3) and canUse(13) then
+                    if (getOptionValue("Trinkets") == 1 or getOptionValue("Trinkets") == 3) and canUseItem(13) then
                         useItem(13)
                     end
-                    if (getOptionValue("Trinkets") == 2 or getOptionValue("Trinkets") == 3) and canUse(14) then
+                    if (getOptionValue("Trinkets") == 2 or getOptionValue("Trinkets") == 3) and canUseItem(14) then
                         useItem(14)
                     end
                 end
@@ -425,22 +427,11 @@ local function runRotation()
         end -- End Action List - Cooldowns
     -- Action List - Pre-Combat
         function actionList_PreCombat()
-        -- Flask
-            -- flask,type=greater_draenic_strength_flask
-            if isChecked("Str-Pot") then
-                if inRaid and canFlask and flaskBuff==0 and not UnitBuffID("player",176151) then
-                    useItem(br.player.flask.wod.strengthBig)
-                    return true
-                end
-                if flaskBuff==0 then
-                    if br.player.useCrystal() then return end
-                end
-            end
             -- food,type=sleeper_sushi
             -- snapshot_stats
             -- potion,name=draenic_strength
             -- if useCDs() and inRaid and isChecked("Str-Pot") and isChecked("Pre-Pull Timer") and pullTimer <= getOptionValue("Pre-Pull Timer") then
-            --     if canUse(109219) then
+            --     if canUseItem(109219) then
             --         useItem(109219)
             --     end
             -- end
@@ -505,13 +496,15 @@ local function runRotation()
             end
         -- Colossus Smash
             -- colossus_smash,if=debuff.colossus_smash.down
-            if not talent.warbreaker and cast.able.colossusSmash() and (not debuff.colossusSmash.exists(units.dyn5)) then
+            if not talent.warbreaker and cast.able.colossusSmash() and (not debuff.colossusSmash.exists(units.dyn5)) 
+                and (ttd(units.dyn5) > 5 or useCDs())
+            then
                 if cast.colossusSmash() then return end
             end
         -- Warbreaker
             -- warbreaker,if=debuff.colossus_smash.down
             if isChecked("Warbreaker") and cast.able.warbreaker() and talent.warbreaker and (not debuff.colossusSmash.exists(units.dyn5))
-                and #enemies.yards8 >= getOptionValue("Warbreaker")
+                and #enemies.yards8 >= getOptionValue("Warbreaker") and (ttd(units.dyn8AOE) > 5 or useCDs())
             then
                 if cast.warbreaker() then return end
             end
@@ -587,13 +580,15 @@ local function runRotation()
             end
         -- Colossus Smash
             -- colossus_smash,if=debuff.colossus_smash.down
-            if not talent.warbreaker and cast.able.colossusSmash() and (not debuff.colossusSmash.exists(units.dyn5)) then
+            if not talent.warbreaker and cast.able.colossusSmash() and (not debuff.colossusSmash.exists(units.dyn5)) 
+                and (ttd(units.dyn5) > 5 or useCDs())
+            then
                 if cast.colossusSmash() then return end
             end
         -- Warbreaker
             -- warbreaker,if=debuff.colossus_smash.down
             if isChecked("Warbreaker") and cast.able.warbreaker() and talent.warbreaker and (not debuff.colossusSmash.exists(units.dyn5))
-                and #enemies.yards8 >= getOptionValue("Warbreaker")
+                and #enemies.yards8 >= getOptionValue("Warbreaker") and (ttd(units.dyn8AOE) > 5 or useCDs())
             then
                 if cast.warbreaker() then return end
             end
@@ -644,14 +639,14 @@ local function runRotation()
         -- Whirlwind
             -- whirlwind,if=talent.fervor_of_battle.enabled&(!azerite.test_of_might.enabled|debuff.colossus_smash.up)
             if cast.able.whirlwind(nil,"aoe") and (talent.fervorOfBattle 
-                and (not traits.testOfMight.active or debuff.colossusSmash.exists(units.dyn5))) 
+                and (not traits.testOfMight.active or debuff.colossusSmash.exists(units.dyn8AOE) or ttd(units.dyn8AOE) <= 5)) 
             then
                 if cast.whirlwind(nil,"aoe") then return end
             end
         -- Slam
             -- slam,if=!talent.fervor_of_battle.enabled&(!azerite.test_of_might.enabled|debuff.colossus_smash.up|buff.deadly_calm.up|rage>=60)
             if cast.able.slam() and (not talent.fervorOfBattle and (not traits.testOfMight.active 
-                or debuff.colossusSmash.exists() or buff.deadlyCalm.exists() or rage >= 60)) 
+                or debuff.colossusSmash.exists(units.dyn5) or buff.deadlyCalm.exists() or rage >= 60 or ttd(units.dyn5) <= 5)) 
             then
                 if cast.slam() then return end
             end
@@ -679,22 +674,24 @@ local function runRotation()
             end
         -- Colossus Smash
             -- colossus_smash,if=debuff.colossus_smash.down
-            if not talent.warbreaker and cast.able.colossusSmash() and (not debuff.colossusSmash.exists(units.dyn5)) then
+            if not talent.warbreaker and cast.able.colossusSmash() and (not debuff.colossusSmash.exists(units.dyn5)) 
+                and (ttd(units.dyn5) > 5 or useCDs())
+            then
                 if cast.colossusSmash() then return end
             end
         -- Warbreaker
             -- warbreaker,if=debuff.colossus_smash.down
             if isChecked("Warbreaker") and cast.able.warbreaker() and talent.warbreaker and (not debuff.colossusSmash.exists(units.dyn5))
-                and #enemies.yards8 >= getOptionValue("Warbreaker")
+                and #enemies.yards8 >= getOptionValue("Warbreaker") and (ttd(units.dyn8AOE) > 5 or useCDs())
             then
                 if cast.warbreaker() then return end
             end
         -- Bladestorm
             -- bladestorm,if=buff.sweeping_strikes.down&(!talent.deadly_calm.enabled|buff.deadly_calm.down)&((debuff.colossus_smash.remains>4.5&!azerite.test_of_might.enabled)|buff.test_of_might.up)
-            if mode.bladestorm == 1            
-			    and cast.able.bladestorm(nil,"aoe") and (isChecked("Bladestorm") and #enemies.yards8 >= getOptionValue("Bladestorm")) and not talent.ravager 
-                and (not buff.sweepingStrikes.exists() and (not talent.deadlyCalm or not buff.deadlyCalm.exists()) 
-                and ((debuff.colossusSmash.remain(units.dyn5) > 4.5 and not traits.testOfMight.active) or buff.testOfMight.exists()))                
+            if mode.bladestorm == 1
+                and cast.able.bladestorm(nil,"aoe") and (isChecked("Bladestorm") and (#enemies.yards8 >= getOptionValue("Bladestorm") or useCDs())) 
+                and not talent.ravager and (not buff.sweepingStrikes.exists() and (not talent.deadlyCalm or not buff.deadlyCalm.exists()) 
+                and ((debuff.colossusSmash.remain(units.dyn5) > 4.5 and not traits.testOfMight.active) or buff.testOfMight.exists()))
             then
                 if cast.bladestorm(nil,"aoe") then return end
             end
@@ -724,7 +721,9 @@ local function runRotation()
             end
         -- Whirlwind
             -- whirlwind,if=debuff.colossus_smash.up|(buff.crushing_assault.up&talent.fervor_of_battle.enabled)
-            if cast.able.whirlwind(nil,"aoe") and (debuff.colossusSmash.exists(units.dyn5) or (buff.crushingAssasult.exists() and talent.fervorOfBattle)) then
+            if cast.able.whirlwind(nil,"aoe") and (debuff.colossusSmash.exists(units.dyn8AOE) 
+                or (buff.crushingAssasult.exists() and talent.fervorOfBattle) or ttd(units.dyn8AOE) <= 5)
+            then
                 if cast.whirlwind(nil,"aoe") then return end
             end
             -- whirlwind,if=buff.deadly_calm.up|rage>60
@@ -778,13 +777,15 @@ local function runRotation()
             end
         -- Colossus Smash 
             -- colossus_smash,if=raid_event.adds.up|raid_event.adds.in>40|(raid_event.adds.in>20&talent.anger_management.enabled)
-            if not talent.warbreaker and cast.able.colossusSmash() and (not debuff.colossusSmash.exists(units.dyn5)) then
+            if not talent.warbreaker and cast.able.colossusSmash() and (not debuff.colossusSmash.exists(units.dyn5)) 
+                and (ttd(units.dyn5) > 5 or useCDs())
+            then
                 if cast.colossusSmash() then return end
             end
         -- Warbreaker
             -- warbreaker,if=raid_event.adds.up|raid_event.adds.in>40|(raid_event.adds.in>20&talent.anger_management.enabled)
             if isChecked("Warbreaker") and cast.able.warbreaker() and talent.warbreaker and (not debuff.colossusSmash.exists(units.dyn5))
-                and #enemies.yards8 >= getOptionValue("Warbreaker")
+                and #enemies.yards8 >= getOptionValue("Warbreaker") and (ttd(units.dyn8AOE) > 5 or useCDs())
             then
                 if cast.warbreaker() then return end
             end
@@ -792,7 +793,8 @@ local function runRotation()
             -- bladestorm,if=(debuff.colossus_smash.up&raid_event.adds.in>target.time_to_die)|raid_event.adds.up&((debuff.colossus_smash.remains>4.5&!azerite.test_of_might.enabled)|buff.test_of_might.up)
             if mode.bladestorm == 1
 			    and cast.able.bladestorm(nil,"aoe") and isChecked("Bladestorm")  
-			    and not talent.ravager and ((debuff.colossusSmash.remain(units.dyn5) > 4.5 and not traits.testOfMight.active) and not buff.sweepingStrikes.exists() or buff.testOfMight.exists())                
+                and not talent.ravager and ((debuff.colossusSmash.remain(units.dyn5) > 4.5 and not traits.testOfMight.active) 
+                and not buff.sweepingStrikes.exists() or buff.testOfMight.exists())
             then
                 if cast.bladestorm(nil,"aoe") then return end
             end

@@ -131,7 +131,7 @@ local function runRotation()
         local animality                                     = false
         local artifact                                      = br.player.artifact
         local buff                                          = br.player.buff
-        local canFlask                                      = canUse(br.player.flask.wod.agilityBig)
+        local canFlask                                      = canUseItem(br.player.flask.wod.agilityBig)
         local cast                                          = br.player.cast
         local combatTime                                    = getCombatTime()
         local combo                                         = br.player.comboPoints
@@ -153,7 +153,7 @@ local function runRotation()
         local inCombat                                      = br.player.inCombat
         local inInstance                                    = br.player.instance=="party"
         local inRaid                                        = br.player.instance=="raid"
-        local item                                          = br.player.spell.items
+        local item                                          = br.player.items
         local level                                         = br.player.level
         local lootDelay                                     = getOptionValue("LootDelay")
         local lowestHP                                      = br.friend[1].hp
@@ -273,9 +273,9 @@ local function runRotation()
 					if buff.trickShots.exists() and not buff.preciseShots.exists() and not buff.doubleTap.exists() then
 						if cast.aimedShot() then return end
 					end
-                    --Multishot actions.trickshots+=/multishot,if=buff.trick_shots.down|(buff.precise_shots.up|buff.lethal_shots.up)&(!talent.barrage.enabled&buff.steady_focus.down&focus>45|focus>70)
+                    --multishot actions.trickshots+=/multishot,if=buff.trick_shots.down|(buff.precise_shots.up|buff.lethal_shots.up)&(!talent.barrage.enabled&buff.steady_focus.down&focus>45|focus>70)
 					if (not buff.trickShots.exists() or buff.preciseShots.exists()) or power > 70 then
-						if cast.multiShot() then return end
+						if cast.multishot() then return end
 					end
 					--Steady shot actions.trickshots+=/steady_shot,if=focus+cast_regen<focus.max|(talent.lethal_shots.enabled&buff.lethal_shots.down)
 					if ((power + (cast.regen.steadyShot() + 10)) < powerMax) then
@@ -290,10 +290,10 @@ local function runRotation()
             -- Trinkets
             -- use_items
             if getOptionValue("Trinkets") ~= 4 then
-                if (getOptionValue("Trinkets") == 1 or getOptionValue("Trinkets") == 3) and canUse(13) then
+                if (getOptionValue("Trinkets") == 1 or getOptionValue("Trinkets") == 3) and canUseItem(13) then
                     useItem(13)
             end
-            if (getOptionValue("Trinkets") == 2 or getOptionValue("Trinkets") == 3) and canUse(14) then
+            if (getOptionValue("Trinkets") == 2 or getOptionValue("Trinkets") == 3) and canUseItem(14) then
                     useItem(14)
                     end
             end                    

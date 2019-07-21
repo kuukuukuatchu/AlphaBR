@@ -175,7 +175,6 @@ interruptWhitelist = {
 	[258777] = true, -- sea-spout
 	[257732] = true, -- shattering-bellow
 	[257736] = true, -- thundering-squall
-	[257899] = true, -- painful-motivation
 	[256060] = true, -- revitalizing-brew
 	[257784] = true, -- Frostblast
 	-- Freehold end
@@ -230,12 +229,25 @@ interruptWhitelist = {
 	-- Battle of Dazarlor start
 	[283628] = true, -- Heal of the forces of the crusade, champion of the light encounter
 	[282243] = true, -- Apetagonize, Grong encounter
+	[289596] = true, -- For the King, 7th Legion Cavalier
 	[286379] = true, -- Pyroblast, Jade Masters encounter
 	[286563] = true, -- Tidal Empowerment, Brother Joseph , Stormwall Blockade encounter
 	[287887] = true, -- Storm's Empowerment, Sister Katherine , Stormwall Blockade encounter
 	[289861] = true, -- Howling Winds, Lady Jaina Proudmoore
 	[287419] = true, -- Angelic Renewal, Disciples Boss-Heal on Mythic Champions of Light.
 	-- Battle of Dazarlor end
+	-- Mechagon Start
+	[300650] = true, -- Suffocating Smog, Toxic Lurkers
+	[300414] = true, -- Enrage, Scrapbone Grinders
+	[300171] = true, -- Repair Protocol, Heavy Scrapbot
+	[299588] = true, -- Overclock, Pistonhead Mechanic
+	[300087] = true, -- Repair, Pistonhead Mechanic
+	[298669] = true, -- Taze, Trixie Tazer
+	[300514] = true, -- Stoneskin, Scrapbone Shamans
+	[300436] = true, -- Grasping Hex, Scrapbone Shamans
+	[301629] = true, -- Enlarge, Mechagon Renormalizer
+	[284219] = true, -- Shrink, Mechagon Renormalizer
+
 
 	-- Old Content start 
 	[191823] = true, -- Furious Blast
@@ -343,27 +355,70 @@ interruptWhitelist = {
 	[211875] = true, -- Bladestorm
 	-- Old Content end
 }
-validUnitBypassList = {
-	[133492] = "Corruption Corpuscle",
-	[135016] = "Plague Amalgam",
-	[131009] = "Spirit of Gold", --Atal
-	[125828] = "Soulspawn", --Atal
-    [134691] = "Static Charged Dervish", --Temple
-    [147218] = "Spirit of Gold", --Opulence
-    [148436] = "Barrier", --Jadefire Masters
-	[148415] = "Barrier", --Jadefire Masters
-	[147377] = "Barrier", --Jadefire Masters
-	[147376] = "Barrier", --Jadefire Masters
-    [147374] = "Barrier", --Jadefire Masters
-    [147375] = "Barrier", --Jadefire Masters
-	[146756] = "Energized Storm", --Jadefire Masters
-	[146107] = "Living Bomb", -- Jadefire Masters
-	[148522] = "Ice Block", --Jaina
-	[148907] = "Prismatic Image", --Jaina
-    [148716] = "Risen Soul", --M+ Reaping
-    [148893] = "Tormented Soul", --M+ Reaping
-	[148894] = "Lost Soul", --M+ Reaping
-	[120651] = "Explosive", -- Explosive
-	[136330] = "Soul Thorns", -- Soul Thorns Waycrest Manor
-	[134388] = "A Knot of Snakes" -- A Knot of Snakes ToS
+-- Moved to threatBypassList (System/List/ThreatBypass.lua)
+-- validUnitBypassList = {
+-- 	[133492] = "Corruption Corpuscle",
+-- 	[135016] = "Plague Amalgam",
+-- 	[131009] = "Spirit of Gold", --Atal
+-- 	[125828] = "Soulspawn", --Atal
+--     [134691] = "Static Charged Dervish", --Temple
+--     [147218] = "Spirit of Gold", --Opulence
+--     [148436] = "Barrier", --Jadefire Masters
+-- 	[148415] = "Barrier", --Jadefire Masters
+-- 	[147377] = "Barrier", --Jadefire Masters
+-- 	[147376] = "Barrier", --Jadefire Masters
+--     [147374] = "Barrier", --Jadefire Masters
+--     [147375] = "Barrier", --Jadefire Masters
+-- 	[146756] = "Energized Storm", --Jadefire Masters
+-- 	[146107] = "Living Bomb", -- Jadefire Masters
+-- 	[148522] = "Ice Block", --Jaina
+-- 	[148907] = "Prismatic Image", --Jaina
+--     [148716] = "Risen Soul", --M+ Reaping
+--     [148893] = "Tormented Soul", --M+ Reaping
+-- 	[148894] = "Lost Soul", --M+ Reaping
+-- 	[120651] = "Explosive", -- Explosive
+-- 	[136330] = "Soul Thorns", -- Soul Thorns Waycrest Manor
+-- 	[134388] = "A Knot of Snakes", -- A Knot of Snakes ToS
+-- 	[154240] = "Azshara's Devoted", -- Azshara's Devoted
+--     [155354] = "Azshara's Indomitable", -- Azshara's Indomitable
+--     [155643] = "Overzealous Hulk", -- Overzealous Hulk
+-- }
+
+rangeOrMelee = {
+	[250] = "melee",
+	[251] = "melee",
+	[252] = "melee",
+	[577] = "melee",
+	[581] = "melee",
+	[102] = "ranged",
+	[103] = "melee",
+	[104] = "melee",
+	[105] = "ranged",
+	[253] = "ranged",
+	[254] = "ranged",
+	[255] = "melee",
+	[62] = "ranged",
+	[63] = "ranged",
+	[64] = "ranged",
+	[268] = "melee",
+	[269] = "melee",
+	[270] = "ranged",
+	[65] = "ranged",
+	[66] = "melee",
+	[70] = "melee",
+	[256] = "ranged",
+	[257] = "ranged",
+	[258] = "ranged",
+	[259] = "melee",
+	[260] = "melee",
+	[261] = "melee",
+	[262] = "ranged",
+	[263] = "melee",
+	[264] = "ranged",
+	[265] = "ranged",
+	[266] = "ranged",
+	[267] = "ranged",
+	[71] = "melee",
+	[72] = "melee",
+	[73] = "melee",
 }

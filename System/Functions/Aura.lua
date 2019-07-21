@@ -41,7 +41,21 @@ function UnitBuffID(unit, spellID, filter)
 end
 
 function UnitDebuffID(unit, spellID, filter)
+	local thisUnit = ObjectPointer(unit)
 	local spellName = GetSpellInfo(spellID)
+	-- Check Cache
+	if br.enemy[thisUnit] ~= nil then 
+		if filter == nil then filter = "player" else filter = ObjectPointer(filter) end
+		if br.enemy[thisUnit].debuffs[filter] ~= nil then 
+			if br.enemy[thisUnit].debuffs[filter][spellID] ~= nil then
+				return br.enemy[thisUnit].debuffs[filter][spellID](spellID,thisUnit)
+			else 
+				return nil
+			end
+		end
+	end
+
+	-- Failsafe if not cached
 	local exactSearch = filter ~= nil and strfind(strupper(filter), "EXACT")
 	if exactSearch then
 		for i = 1, 40 do
@@ -69,57 +83,47 @@ end
 -- 		end
 -- 	end
 -- end
-local function Dispel(unit,buff)
-	if not UnitInPhase(unit) then
-		return false
-	end
+local function Dispel(unit,stacks,buffDuration,buffRemain,buffSpellID,buff)
 	if not buff then
-		for i=1,40 do
-			local buffName,_,stacks,_,_,_,buffCaster,_,_,buffSpellID = UnitDebuff(unit,i)
-			if buffName then
-				if buffSpellID == 288388 then
-					if stacks >= getOptionValue("Reaping") then
-						return true
-					else 
-						return false
-					end
-				elseif buffSpellID == 282566 then
-					if stacks >= getOptionValue("Promise of Power") then
-						return true
-					else
-						return false
-					end
-				elseif novaEngineTables.DispelID[buffSpellID] ~= nil then
-					if stacks >= novaEngineTables.DispelID[buffSpellID].stacks
-					then
-						if novaEngineTables.DispelID[buffSpellID].stacks ~= 0 and novaEngineTables.DispelID[buffSpellID].range == nil then
-							return true
-						else
-							if (getDebuffDuration(unit, buffSpellID) - getDebuffRemain(unit,buffSpellID)) > (getDebuffDuration(unit, buffSpellID) * (math.random(getValue("Dispel delay")-2, getValue("Dispel delay")+2)/100)) then -- Dispel Delay then
-								if novaEngineTables.DispelID[buffSpellID].range ~= nil then
-									if #getAllies(unit,novaEngineTables.DispelID[buffSpellID].range) > 1 then
-										return false
-									end
-									return true
-								end
-								return true
+		if buffSpellID == 288388 then
+			if stacks >= getOptionValue("Reaping") or not UnitAffectingCombat("player") then
+				return true
+			else 
+				return false
+			end
+		elseif buffSpellID == 282566 then
+			if stacks >= getOptionValue("Promise of Power") then
+				return true
+			else
+				return false
+			end
+		elseif novaEngineTables.DispelID[buffSpellID] ~= nil then
+			if stacks >= novaEngineTables.DispelID[buffSpellID].stacks
+			then
+				if novaEngineTables.DispelID[buffSpellID].stacks ~= 0 and novaEngineTables.DispelID[buffSpellID].range == nil then
+					return true
+				else
+					if buffDuration - buffRemain > (getValue("Dispel delay") - 0.3 + math.random() * 0.6) then -- Dispel Delay then
+						if novaEngineTables.DispelID[buffSpellID].range ~= nil then
+							if #getAllies(unit,novaEngineTables.DispelID[buffSpellID].range) > 1 then
+								return false
 							end
-							return false
+							return true
 						end
-					end	
+						return true
+					end
 					return false
 				end
-			end
+			end	
+			return false
 		end
 		return nil
 	elseif buff then
-		for i=1,40 do
-			local buffName,_,_,_,_,_,buffCaster,_,_,buffSpellID = UnitBuff(unit,i)
-			if buffName then
-				if novaEngineTables.PurgeID[buffSpellID] ~= nil then
-					return true
-				end
+		if novaEngineTables.PurgeID[buffSpellID] ~= nil then
+			if (buffDuration - buffRemain) > (getValue("Dispel delay") - 0.3 + math.random() * 0.6) then
+				return true
 			end
+			return false
 		end
 		return nil
 	end
@@ -178,7 +182,8 @@ function canDispel(Unit, spellID)
 		if spellID == 370 then typesList = {"Magic"} end
 	end
 	if ClassNum == 8 then --Mage
-		typesList = {}
+		-- Remove Curse
+		if spellID == 475 then typesList = {"Curse"} end
 	end
 	if ClassNum == 9 then --Warlock
 		typesList = {}
@@ -211,7 +216,7 @@ function canDispel(Unit, spellID)
 	end
 	if br.player.race == "BloodElf" then --Blood Elf
 		-- Arcane Torrent
-		if spellID == 69179 then typesList = {"Magic"} end
+		if spellID == select(7, GetSpellInfo(GetSpellInfo(69179))) then typesList = {"Magic"} end
 	end
 	local function ValidType(debuffType)
 		local typeCheck = false
@@ -232,52 +237,58 @@ function canDispel(Unit, spellID)
 	if UnitInPhase(Unit) then
 		if GetUnitIsFriend("player", Unit) then
 			while UnitDebuff(Unit, i) do
-				local _, _, _, debuffType, debuffDuration, debuffExpire, _, _, _, debuffid = UnitDebuff(Unit, i)
+				local _, _, stacks, debuffType, debuffDuration, debuffExpire, _, _, _, debuffid = UnitDebuff(Unit, i)
 				local debuffRemain = debuffExpire - GetTime()
 				local dispelUnitObj
 				if (debuffType and ValidType(debuffType)) then 
-					if isChecked("Dispel Only Whitelist") and novaEngineTables.DispelID[debuffid] == nil then
-						return false
-					else
-						for i = 1, #br.friend do
-							local thisUnit = br.friend[i].unit
-							if Unit == thisUnit then
-								if Dispel(thisUnit) ~= nil then
-									dispelUnitObj = Dispel(thisUnit)
-								end
-							end
-						end
-						if dispelUnitObj == nil then
-							if (debuffDuration - debuffRemain) > (getValue("Dispel delay") - 0.3 + math.random() * 0.6) then
-								HasValidDispel = true
-								break
-							end
-						elseif dispelUnitObj == true then
+					if debuffid == 284663 then
+						if (GetHP(Unit) < getOptionValue("Bwonsamdi's Wrath HP") or pakuWrath == true) then
 							HasValidDispel = true
-							dispelUnitObj = nil
+							break
+						elseif UnitGroupRolesAssigned(Unit) == "TANK" and (debuffDuration - debuffRemain) > (getValue("Dispel delay") - 0.3 + math.random() * 0.6) then
+							HasValidDispel = true
 							break
 						end
+					end
+					for i = 1, #br.friend do
+						local thisUnit = br.friend[i].unit
+						if Unit == thisUnit then
+							if Dispel(thisUnit,stacks,debuffDuration,debuffRemain,debuffid) ~= nil then
+								dispelUnitObj = Dispel(thisUnit,stacks,debuffDuration,debuffRemain,debuffid)
+							end
+						end
+					end
+					if dispelUnitObj == nil and not isChecked("Dispel Only Whitelist") then
+						if (debuffDuration - debuffRemain) > (getValue("Dispel delay") - 0.3 + math.random() * 0.6) then
+							HasValidDispel = true
+							break
+						end
+					elseif dispelUnitObj == true then
+						HasValidDispel = true
+						dispelUnitObj = nil
+						break
 					end
 				end
 				i = i + 1
 			end
 		else
 			while UnitBuff(Unit, i) do
-				local _, _, _, buffType, buffDuration, buffExpire, _, _, _, buffid = UnitBuff(Unit, i)
+				local _, _, stacks, buffType, buffDuration, buffExpire, _, _, _, buffid = UnitBuff(Unit, i)
 				local buffRemain = buffExpire - GetTime()
 				local dispelUnitObj
 				if (buffType and ValidType(buffType)) then 
-					if isChecked("Purge Only Whitelist") then
-						dispelUnitObj = Dispel(Unit,true)
-					else 
-						dispelUnitObj = true
+					if Dispel(Unit,stacks,buffDuration,buffRemain,buffid,true) ~= nil then
+						dispelUnitObj = Dispel(Unit,stacks,buffDuration,buffRemain,buffid,true)
 					end
-					if dispelUnitObj == true then
+					if dispelUnitObj == nil and not isChecked("Purge Only Whitelist") then
 						if (buffDuration - buffRemain) > (getValue("Dispel delay") - 0.3 + math.random() * 0.6) then
 							HasValidDispel = true
-							dispelUnitObj = nil
 							break
 						end
+					elseif dispelUnitObj == true then
+						HasValidDispel = true
+						dispelUnitObj = nil
+						break
 					end
 				end
 				i = i + 1
@@ -334,6 +345,7 @@ function getDebuffRemain(Unit, DebuffID, Source)
 	local remain = select(6, UnitDebuffID(Unit, DebuffID, Source))
 	if remain ~= nil then
 		remain = remain - GetTime()
+		-- Print(GetSpellInfo(DebuffID)..": "..remain)
 		return remain
 	end
 	-- if UnitDebuffID(Unit,DebuffID,Source) ~= nil then
@@ -461,6 +473,13 @@ function getBuffCount(spellID)
 		end
 	end
 	return tonumber(counter)
+end
+function getBuffReact(Unit, BuffID, Source)
+	local _, _, _, _, duration, expire = UnitBuffID(Unit, BuffID, Source)
+	if duration ~= nil then
+		return (GetTime() - (expire - duration)) > 0.5
+	end
+	return false
 end
 -- if getDisease(30,true,min) < 2 then
 function getDisease(range, aoe, mod)

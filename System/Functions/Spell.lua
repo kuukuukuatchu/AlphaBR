@@ -54,6 +54,8 @@ end
 -- canInterrupt("target",20)
 function canInterrupt(unit,percentint)
 	unit = unit or "target"
+	-- M+ Affix: Beguiling (Prevents Interrupt) - Queen's Decree: Unstoppable buff
+	if UnitBuffID(unit,302417) ~= nil then return false end
 	local interruptTarget = getOptionValue("Interrupt Target")
 	if interruptTarget == 2 and not GetUnitIsUnit(unit, "target") then
 		return false
@@ -269,4 +271,10 @@ function isKnown(spellID)
  --    end
 	-- return false
 	return spellID ~= nil and (GetSpellBookItemInfo(tostring(spellName)) ~= nil or IsPlayerSpell(tonumber(spellID)) or IsSpellKnown(spellID) or hasPerk(spellID) or isSpellInSpellbook(spellID,"spell"))
+end
+
+function isActiveEssence(spellID)
+	local _, _, heartIcon = GetSpellInfo(296208) 
+	local _, _, essenceIcon = GetSpellInfo(spellID)
+	return heartIcon == essenceIcon
 end

@@ -137,6 +137,8 @@ function br.read.commonReaders()
 			Rake_sDamage = {}
 			Thrash_sDamage = {}
 			petAttacking = false
+			br.lastCast.line_cd = {}
+			wipe(br.read.debuffTracker)
 		end
 	end
 	Frame:SetScript("OnEvent", LeavingCombat)
@@ -265,7 +267,7 @@ function br.read.commonReaders()
 			if isChecked("Target Validation Debug") and not UnitIsPlayer(unit) then
 				if isValidUnit(unit) then
 					self:AddLine("Unit is Valid",0,1,0)
-				elseif not (br.units[unit] ~= nil or GetUnitIsUnit(unit,"target") or validUnitBypassList[GetObjectID(unit)] ~= nil or burnUnit) then
+				elseif not (br.units[unit] ~= nil or GetUnitIsUnit(unit,"target") or br.lists.threatBypass[GetObjectID(unit)] ~= nil or burnUnit) then
 					self:AddLine("Not in Units Table",1,0,0)
 				elseif not (not UnitIsTapDenied(unit) or dummy) then
 					self:AddLine("Unit is Tap Denied",1,0,0)
@@ -299,16 +301,26 @@ function br.read.commonReaders()
 	superReaderFrame:RegisterEvent("UNIT_SPELLCAST_CHANNEL_START")
 	superReaderFrame:RegisterEvent("UNIT_SPELLCAST_CHANNEL_UPDATE")
 	superReaderFrame:RegisterEvent("UNIT_SPELLCAST_INTERRUPTED")
+	superReaderFrame:RegisterEvent("UNIT_POWER_UPDATE")
 	superReaderFrame:RegisterEvent("ENCOUNTER_START")
 	superReaderFrame:RegisterEvent("ENCOUNTER_END")
 	superReaderFrame:RegisterUnitEvent("AZERITE_EMPOWERED_ITEM_SELECTION_UPDATED")
+	superReaderFrame:RegisterUnitEvent("AZERITE_ESSENCE_ACTIVATED")
 	superReaderFrame:RegisterUnitEvent("PLAYER_EQUIPMENT_CHANGED")
 	superReaderFrame:RegisterUnitEvent("PLAYER_LEVEL_UP")
 	superReaderFrame:RegisterUnitEvent("PLAYER_TALENT_UPDATE")
 	superReaderFrame:RegisterUnitEvent("UI_ERROR_MESSAGE")
-	frame:RegisterEvent("LOADING_SCREEN_ENABLED")
-	frame:RegisterEvent("LOADING_SCREEN_DISABLED")
+	superReaderFrame:RegisterEvent("LOADING_SCREEN_ENABLED")
+	superReaderFrame:RegisterEvent("LOADING_SCREEN_DISABLED")
 	local function SuperReader(self, event, ...)
+		-- Azerite Essence
+		if event == "AZERITE_ESSENCE_ACTIVATED" or event == "AZERITE_ESSENCE_CHANGED" then
+			br.updatePlayerInfo = true
+		end
+		-- Warlock Soul Shards
+		if event == "UNIT_POWER_UPDATE" and select(2, ...) == "SOUL_SHARDS" then
+			shards = WarlockPowerBar_UnitPower("player")
+		end
 		if event == "PLAYER_EQUIPMENT_CHANGED" then
 			br.equipHasChanged = true
 		end
@@ -447,6 +459,7 @@ function br.read.commonReaders()
 								tremove(br.player.queue, i)
 								if IsAoEPending() then
 									SpellStopTargeting()
+									br.addonDebug("Canceling Spell")
 								end
 								if not isChecked("Mute Queue") then
 									Print("Cast Success! - Removed |cFFFF0000" .. GetSpellInfo(spell) .. "|r from the queue.")
@@ -580,9 +593,11 @@ function br.read.commonReaders()
 			end
 		end
 		if event == "ENCOUNTER_START" then
-			br.player.eID = select(1, ...)
-			if br.player.eID and br.player.eID == 2141 then -- MOTHER Uldir fight
-				_brMotherFight = true
+			if br.player ~= nil then 
+				br.player.eID = select(1, ...)
+				if br.player.eID and br.player.eID == 2141 then -- MOTHER Uldir fight
+					_brMotherFight = true
+				end
 			end
 		end
 		if event == "ENCOUNTER_END" then
@@ -590,7 +605,7 @@ function br.read.commonReaders()
 			if eID and eID == 2141 then -- MOTHER Uldir fight
 				_brMotherFight = false
 			end
-			br.player.eID = nil
+			if br.player ~= nil then br.player.eID = nil end
 		end
 		if event == "CHAT_MSG_ADDON" then
 			local prefix, message = ...
