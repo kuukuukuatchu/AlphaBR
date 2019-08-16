@@ -314,7 +314,7 @@ function br.read.commonReaders()
 	superReaderFrame:RegisterEvent("LOADING_SCREEN_DISABLED")
 	local function SuperReader(self, event, ...)
 		-- Azerite Essence
-		if event == "AZERITE_ESSENCE_ACTIVATED" or event == "AZERITE_ESSENCE_CHANGED" then
+		if event == "AZERITE_ESSENCE_ACTIVATED" then
 			br.updatePlayerInfo = true
 		end
 		-- Warlock Soul Shards
@@ -459,7 +459,6 @@ function br.read.commonReaders()
 								tremove(br.player.queue, i)
 								if IsAoEPending() then
 									SpellStopTargeting()
-									br.addonDebug("Canceling Spell")
 								end
 								if not isChecked("Mute Queue") then
 									Print("Cast Success! - Removed |cFFFF0000" .. GetSpellInfo(spell) .. "|r from the queue.")
@@ -584,35 +583,26 @@ function br.read.commonReaders()
 		end
 		if event == "UI_ERROR_MESSAGE" then
 			local errorMsg = select(1, ...)
-			if errorMsg == 277 or errorMsg == 275 then
-				if deadPet == false then
-					deadPet = true
-				elseif deadPet == true then
-					deadPet = false
-				end
+			local messageErr = select(2, ...)
+			-- Print("Error "..errorMsg..": "..messageErr)
+			-- 51 = "Your Pet is Dead"
+			-- 203 = "Cannot attack while dead"
+			if not UnitIsDeadOrGhost("player") and (UnitIsDeadOrGhost("pet") or not UnitExists("pet")) and (errorMsg == 51 or errorMsg == 203) then --or errorMsg == 277 or errorMsg == 275 then
+				deadPet = true
+				-- if deadPet == false then
+				-- elseif deadPet == true and UnitHealth("pet") > 0 then
+				-- 	deadPet = false
+				-- end
 			end
 		end
 		if event == "ENCOUNTER_START" then
 			if br.player ~= nil then 
 				br.player.eID = select(1, ...)
-				if br.player.eID and br.player.eID == 2141 then -- MOTHER Uldir fight
-					_brMotherFight = true
-				end
 			end
 		end
 		if event == "ENCOUNTER_END" then
-			local eID = select(1, ...)
-			if eID and eID == 2141 then -- MOTHER Uldir fight
-				_brMotherFight = false
-			end
-			if br.player ~= nil then br.player.eID = nil end
-		end
-		if event == "CHAT_MSG_ADDON" then
-			local prefix, message = ...
-			if prefix == "D4" and string.find(message, "PT") then
-				_brPullTimer = GetTime() + tonumber(string.sub(message, 4, 5))
-			elseif prefix == "BigWigs" and string.find(message, "Pull") then
-				_brPullTimer = GetTime() + tonumber(string.sub(message, 8, 9))
+			if br.player ~= nil then 
+				br.player.eID = 0
 			end
 		end
 		if event == "LOADING_SCREEN_ENABLED" and disableControl == false then

@@ -8,7 +8,7 @@ local function flipRace()
             return "Human"
         elseif race == "Troll" then
             if class == 7 then
-                return "Draenei" 
+                return "Draenei"
             elseif class == 9 then
                 return "Human"
             else
@@ -56,7 +56,7 @@ local function flipRace()
             return "MagharOrc"
         elseif race == "Human" then
             if class == 2 then
-                return "BloodElf" 
+                return "BloodElf"
             else
                 return "Undead"
             end
@@ -104,9 +104,9 @@ local function flipRace()
     end
 end
 
-        
 
-        
+
+
 
 function getRacial()
     local forTheAlliance = UnitBuffID("player",193863) or false
@@ -727,6 +727,7 @@ br.lists.spells = {
             },
             traits                          = {
                 bloodMist                   = 279524,
+                jungleFury                  = 274424,
                 ironJaws                    = 276021,
                 twistedClaws                = 275906,
                 wildFleshrending            = 279527,
@@ -797,6 +798,7 @@ br.lists.spells = {
                 tranquility                 = 740,
                 ursolsVortex                = 102793,
                 yserasGift                  = 145108,
+                swipeResto                  = 213764,
             },
             artifacts                       = {
 
@@ -844,6 +846,10 @@ br.lists.spells = {
                 springBlossoms              = 207385,
                 stonebark                   = 197061,
             },
+            traits                          = {
+                dawningSun                  = 276152,
+                highNoon                    = 278505,
+            }
         },
         -- All
         Shared = {
@@ -1748,6 +1754,7 @@ br.lists.spells = {
                 auraOfMercy                 = 183415,
                 auraMastery                 = 31821,
                 avengingWrath               = 31884,
+                avengingWrathCrit           = 294027,
                 beaconOfLight               = 53563,
                 beaconOfFaith               = 156910,
                 blessingOfSacrifice         = 6940,
@@ -2159,6 +2166,7 @@ br.lists.spells = {
             buffs                           = {
                 dispersion                  = 47585,
                 harvestedThoughts           = 288343,
+                lingeringInsanity            = 199849,
                 powerWordShield             = 17,
                 powerInfusion               = 10060,
                 shadowyInsight              = 124430,
@@ -2189,7 +2197,7 @@ br.lists.spells = {
                 --dominantMind                = 205367,
                 fortressOfTheMind           = 193195,
                 legacyOfTheVoid             = 193225,
-                lingeringInsanty            = 199849,
+                lingeringInsanity            = 199849,
                 --mania                       = 193173,
                 --masochism                   = 193063,
                 mindBomb                    = 205369,
@@ -2237,7 +2245,7 @@ br.lists.spells = {
             buffs                           = {
                 classHallSpeed              = 224098,
                 powerWordFortitude          = 21562,
-                
+
             },
             debuffs                         = {
 
@@ -3440,6 +3448,7 @@ br.lists.spells = {
                 saphireofBrilliance             = 290365,
                 vigorEngaged                    = 287916,
                 -- Essences
+                guardianOfAzeroth               = 295855,
                 lifeblood                       = 295137,
                 memoryOfLucidDreams             = 298357,
                 recklessForce                   = 302932,
@@ -3448,6 +3457,7 @@ br.lists.spells = {
             },
             debuffs                             = {
                 concentratedFlame               = 295368,
+                conductiveInk                   = 302565,
                 dampening                       = 110310,
                 eyeOfLeotheras                  = 206649,
                 razorCoral                      = 303568, --304877,

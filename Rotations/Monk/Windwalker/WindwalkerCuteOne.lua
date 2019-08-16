@@ -249,7 +249,6 @@ end
 local actionList = {}
 -- Action List - Extras
 actionList.Extras = function()
-    debug("=== Extras [Action List] ===") 
     -- Stop Casting
     if isCastingSpell(spell.cracklingJadeLightning) then
         --   Print("channeling cjl")
@@ -328,7 +327,6 @@ end -- End Action List - Extras
 
 -- Action List - Defensive
 actionList.Defensive = function()
-    debug("=== Defensive [Action List] ===") 
     if useDefensive() then
         -- Pot/Stoned
         if option.checked("Healthstone") and getHP("player") <= option.value("Healthstone") and inCombat then
@@ -391,7 +389,6 @@ end -- End Action List - Defensive
 
 -- Action List - Interrupts
 actionList.Interrupts = function()
-    debug("=== Interrupts [Action List] ===") 
     if useInterrupts() then
         for i=1, #getEnemies("player",20) do
             local thisUnit = getEnemies("player",20)[i]
@@ -416,7 +413,6 @@ end -- End Action List - Interrupts
 
 -- Action List - Cooldowns
 actionList.Cooldowns = function()
-    debug("=== Cooldowns [Action List] ===") 
     -- Trinkets
     if getDistance(units.dyn5) < 5  then
         local thisTrinket
@@ -480,7 +476,6 @@ end -- End Cooldown - Action List
 
 -- Action List - Single Target
 actionList.SingleTarget = function()
-    debug("=== ST [Action List] ===") 
     -- Whirling Dragon Punch
     -- whirling_dragon_punch
     if option.checked("Whirling Dragon Punch") and cast.able.whirlingDragonPunch() and talent.whirlingDragonPunch and not moving and not isExplosive("target")
@@ -566,7 +561,6 @@ end -- End Action List - Single Target
 
 -- Action List - AoE
 actionList.AoE = function()
-    debug("=== AOE [Action List] ===") 
     -- Rising Sun Kick
     -- rising_sun_kick,target_if=min:debuff.mark_of_the_crane.remains,if=(talent.whirling_dragon_punch.enabled&cooldown.whirling_dragon_punch.remains<5)&cooldown.fists_of_fury.remains>3
     if cast.able.risingSunKick(lowestMark) and (((talent.whirlingDragonPunch and cd.whirlingDragonPunch.remain() < 5) and cd.fistsOfFury.remain() > 3)
@@ -646,7 +640,6 @@ end -- End Action List - AoE
 
 -- Action List - Essence
 actionList.Essence = function()
-    debug("=== Essence [Action List] ===") 
     -- concentrated_flame
     if cast.able.concentratedFlame() then
         if cast.concentratedFlame() then debug("Casting Concentrated Flame") return end
@@ -691,7 +684,6 @@ end
 
 -- Action List - Serenity
 actionList.Serenity = function()
-    debug("=== Serenity [Action List] ===") 
     -- Rising Sun Kick
     -- rising_sun_kick,target_if=min:debuff.mark_of_the_crane.remains,if=active_enemies<3|prev_gcd.1.spinning_crane_kick
     if chi >= 2 and  cast.able.risingSunKick(lowestMark) and (#enemies.yards8 < 3 or wasLastCombo(spell.spinningCraneKick)) then
@@ -720,7 +712,6 @@ end -- End Action List - Serenity
 
 -- Action List - Pre-Combat
 actionList.PreCombat = function()
-    debug("=== PreCombat [Action List] ===") 
     if not inCombat then
         -- Flask / Crystal
         -- flask,type=flask_of_the_seventh_demon
@@ -770,12 +761,11 @@ actionList.PreCombat = function()
         end
     end -- End No Combat Check
     -- Opener
-    if actionList.Opener() then return true end
+    if actionList.Opener() then debug("=== Opener [Action List] ===") return true end
 end --End Action List - Pre-Combat
 
 -- Action List - Opener
 actionList.Opener = function()
-    debug("=== Opener [Action List] ===") 
     -- Start Attack
     -- auto_attack
     if mode.opener == 1 and isBoss("target") and not opener.complete then
@@ -1126,15 +1116,15 @@ local function runRotation()
         -----------------------
         --- Extras Rotation ---
         -----------------------
-        if actionList.Extras() then return true end
+        if actionList.Extras() then debug("=== Extras [Action List] ===") return true end
         --------------------------
         --- Defensive Rotation ---
         --------------------------
-        if actionList.Defensive() then return true end
+        if actionList.Defensive() then debug("=== Defensive [Action List] ===") return true end
         ---------------------------
         --- Pre-Combat Rotation ---
         ---------------------------
-        if actionList.PreCombat() then return true end
+        if actionList.PreCombat() then debug("=== PreCombat [Action List] ===") return true end
         --------------------------
         --- In Combat Rotation ---
         --------------------------
@@ -1146,7 +1136,7 @@ local function runRotation()
             --- Interrupts ---
             ------------------
             -- Run Action List - Interrupts
-            if actionList.Interrupts() then return true end
+            if actionList.Interrupts() then debug("=== Interrupts [Action List] ===") return true end
             ----------------------
             --- Start Rotation ---
             ----------------------
@@ -1181,7 +1171,7 @@ local function runRotation()
                 -- Call Action List - Serenity
                 -- call_action_list,name=serenity,if=buff.serenity.up
                 if buff.serenity.exists() then
-                    if actionList.Serenity() then return true end
+                    if actionList.Serenity() then debug("=== Serenity [Action List] ===") return true end
                 end
                 -- Xuen
                 if cast.able.invokeXuenTheWhiteTiger() and useCDs() and option.checked("Xuen") then
@@ -1201,21 +1191,21 @@ local function runRotation()
                 end
                 -- Call Action List - Cooldowns
                 -- call_action_list,name=cd
-                if actionList.Cooldowns() then return true end
+                if actionList.Cooldowns() then debug("=== Cooldowns [Action List] ===") return true end
                 -- Call Action List - Essence
                 -- call_action_list,name=essences
-                if option.checked("Use Essence") then 
-                    if actionList.Essence() then return end
+                if option.checked("Use Essence") then
+                    if actionList.Essence() then debug("=== Essence [Action List] ===") return end
                 end
                 -- Call Action List - Single Target
                 -- call_action_list,name=st,if=active_enemies<3
                 if level < 40 or ((mode.rotation == 1 and #enemies.yards8 < 3) or (mode.rotation == 3 and #enemies.yards8 > 0)) then
-                    if actionList.SingleTarget() then return true end
+                    if actionList.SingleTarget() then debug("=== ST [Action List] ===") return true end
                 end
                 -- Call Action List - AoE
                 -- call_action_list,name=aoe,if=active_enemies>=3
                 if level >= 40 and ((mode.rotation == 1 and #enemies.yards8 >= 3) or (mode.rotation == 2 and #enemies.yards8 > 0)) then
-                    if actionList.AoE() then return true end
+                    if actionList.AoE() then debug("=== AOE [Action List] ===") return true end
                 end
             end -- End Simulation Craft APL
             ----------------------------

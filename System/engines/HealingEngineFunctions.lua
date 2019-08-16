@@ -96,12 +96,9 @@ function getUnitsToHealAround(UnitID,radius,health,count)
 	elseif UnitID and UnitID.x ~= 0 then
 		X1,Y1,Z1 = UnitID.x,UnitID.y,UnitID.z
 	end
-	local unit = {x = X1,y = Y1,z = Z1,guid = UnitGUID(UnitID),name = UnitName(UnitID), hp = getHP(UnitID)}
+	local unit = {x = X1,y = Y1,z = Z1,guid = UnitGUID(UnitID),name = UnitName(UnitID)}
 	-- once we get our unit location we call our getdistance
 	local lowHealthCandidates = {}
-	-- if UnitIsUnit("player",unit) and unit.hp <= health then
-	-- 	tinsert(lowHealthCandidates, 1, {hp = unit.hp,x = unit.x,y = unit.y,z = unit.z,name = unit.name,guid = unit.guid})
-	-- end
 	for i = 1, #br.friend do
 		local thisUnit = br.friend[i]
 		-- if in given radius

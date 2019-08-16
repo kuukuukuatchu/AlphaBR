@@ -198,8 +198,8 @@ local function createOptions()
 		br.ui:createCheckbox(section, "Auto Soothe")
 		-- Revive
 		br.ui:createDropdown(section, "Revive", {"|cffFFFF00Selected Target", "|cffFF0000Mouseover Target","|cffFFBB00Auto"}, 1, "|ccfFFFFFFTarget to Cast On")
-		-- Necrotic Rot
-		br.ui:createSpinnerWithout(section, "Necrotic Rot", 30, 0, 100, 1, "|cffFFFFFFNecrotic Rot Stacks does not healing the unit")
+
+		br.ui:createCheckbox(section, "Pig Catcher", "Catch the freehold Pig in the ring of booty")
 		br.ui:checkSectionState(section)
 		-- Cooldown Options
 		section = br.ui:createSection(br.ui.window.profile, "Cooldowns")
@@ -231,8 +231,17 @@ local function createOptions()
 		 section = br.ui:createSection(br.ui.window.profile, "Essence Options")
 		 --Concentrated Flame
 			 br.ui:createSpinner(section, "Concentrated Flame", 75, 0, 100, 5, colorWhite.."Will cast Concentrated Flame if party member is below value. Default: 75")
-		 --Memory of Lucid Dreams
+		--Memory of Lucid Dreams
 			 br.ui:createCheckbox(section, "Lucid Dreams")
+		-- Ever-Rising Tide
+			br.ui:createDropdown(section, "Ever-Rising Tide", { "Always", "Based on Health" }, 1, "When to use this Essence")
+            br.ui:createSpinner(section, "Ever-Rising Tide - Mana", 30, 0, 100, 5, "", "Min mana to use")
+			br.ui:createSpinner(section, "Ever-Rising Tide - Health", 30, 0, 100, 5, "", "Health threshold to use")
+		-- Well of Existence
+			br.ui:createCheckbox(section, "Well of Existence")
+		-- Life Binder's Invocation
+			br.ui:createSpinner(section, "Life Binder's Invocation", 85, 1, 100, 5, "Health threshold to use")
+            br.ui:createSpinner(section, "Life Binder's Invocation Targets", 5, 1, 40, 1, "Number of targets to use")
 		 br.ui:checkSectionState(section)
 		-- Defensive Options
 		section = br.ui:createSection(br.ui.window.profile, "Defensive")
@@ -371,7 +380,7 @@ local function runRotation()
 	--------------
 	-- local artifact                                      = br.player.artifact
 	-- local combatTime                                    = getCombatTime()
-	-- local cd                                            = br.player.cd
+	-- local cd 										   = br.player.cd
 	-- local charges                                       = br.player.charges
 	-- local perk                                          = br.player.perk
 	-- local gcd                                           = br.player.gcd
@@ -379,6 +388,7 @@ local function runRotation()
 	-- local lowest                                        = br.friend[1]
 	local buff = br.player.buff
 	local cast = br.player.cast
+	local cd = br.player.cd
 	local combo = br.player.power.comboPoints.amount()
 	local debuff = br.player.debuff
 	local drinking = getBuffRemain("player", 192002) ~= 0 or getBuffRemain("player", 167152) ~= 0 or getBuffRemain("player", 192001) ~= 0
@@ -689,6 +699,9 @@ local function runRotation()
 
 	-- Action List - Pre-Combat
 	local function actionList_PreCombat()
+		if isChecked("Pig Catcher") then
+			bossHelper()
+		end
 		-- Pre-Pull Timer
 		if isChecked("Pre-Pull Timer") then
 			if PullTimerRemain() <= getOptionValue("Pre-Pull Timer") then
@@ -995,6 +1008,26 @@ local function runRotation()
 								ClickPosition(loc.x, loc.y, loc.z)
 								return true
 							end
+						end
+					end
+				end
+			end
+			if isChecked("Life-Binder's Invocation") and essence.lifeBindersInvocation.active and cd.lifeBindersInvocation.remain() <= gcd and getLowAllies(getOptionValue("Life-Binder's Invocation")) >= getOptionValue("Life-Binder's Invocation Targets") then
+                if cast.lifeBindersInvocation() then
+                    br.addonDebug("Casting Life-Binder's Invocation")
+                    return true
+                end
+            end
+			if isChecked("Ever-Rising Tide") and essence.overchargeMana.active and cd.overchargeMana.remain() <= gcdMax and getOptionValue("Ever-Rising Tide - Mana") <= mana then
+				if getOptionValue("Ever-Rising Tide") == 1 then
+					if cast.overchargeMana() then
+						return
+					end
+				end
+				if getOptionValue("Ever-Rising Tide") == 2 then
+					if lowest.hp < getOptionValue("Ever Rising Tide - Health") or burst == true then
+						if cast.overchargeMana() then
+							return
 						end
 					end
 				end
@@ -1547,6 +1580,10 @@ local function runRotation()
 					end
 				end
 			end
+		end
+		-- Refreshment
+		if isChecked("Well of Existence") and essence.refreshment.active and cd.refreshment.remain() <= gcd and UnitBuffID("player",296138) and select(16,UnitBuffID("player",296138,"EXACT")) >= 15000 and lowest.hp <= getValue("Shadow Mend") then
+			if cast.refreshment(lowest.unit) then br.addonDebug("Casting Refreshment") return true end
 		end
 		-- Concentrated Flame
 		if isChecked("Concentrated Flame") and essence.concentratedFlame.active and getSpellCD(295373) <= gcdMax then
@@ -2281,6 +2318,10 @@ local function runRotation()
 			end
 		end -- End -- Balance Affinity
 	end -- End Action List - DPS
+	if br.data.settings[br.selectedSpec][br.selectedProfile]['HE ActiveCheck'] == false and br.timer:useTimer("Error delay",0.5) then
+		Print("Detecting Healing Engine is not turned on.  Please activate Healing Engine to use this profile.")
+		return
+	end
 	-----------------
 	--- Rotations ---
 	-----------------

@@ -1,6 +1,3 @@
-if _brMotherFight == nil then
-	_brMotherFight = false
-end
 -- getLatency()
 function getLatency()
 	-- local lag = ((select(3,GetNetStats()) + select(4,GetNetStats())) / 1000)
@@ -79,7 +76,7 @@ function getLineOfSight(Unit1, Unit2)
 		local X2, Y2, Z2 = GetObjectPosition(Unit2)
 		local pX, pY, pZ = GetObjectPosition("player")
 		if TraceLine(X1, Y1, Z1 + 2, X2, Y2, Z2 + 2, 0x10) == nil then
-			if _brMotherFight == true then
+			if br.player and br.player.eID and br.player.eID == 2141 then
 				if pX < -108 and X2 < -108 then
 					return true
 				elseif (pX > -108 and pX < -54) and (X2 > -108 and X2 < -54) then
@@ -381,12 +378,12 @@ end
 
 function enemyListCheck(Unit)
 	local distance = getDistance(Unit, "player")
-	local mcCheck =	(isChecked("Attack MC Targets") and (not GetUnitIsFriend(Unit, "player") or UnitIsCharmed(Unit))) or not GetUnitIsFriend(Unit, "player")
+	local mcCheck = (isChecked("Attack MC Targets") and	(not GetUnitIsFriend(Unit, "player") or (UnitIsCharmed(Unit) and UnitCanAttack("player", Unit)))) or not GetUnitIsFriend(Unit, "player")
 	--local playerObj = GetObjectWithGUID(UnitGUID("player"))
 	return GetObjectExists(Unit) and not UnitIsDeadOrGhost(Unit) and UnitInPhase(Unit) and UnitCanAttack("player", Unit) and
 		distance < 50 and
 		not isCritter(Unit) and
-		mcCheck and
+		mcCheck and isSafeToAttack(Unit) and
 		not GetUnitIsUnit(Unit, "pet") and
 		UnitCreator(Unit) ~= ObjectPointer("player") and
 		GetObjectID(Unit) ~= 11492 and
@@ -403,21 +400,22 @@ function isValidUnit(Unit)
 	local threatBypassUnit = br.lists.threatBypass[GetObjectID(Unit)] ~= nil
 	local burnUnit = getOptionCheck("Forced Burn") and isBurnTarget(Unit) > 0
 	local isCC = getOptionCheck("Don't break CCs") and isLongTimeCCed(Unit) or false
-	local mcCheck = (isChecked("Attack MC Targets") and	(not GetUnitIsFriend(Unit, "player") or (UnitIsCharmed(Unit) and UnitCanAttack("player", Unit)))) or not GetUnitIsFriend(Unit, "player")
 	if playerTarget and br.units[UnitTarget("player")] == nil and not enemyListCheck("target") then
 		return false
 	end
 	if not pause(true) and Unit ~= nil and
-		(br.units[Unit] ~= nil or Unit == "target" or threatBypassUnit or burnUnit) and
-		mcCheck and not isCC and (dummy or burnUnit or (not UnitIsTapDenied(Unit) and isSafeToAttack(Unit) and		
-			((not hostileOnly and reaction < 5) or (hostileOnly and (reaction < 4 or playerTarget or targeting)))))
+		(br.units[Unit] ~= nil or Unit == "target" or threatBypassUnit or burnUnit) and getHP(Unit) > 0 
+		and not isCC and (dummy or burnUnit or (not UnitIsTapDenied(Unit) and		
+		((not hostileOnly and reaction < 5) or (hostileOnly and (reaction < 4 or playerTarget or targeting)))))
 	 then
 		local instance = IsInInstance()
 		local distanceToTarget = getDistance("target",Unit)
 		local distanceToPlayer = getDistance("player",Unit)
-		local inCombat = UnitAffectingCombat("player") or (GetObjectExists("pet") and UnitAffectingCombat("pet"))
+		local inCombat = (br.player and br.player.inCombat) or UnitAffectingCombat("player") or (GetObjectExists("pet") and UnitAffectingCombat("pet"))
 		local unitThreat = hasThreat(Unit) or targeting or isInProvingGround() or burnUnit or threatBypassUnit
-		return unitThreat or ((not instance and (playerTarget or distanceToTarget < 8)) or (instance and (#br.friend == 1 or (UnitAffectingCombat(Unit) and distanceToPlayer < 40)))) -- (not hasThreat and (
+		return unitThreat 
+			or ((not instance and (playerTarget or (distanceToTarget < 8 and (reaction < 4 or isDummy())))) 
+			or (instance and (#br.friend == 1 or (UnitAffectingCombat(Unit) and distanceToPlayer < 40)))) -- (not hasThreat and (
 			-- Not In Instance
 			-- (not instance and (playerTarget or distanceToTarget < 8)) or
 			-- In Instance 
@@ -519,8 +517,9 @@ function pause(skipCastingCheck)
 	-- Focused Azerite Beam / Cyclotronic Blast
 	local lastCast = br.lastCast.tracker[1]
 	if br.pauseCast - GetTime() <= 0 then
-		if lastCast == 295258 and getSpellCD(295258) == 0 then br.pauseCast = GetTime() + getCastTime(295258) + getCastTime(295261) end
-		if lastCast == 293491 and GetItemCooldown(167555) == 0 then br.pauseCast = GetTime() + getCastTime(293491) + 2.5 end
+		local hasted = (1-UnitSpellHaste("player")/100)
+		if lastCast == 295258 and getSpellCD(295258) == br.player.gcdMax then br.pauseCast = GetTime() + getCastTime(295258) + (getCastTime(295261) * hasted) end
+		if lastCast == 293491 and GetItemCooldown(167555) <= br.player.gcdMax then br.pauseCast = GetTime() + getCastTime(293491) + (2.5 * hasted) end
 	end
 	if GetTime() < br.pauseCast then
 		return true
@@ -565,7 +564,8 @@ function pause(skipCastingCheck)
 		-- or (UnitIsDeadOrGhost("target") and not UnitIsPlayer("target"))
 		UnitBuffID("player", 257427) or -- Eating
 		UnitBuffID("player", 274914) or -- Drinking
-		UnitDebuffID("player", 252753) -- Potion of Replenishment (BFA Mana channel) Apparently a debuff
+		UnitDebuffID("player", 252753) or
+		UnitBuffID("player", 115834) -- Potion of Replenishment (BFA Mana channel) Apparently a debuff
 		-- or UnitBuffID("target",117961) --Impervious Shield - Qiang the Merciless
 		-- or UnitDebuffID("player",135147) --Dead Zone - Iron Qon: Dam'ren
 		-- or (((UnitHealth("target")/UnitHealthMax("target"))*100) > 10 and UnitBuffID("target",143593)) --Defensive Stance - General Nagrazim

@@ -38,7 +38,7 @@ local function IsCritter(checkID)
 end
 
 --Check Totem
-local function isTotem(unit)
+function isTotem(unit)
 	local creatureType = UnitCreatureType(unit)
 	if creatureType ~= nil then
 	  if creatureType == "Totem" or creatureType == "Tótem" or creatureType == "Totém" or creatureType == "Тотем" or creatureType == "토템" or creatureType == "图腾" or creatureType == "圖騰" then return true end
@@ -94,7 +94,7 @@ function updateOM()
 			if omCounter == 1 then cycleTime = debugprofilestop() end
 				-- define our unit
 				local thisUnit = GetObjectWithIndex(i)
-				if ObjectIsUnit(thisUnit) and ObjectIsVisible(thisUnit) and (UnitReaction("player", thisUnit) <= 4 
+				if ObjectIsUnit(thisUnit) and ObjectIsVisible(thisUnit) and (UnitReaction("player", thisUnit) <= 4
 					or UnitCreator(thisUnit) == "player") and not isCritter(thisUnit) and getDistance(thisUnit) <= 50 and getLineOfSight(thisUnit)
 				then
 					br.debug.cpu.enemiesEngine.objects.targets = br.debug.cpu.enemiesEngine.objects.targets + 1
@@ -122,14 +122,14 @@ end
 
 -- /dump getEnemies("target",10)
 function getEnemies(thisUnit,radius,checkNoCombat,facing)
+	if checkNoCombat == nil then checkNoCombat = false end
+	if facing == nil then facing = false end
     local startTime = debugprofilestop()
 	local radius = tonumber(radius)
 	local targetDist = getDistance("target","player")
 	local enemyTable = checkNoCombat and br.units or br.enemy
 	local enemiesTable = {}
 	local thisEnemy, distance
-	if checkNoCombat == nil then checkNoCombat = false end
-	if facing == nil then facing = false end
     if refreshStored == true then
     	for k,v in pairs(br.storedTables) do br.storedTables[k] = nil end
     	refreshStored = false
@@ -139,26 +139,11 @@ function getEnemies(thisUnit,radius,checkNoCombat,facing)
 			if br.storedTables[checkNoCombat][thisUnit] ~= nil then
 				if br.storedTables[checkNoCombat][thisUnit][radius] ~= nil then
 					if br.storedTables[checkNoCombat][thisUnit][radius][facing] ~= nil then
-				--print("Found Table Unit: "..UnitName(thisUnit).." Radius: "..radius.." CombatCheck: "..tostring(checkNoCombat))
 						return br.storedTables[checkNoCombat][thisUnit][radius][facing]
 					end
 				end
-			end		
+			end
 		end
-		-- if br.storedTables[checkNoCombat][thisUnit] ~= nil then
-		-- 	local lowestTable
-		-- 	for k,v in pairs(br.storedTables[checkNoCombat][thisUnit]) do
-		-- 		if k > radius then
-		-- 			if (lowestTable ~= nil and k < lowestTable) or lowestTable == nil then
-		-- 				lowestTable = k
-		-- 			end
-		-- 		end
-		-- 	end
-		-- 	if lowestTable ~= nil then
-		-- 		--print("Table found at "..lowestTable.." radius.  Using as enemyTable for "..radius.." radius.")
-		-- 		enemyTable = br.storedTables[checkNoCombat][thisUnit][lowestTable]
-		-- 	end
-		-- end
 	end
 
 	for k, v in pairs(enemyTable) do
@@ -168,12 +153,6 @@ function getEnemies(thisUnit,radius,checkNoCombat,facing)
 			tinsert(enemiesTable,thisEnemy)
 		end
     end
-	-- for _, enemy in pairs(enemyTable) do
-    --     distance =  getDistance(thisUnit, enemy.unit)
-    --     if enemiesTable[enemy.unit] == nil and distance < radius then
-    --         rawset(enemiesTable, enemy.unit, enemy.unit)
-    --     end
-    -- end
 	if #enemiesTable == 0 and targetDist < radius and isValidUnit("target") and (not facing or getFacing("player","target")) then
 		tinsert(enemiesTable,"target")
 	end
@@ -187,7 +166,6 @@ function getEnemies(thisUnit,radius,checkNoCombat,facing)
 		if br.storedTables[checkNoCombat][thisUnit] == nil then br.storedTables[checkNoCombat][thisUnit] = {} end
 		if br.storedTables[checkNoCombat][radius] == nil then br.storedTables[checkNoCombat][thisUnit][radius] = {} end
 		br.storedTables[checkNoCombat][thisUnit][radius][facing] = enemiesTable
-		--print("Made Table Unit: "..UnitName(thisUnit).." Radius: "..radius.." CombatCheck: "..tostring(checkNoCombat))
 	end
     return enemiesTable
 end
@@ -214,13 +192,16 @@ end
 			local unitID = GetObjectID(unit)
 			local burnUnit = br.lists.burnUnits[unitID]
 			-- if unit have selected debuff
-			if burnUnit then
+			if burnUnit and (burnUnit.cast == nil or not isCasting(burnUnit.cast,unitID)) then
 				if burnUnit.buff and UnitBuffID(unit,burnUnit.buff) then
 					coef = burnUnit.coef
 				end
 				if not burnUnit.buff and (UnitName(unit) == burnUnit.name or burnUnit or burnUnit.id == unitID) then
 					--if not UnitIsUnit("target",unit) then TargetUnit(unit) end
 					coef = burnUnit.coef
+				end
+				if unitID == 155433 or unitID == 155434 then
+					br.addonDebug("Current coef is: "..coef)
 				end
 			end
 		end
@@ -247,27 +228,29 @@ end
 		end
 		return false
 	end
-	
+
 	-- returns true if we can safely attack this target
 	function isSafeToAttack(unit,bypass)
 		if bypass == nil then bypass = false end
 		if getOptionCheck("Safe Damage Check") == true or bypass == true then
 			-- check if unit is valid
 			local unitID = GetObjectExists(unit) and GetObjectID(unit) or 0
-			for i = 1, #br.lists.noTouchUnits do
-				local noTouch = br.lists.noTouchUnits[i]
-				if noTouch.unitID == 1 or noTouch.unitID == unitID then
-					if noTouch.buff == nil then return false end --If a unit exist in the list without a buff it's just blacklisted
-					if noTouch.buff > 0 then
-						-- Not Safe with Buff/Debuff
-						if UnitBuffID(unit,noTouch.buff) or UnitDebuffID(unit,noTouch.buff) then
-							return false
-						end
-					else
-						-- Not Safe without Buff/Debuff
-						local posBuff = -(noTouch.buff)
-						if not UnitBuffID(unit,posBuff) or not UnitDebuffID(unit,posBuff) then
-							return false
+			if unitID then
+				for i = 1, #br.lists.noTouchUnits do
+					local noTouch = br.lists.noTouchUnits[i]
+					if noTouch.unitID == 1 or noTouch.unitID == unitID then
+						if noTouch.buff == nil then return false end --If a unit exist in the list without a buff it's just blacklisted
+						if noTouch.buff > 0 then
+							-- Not Safe with Buff/Debuff
+							if UnitBuffID(unit,noTouch.buff) or UnitDebuffID(unit,noTouch.buff) then
+								return false
+							end
+						else
+							-- Not Safe without Buff/Debuff
+							local posBuff = -(noTouch.buff)
+							if not UnitBuffID(unit,posBuff) or not UnitDebuffID(unit,posBuff) then
+								return false
+							end
 						end
 					end
 				end
@@ -276,7 +259,7 @@ end
 		-- if all went fine return true
 		return true
 	end
-	
+
 	-- returns true if target is shielded or should be avoided
 	local function isShieldedTarget(unit)
 		local coef = 0
@@ -361,9 +344,9 @@ end
 local function compare(a,b)
 	if UnitHealth(a) == UnitHealth(b) then
 		return getDistance(a) < getDistance(b)
-	else	
+	else
 		return  UnitHealth(a) < UnitHealth(b)
-	end 
+	end
 end
 
 local function findBestUnit(range,facing)
@@ -374,7 +357,7 @@ local function findBestUnit(range,facing)
 	local enemyList = getEnemies("player",range,false,facing)
 	if bestUnit ~= nil and br.enemy[bestUnit] == nil then bestUnit = nil end
 	if bestUnit == nil
---		or GetTime() > lastCheckTime 
+--		or GetTime() > lastCheckTime
 		then
 		-- for k, v in pairs(enemyList) do
 		if #enemyList > 0 then
@@ -425,17 +408,17 @@ function dynamicTarget(range,facing)
 	local bestUnit = bestUnit or nil
 	local tarDist = GetUnitExists("target") and getDistance("target") or 99
 	local defaultRange 
-	-- if rangeOrMelee[GetSpecializationInfo(GetSpecialization())] ~= nil then
-	-- 	if rangeOrMelee[GetSpecializationInfo(GetSpecialization())] == "ranged" then
-	-- 		defaultRange = 40
-	-- 	elseif rangeOrMelee[GetSpecializationInfo(GetSpecialization())] == "melee" then
-	-- 		defaultRange = 8
-	-- 	else
-	-- 		defaultRange = 40
-	-- 	end
-	-- else
-	-- 	defaultRange = 40
-	-- end
+	if rangeOrMelee[GetSpecializationInfo(GetSpecialization())] ~= nil then
+		if rangeOrMelee[GetSpecializationInfo(GetSpecialization())] == "ranged" then
+			defaultRange = 40
+		elseif rangeOrMelee[GetSpecializationInfo(GetSpecialization())] == "melee" then
+			defaultRange = 8
+		else
+			defaultRange = 40
+		end
+	else
+		defaultRange = 40
+	end
 	if isChecked("Forced Burn") then
 		if isBurnTarget("target") > 0 and ((isExplosive and getFacing("player","target")) or not isExplosive("target")) and getDistance("target") <= range then
 			return
@@ -475,7 +458,10 @@ function dynamicTarget(range,facing)
 				then
 					bestUnit = findBestUnit(range,facing)
 			elseif getOptionValue("Dynamic Targetting") == 3 then
-				if isChecked("Wise Target") then
+				if isChecked("Wise Target") and br.timer:useTimer("wiseTargetDelay", 0.5) then
+					if getOptionValue("Wise Target Frequency") == 2 and not (UnitIsDeadOrGhost("target") and GetUnitIsFriend("target")) and tarDist <= range then
+						return
+					end
 					local targetHP
 					local lowDist
 					local highDist
@@ -486,45 +472,46 @@ function dynamicTarget(range,facing)
 						local currDist = getDistance(enemyList[i])
 						if not isCC and isSafeToAttack(enemyList[i],true) and br.lists.shieldUnits[enemyList[i]] == nil then
 							if getOptionValue("Wise Target") == 1 then 	   -- Highest	
-								if (targetHP == nil or unitHP > targetHP) then
+								if (targetHP == nil or unitHP*1.10 > targetHP) then
 									targetHP = unitHP
 									bestUnit = enemyList[i]
 								end
-							elseif getOptionValue("Wise Target") == 3 then -- abs Haighest
-								if (targetHP == nil or absUnitHP > targetHP) then
+							elseif getOptionValue("Wise Target") == 3 then -- abs Highest
+								if (targetHP == nil or absUnitHP*1.10 > targetHP) then
 									targetHP = absUnitHP
 									bestUnit = enemyList[i]
 								end
 							elseif getOptionValue("Wise Target") == 4 then -- abs Lowest	
-								if (targetHP == nil or absUnitHP < targetHP) then
+								if (targetHP == nil or absUnitHP*.9 < targetHP) then
 									targetHP = absUnitHP  
 									bestUnit = enemyList[i]
 								end
 							elseif getOptionValue("Wise Target") == 5 then -- Nearest
-								if (lowDist == nil or currDist < lowDist) then
+								if (lowDist == nil or currDist*0.9 < lowDist*.90) then
 									lowDist = currDist
 									bestUnit = enemyList[i]
 								end
 							elseif getOptionValue("Wise Target") == 6 then -- Furthest
-								if (highDist == nil or currDist > highDist) then
+								if (highDist == nil or currDist*1.1 > highDist) then
 									highDist = currDist
 									bestUnit = enemyList[i]
 								end
 							else 										   -- Lowest
-								if (targetHP == nil or unitHP < targetHP) then
+								if (targetHP == nil or unitHP*.9 < targetHP*.90) then
 									targetHP = unitHP
 									bestUnit = enemyList[i]
 								end
 							end
 						end
 					end
-				elseif not isSafeToAttack("target",true) or not GetUnitExists("target") or (UnitIsDeadOrGhost("target") and not GetUnitIsFriend("target","player"))
-				or (facing and not getFacing("player","target")) or (getOptionCheck("Don't break CCs") and isLongTimeCCed("target")) or (getDistance("target") > range and isChecked("Include Range")) then
-					bestUnit = findBestUnit(range,facing)
+				elseif not GetUnitExists("target") or (UnitIsDeadOrGhost("target") and not GetUnitIsFriend("target","player"))	or not isSafeToAttack("target",true) or
+				  (facing and not getFacing("player","target")) or (getOptionCheck("Don't break CCs") and isLongTimeCCed("target")) or (getDistance("target") > range and isChecked("Include Range")) then
+					bestUnit = findBestUnit(defaultRange,facing)
 				end
 			end
-			if isChecked("Target Dynamic Target") and ((isChecked("Wise Target") and not UnitIsUnit("target",bestUnit)) or not isSafeToAttack("target",true) or not GetUnitExists("target") or (UnitIsDeadOrGhost("target") and not GetUnitIsFriend("target","player"))
-			or (facing and not getFacing("player","target")) or (getOptionCheck("Don't break CCs") and isLongTimeCCed("target")) or (getDistance("target") > range and isChecked("Include Range"))) then
+			if isChecked("Target Dynamic Target") and (not GetUnitExists("target") or (UnitIsDeadOrGhost("target") and not GetUnitIsFriend("target","player")) 
+			or not isSafeToAttack("target",true) or ((unitID == 135360 or unitID == 135358 or unitID == 135359) and not UnitBuffID(thisUnit,260805))
+			or (isChecked("Wise Target") and not UnitIsUnit("target",bestUnit)) or (facing and not getFacing("player","target")) or (getOptionCheck("Don't break CCs") and isLongTimeCCed("target")) or (getDistance("target") > range and isChecked("Include Range"))) then
 				TargetUnit(bestUnit)
 			end
 		end
@@ -674,4 +661,24 @@ function getNonExecuteEnemiesPercent(executeHP)
         nonexecutePercent = nonexecuteCount / divisor
     end
     return nonexecutePercent
+end
+
+function br.AoEDamageTracker()
+	for i = 1, #br.lists.AoEDamage do
+		if br.DBM:getTimer(br.lists.AoEDamage[i]) ~= 999 then
+			br.curAoESpell = br.lists.AoEDamage[i]
+			if br.lastAoESpell == nil then
+				br.lastAoESpell = br.curAoESpell
+			end
+			if br.curAoESpell == br.lastAoeSpell then
+				if br.burstCount == nil then br.burstCount = 0 end
+				br.burstCount = br.burstCount + 1
+			else
+				br.lastAoESpell = br.curAoESpell
+				br.burstCount = 1
+			end
+			return br.DBM:getTimer(br.lists.AoEDamage[i]), br.burstCount
+		end
+	end
+	return -1
 end

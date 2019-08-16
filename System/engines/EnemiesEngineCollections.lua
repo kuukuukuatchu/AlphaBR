@@ -117,7 +117,7 @@ dispellOffensiveBuffs = {
 	[129016] = "Enrage",[129874] = "Enrage",[130196] = "Enrage",[130202] = "Enrage",[131150] = "Enrage",
 	[135524] = "Enrage",[135548] = "Enrage",[142760] = "Enrage",[148295] = "Enrage",[151553] = "Enrage",
 	[154017] = "Enrage",[155620] = "Enrage",[164324] = "Enrage",[164835] = "Enrage",[175743] = "Enrage",
-	[144351] = "Magic"
+	[144351] = "Magic",
 }
 interruptWhitelist = {
 	-- Atal'Dazar start
@@ -126,7 +126,7 @@ interruptWhitelist = {
 	[253544] = true, -- bwonsamdismantle
 	[253517] = true, -- mending word
 	[256849] = true, -- dinomight
-    [250368] = true, -- noxious-stench
+    [259572] = true, -- noxious-stench
     [250096] = true, -- wracking-pain
     [255041] = true, -- terrifying-screech
     [279118] = true, -- unstable-hex
@@ -247,6 +247,18 @@ interruptWhitelist = {
 	[300436] = true, -- Grasping Hex, Scrapbone Shamans
 	[301629] = true, -- Enlarge, Mechagon Renormalizer
 	[284219] = true, -- Shrink, Mechagon Renormalizer
+	[301689] = true, -- Charged Coil, Anodized Coilbearer
+	[301088] = true, -- Detonate, Bomb Tonk
+	[293930] = true, -- Overclock, Mechagon Mechanic
+	[293729] = true, -- Tune Up, Mechagon Mechanic
+	-- Mechagon End
+	-- Eternal Palace Start
+	[296673] = true, -- Chain Lightning, Stormling
+	[295822] = true, -- Conductive Pulse, Azsh'ari Witch
+	[297972] = true, -- Chain Lightning, Aethanel, Tidemistress
+	[300491] = true, -- Drain Ancient Ward, Tidemistress
+	[300490] = true, -- Energize Ward of Power, Tidemistress
+	-- Eternal Palace End
 
 
 	-- Old Content start 
@@ -354,6 +366,24 @@ interruptWhitelist = {
 	[225562] = true, -- Blood Metamorphosis
 	[211875] = true, -- Bladestorm
 	-- Old Content end
+}
+
+activeMitigationList = {
+		--spell_id	, spell_name
+		{267899, "Hindering Cleave"}, -- Shrine of the Storm
+		{272457, "Shockwave"}, -- Underrot
+		{260508, "Crush"}, -- Waycrest Manor
+		{249919, "Skewer"}, -- Atal'Dazar
+		{265910, "Tail Thrash"}, -- King's Rest
+		{268586, "Blade Combo"}, -- King's Rest
+		{262277, "Terrible Thrash"}, -- Fetid Devourer
+		{265248, "Shatter"}, -- Zek'voz
+		{273316, "Bloody Cleave"}, -- Zul, Reborn
+		{273282, "Essence Shear"}, -- Mythrax the Unraveler
+		{300877, "System Shock"}, -- Queen Azshara
+		{296566, "Tide Fist"}, -- Radiance of Azshara
+		{297585, "Obey or Suffer"}, -- The Queens Court
+
 }
 -- Moved to threatBypassList (System/List/ThreatBypass.lua)
 -- validUnitBypassList = {

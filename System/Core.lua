@@ -304,27 +304,27 @@ function BadRotationsUpdate(self)
 					-- Rotation Log
 					br.ui:toggleDebugWindow()
 
-					-- -- Settings Garbage Collection
-					-- if collectGarbage then
-					-- 	-- Ensure we have all the settings recorded
-					-- 	br.ui:recreateWindows()
-					-- 	-- Compare br.data.settings for the current spec/profile to the ui options
-					-- 	for k,v in pairs(br.data.settings[br.selectedSpec][br.selectedProfile]) do
-					-- 		local inOptions = br.data.ui[k] ~= nil
-					-- 		-- Remove any Check/Drop/Status Options that are no longer a UI Option
-					-- 		if br.data.ui[k] == nil then
-					-- 			local drop = k.sub(k,-4)
-					-- 			local check = k.sub(k,-5)
-					-- 			local status = k.sub(k,-6)
-					-- 			if check == "Check" or drop == "Drop" or status == "Status" then
-					-- 				Print("Removing Unused Option: "..k)
-					-- 				br.data.settings[br.selectedSpec][br.selectedProfile][k] = nil
-					-- 			end
-					-- 		end
-					-- 	end
-					-- 	-- Set flag to prevent un-needed runs
-					-- 	collectGarbage = false
-					-- end
+					-- Settings Garbage Collection
+					if collectGarbage then
+						-- Ensure we have all the settings recorded
+						br.ui:recreateWindows()
+						-- Compare br.data.settings for the current spec/profile to the ui options
+						for k,v in pairs(br.data.settings[br.selectedSpec][br.selectedProfile]) do
+							local inOptions = br.data.ui[k] ~= nil
+							-- Remove any Check/Drop/Status Options that are no longer a UI Option
+							if br.data.ui[k] == nil then
+								local drop = k.sub(k,-4)
+								local check = k.sub(k,-5)
+								local status = k.sub(k,-6)
+								if check == "Check" or drop == "Drop" or status == "Status" then
+									Print("Removing Unused Option: "..k)
+									br.data.settings[br.selectedSpec][br.selectedProfile][k] = nil
+								end
+							end
+						end
+						-- Set flag to prevent un-needed runs
+						collectGarbage = false
+					end
 				end --End Update Check
 			end -- End Update In Progress Check
 		end

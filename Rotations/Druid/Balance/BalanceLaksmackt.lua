@@ -64,7 +64,6 @@ local function createOptions()
             br.ui:createSpinner(section, "OOC Regrowth", 50, 1, 100, 5, "Set health to heal while out of combat. Min: 1 / Max: 100 / Interval: 5")
             br.ui:createSpinner(section, "OOC Wild Growth", 50, 1, 100, 5, "Set health to heal while out of combat. Min: 1 / Max: 100 / Interval: 5")
         end
-        br.ui:createCheckbox(section, "Auto Shapeshifts")
         br.ui:createCheckbox(section, "Auto Soothe")
         br.ui:createCheckbox(section, "Auto Engage On Target", "Check this to cast sunfire on target OOC to engage combat")
         br.ui:checkSectionState(section)
@@ -83,14 +82,25 @@ local function createOptions()
         br.ui:createCheckbox(section, "Freehold - pig")
         br.ui:createCheckbox(section, "Freehold - root grenadier")
         br.ui:createCheckbox(section, "Atal - root Spirit of Gold")
+        br.ui:createCheckbox(section, "KR - Minions of Zul")
+        br.ui:createCheckbox(section, "All - root Emissary of the Tides")
+        br.ui:createCheckbox(section, "Punt Enchanted Emissary")
+        br.ui:createCheckbox(section, "Dont DPS spotter", "wont DPS spotter", 0)
         br.ui:checkSectionState(section)
 
         ------------------------
         --- COOLDOWN OPTIONS --- -- Define Cooldown Options
         ------------------------
+        section = br.ui:createSection(br.ui.window.profile, "Pots")
+        br.ui:createCheckbox(section, "Auto use Pots")
+        br.ui:createDropdownWithout(section, "Pots - 1 target", { "None", "Battle", "RisingDeath", "Draenic", "Prolonged", "Empowered Proximity", "Focused Resolve", "Superior Battle" }, 1, "", "Use Pot when Incarnation/Celestial Alignment is up")
+        br.ui:createDropdownWithout(section, "Pots - 2-3 targets", { "None", "Battle", "RisingDeath", "Draenic", "Prolonged", "Empowered Proximity", "Focused Resolve", "Superior Battle" }, 1, "", "Use Pot when Incarnation/Celestial Alignment is up")
+        br.ui:createDropdownWithout(section, "Pots - 4+ target", { "None", "Battle", "RisingDeath", "Draenic", "Prolonged", "Empowered Proximity", "Focused Resolve", "Superior Battle" }, 1, "", "Use Pot when Incarnation/Celestial Alignment is up")
+        br.ui:checkSectionState(section)
+
         section = br.ui:createSection(br.ui.window.profile, "Cooldowns")
         br.ui:createCheckbox(section, "Auto Innervate", "Use Innervate if you have Lively Spirit traits for DPS buff")
-        br.ui:createDropdown(section, "Pots", { "None", "Battle", "RisingDeath", "Draenic", "Prolonged" }, 1, "", "Use Pot when Incarnation/Celestial Alignment is up")
+        br.ui:createDropdown(section, "Pots", { "None", "Battle", "RisingDeath", "Draenic", "Prolonged", "Empowered Proximity" }, 1, "", "Use Pot when Incarnation/Celestial Alignment is up")
         br.ui:createCheckbox(section, "Racial")
         br.ui:createCheckbox(section, "Use Trinkets")
         br.ui:createCheckbox(section, "Warrior Of Elune")
@@ -103,8 +113,9 @@ local function createOptions()
         br.ui:createDropdown(section, "Treants Key", br.dropOptions.Toggle, 6, "", "|cffFFFFFFTreant Key")
         br.ui:createSpinner(section, "ConcentratedFlame - Heal", 5, 0, 100, 5, "", "health to heal at")
         br.ui:createCheckbox(section, "ConcentratedFlame - DPS")
+        br.ui:createCheckbox(section, "Guardian Of Azeroth")
         br.ui:createSpinner(section, "Focused Azerite Beam", 3, 1, 10, 1, "|cffFFFFFF Min. units hit to use Focused Azerite Beam")
-
+        ----
         br.ui:createCheckbox(section, "Opener")
         br.ui:checkSectionState(section)
         -------------------------
@@ -229,6 +240,9 @@ local function runRotation()
     local hasteAmount = GetHaste() / 100
     local thisUnit = nil
     local aoeTarget = 0
+    local essence = br.player.essence
+    local healPot = getHealthPot()
+
     -------------
     -- Raid
     ------------
@@ -260,7 +274,9 @@ local function runRotation()
     enemies.get(15)
     enemies.get(8, "target") -- enemies.yards8t
     enemies.get(10, "target", true)
+    enemies.get(11, "target") -- enemies.yards8t
     enemies.get(15, "target") -- enemies.yards15t
+    enemies.get(12)
     enemies.get(12, "target") -- enemies.yards12t
 
 
@@ -366,6 +382,38 @@ local function runRotation()
 
         end
     end
+    local astral_max = 0
+    local astral_def = 0
+
+    if talent.naturesBalance then
+        astral_max = 95
+    else
+        astral_max = 100
+    end
+    astral_def = astral_max - power
+
+    --Print(astral_def)
+    local queenBuff = false
+
+    local function noDamageCheck(unit)
+        if isChecked("Dont DPS spotter") and GetObjectID(unit) == 135263 then
+            return true
+        end
+        --[[
+        if inInstance and UnitBuffID(unit, 290026) then
+            if not queenBuff and IsSpellInRange(GetSpellInfo(spell.moonfire), unit) == 1 then
+                queenBuff = true
+            end
+            return true
+        end
+        ]]
+        if isCasting(302415, unit) then
+            -- emmisary teleporting home
+            return true
+        end
+        return false
+    end
+
 
     local function castBeam(minUnits, safe, minttd)
         if not isKnown(spell.focusedAzeriteBeam) or getSpellCD(spell.focusedAzeriteBeam) ~= 0 then
@@ -415,7 +463,7 @@ local function runRotation()
     local aoe_count = 0
     for i = 1, #enemies.yards10tnc do
         local thisUnit = enemies.yards10tnc[i]
-        if ttd(thisUnit) > 4 then
+        if ttd(thisUnit) > 4 and not noDamageCheck(thisUnit) then
             aoe_count = aoe_count + 1
         end
     end
@@ -440,14 +488,27 @@ local function runRotation()
         end
 
         --Essence Support
-        if isChecked("ConcentratedFlame - DPS") then
+        if useCDs() and isChecked("ConcentratedFlame - DPS") then
             if cast.concentratedFlame("target") then
                 return true
             end
         end
-        if standingTime > 1 and isChecked("Focused Azerite Beam") and aoe_count > 3 then
+        if useCDs() and standingTime > 1 and isChecked("Focused Azerite Beam") and (aoe_count >= 3 or isBoss("target")) then
             if castBeam(getOptionValue("Focused Azerite Beam"), true, 3) then
                 return true
+            end
+        end
+
+        -- https://www.wowhead.com/spell=295840/guardian-of-azeroth
+        if isChecked("Guardian Of Azeroth") and useCDs() and cast.able.guardianOfAzeroth()
+                and (debuff.moonfire.exists("target")
+                and debuff.sunfire.exists("target")
+                and (not talent.stellarFlare or debuff.stellarFlare.exists "target"))
+                and (not talent.starlord or buff.starLord.exists("player"))
+        then
+            if cast.guardianOfAzeroth() then
+                br.addonDebug("Essence: Casting Guardian of Azeroth")
+                return
             end
         end
 
@@ -471,40 +532,91 @@ local function runRotation()
             else
                 starfallRadius = 12
             end
-
-            if (race == "Troll") and isChecked("Racial") and useCDs() and pewbuff and ttd("target") >= 12 then
-                cast.racial("player")
-            end
         elseif getValue("Starfall Targets (0 for auto)") ~= 0 then
             aoeTarget = getValue("Starfall Targets (0 for auto)")
         end
 
+        if (race == "Troll") and isChecked("Racial") and useCDs() and pewbuff and ttd("target") >= 12 then
+            cast.racial("player")
+        end
+
         --trinkets
-        -- pewbuff.
-        if isChecked("Use Trinkets") and (pewbuff or (cd.celestialAlignment.remain() > 30 or cd.incarnationChoseOfElune.remain() > 30)) then
-            if canUseItem(13) then
-                useItem(13)
+        local Trinket13 = GetInventoryItemID("player", 13)
+        local Trinket14 = GetInventoryItemID("player", 14)
+
+        --Print("Trinket1: " .. Trinket13)
+        --Print("Trinket1: " .. Trinket14)
+        --Print("Trinket1: " .. Trinket14)
+
+        if isChecked("Use Trinkets") then
+            --VenumousShivers
+            if (Trinket13 == 168905 or Trinket14 == 168905)
+                    and getDebuffStacks("target", 301624) == 5 then
+                if canUseItem(168905) then
+                    useItem(168905)
+                end
             end
-            if canUseItem(14) then
-                useItem(14)
+
+            -- Generic fallback
+            if (pewbuff or (cd.celestialAlignment.remain() > 30 or cd.incarnationChoseOfElune.remain() > 30)) then
+                if Trinket13 ~= 168905 then
+                    if canUseItem(13) then
+                        useItem(13)
+                    end
+                end
+                if Trinket14 ~= 168905 then
+                    if canUseItem(14) then
+                        useItem(14)
+                    end
+                end
             end
         end
+
+
+
+
 
         --Pots
-        --{ "None", "Battle", "RisingDeath", "Draenic", "Prolonged" }, 1, "", "Use Pot when Incarnation/Celestial Alignment is up")
+        --[[
+                1, none, frX
+                2, battle, 163222
+                3, RisingDeath, 152559
+                4, Draenic, 109218
+                5, Prolonged, 142117
+                6, Empowered Proximity, 168529
+                7, Focused Resolve, 168506
+                8, Superior Battle, 168498
+                ]]
 
-        if isChecked("Pots") and not getOptionValue("Pots") == 1 and not solo and (buff.incarnationChoseOfElune.exists() and buff.incarnationChoseOfElune.remain() > 10) or (buff.celestialAlignment.exists() and buff.celestialAlignment.remain() > 10) then
-            if getOptionValue("Pots") == 2 and canUseItem(163222) then
-                useItem(163222)
-            elseif getOptionValue("Pots") == 3 and canUseItem(152559) then
-                useItem(152559)
-            elseif getOptionValue("Pots") == 4 and canUseItem(109218) then
-                useItem(109218)
-            elseif getOptionValue("Pots") == 5 and canUseItem(142117) then
-                useItem(142117)
+
+        if isChecked("Auto use Pots") then
+            local auto_pot = nil
+            if #enemies.yards12t == 1 and isBoss("target") then
+                auto_pot = getOptionValue("Pots - 1 target")
+            elseif #enemies.yards12t >= 2 and #enemies.yards12t <= 3 then
+                auto_pot = getOptionValue("Pots - 2-3 targets")
+            elseif #enemies.yards12t >= 4 then
+                auto_pot = getOptionValue("Pots - 4+ target")
+            end
+
+            if not auto_pot == 1 and not solo and (buff.incarnationChoseOfElune.exists() and buff.incarnationChoseOfElune.remain() > 16.5) or (buff.celestialAlignment.exists() and buff.celestialAlignment.remain() > 13) then
+                if auto_pot == 2 and canUseItem(163222) then
+                    useItem(163222)
+                elseif auto_pot == 3 and canUseItem(152559) then
+                    useItem(152559)
+                elseif auto_pot == 4 and canUseItem(109218) then
+                    useItem(109218)
+                elseif auto_pot == 5 and canUseItem(142117) then
+                    useItem(142117)
+                elseif auto_pot == 6 and #enemies.yards12 > 3 and canUseItem(168529) then
+                    useItem(168529)
+                elseif auto_pot == 7 and canUseItem(168506) then
+                    useItem(168506)
+                elseif auto_pot == 8 and canUseItem(168498) then
+                    useItem(168498)
+                end
             end
         end
-
         -- Warrior of Elune
         if useCDs() and isChecked("Warrior Of Elune") and talent.warriorOfElune and not buff.warriorOfElune.exists() then
             if cast.warriorOfElune() then
@@ -515,7 +627,7 @@ local function runRotation()
         -- Innverate
         --Print("Innervate Check: "..tostring(isChecked("Auto Innervate")) .." castable: " .. tostring(cast.able.innervate()).." TTD: " ..getTTD("target"))
 
-        if isChecked("Auto Innervate") and cast.able.innervate() and getTTD(UnitTarget(tank)) >= 12 then
+        if isChecked("Auto Innervate") and cast.able.innervate() and (getTTD(UnitTarget(tank)) >= 12 or (traits.livelySpirit.active and (cd.incarnationChoseOfElune.remain() < 2 or cd.celestialAlignment.remain() < 12))) then
             for i = 1, #br.friend do
                 if UnitGroupRolesAssigned(br.friend[i].unit) == "HEALER" and getDistance(br.friend[i].unit) < 45 and inInstance or inRaid and not UnitIsDeadOrGhost(br.friend[i].unit) and getLineOfSight(br.friend[i].unit) then
                     --Print("Healer is: " .. br.friend[i].unit)
@@ -526,69 +638,8 @@ local function runRotation()
             end
         end
 
-
-        --quickdots
-        if not isChecked("Ignore dots during pewbuff") then
-            if (buff.incarnationChoseOfElune.exists() and buff.incarnationChoseOfElune.remain() < gcd + 1)
-                    or (buff.celestialAlignment.exists() and buff.celestialAlignment.remain() < gcd + 1) then
-                if norepeat and not cast.last.moonfire(1) then
-                    if cast.moonfire(units.dyn45) then
-                        return true
-                    end
-                elseif norepeat and not cast.last.sunfire(1) then
-                    if cast.sunfire(units.dyn45) then
-                        return true
-                    end
-                end
-            end
-        end
-
-        --if streaking stars, rotate with solar_wrath
-        if (norepeat and not cast.last.solarWrath(1)) then
-            if mode.DPS == 1 or mode.DPS == 2 then
-                if cast.solarWrath(units.dyn45) then
-                    return true
-                end
-            end
-            if mode.DPS == 3 then
-                if cast.solarWrath("target") then
-                    return true
-                end
-            end
-        end
-
-        -- Incarnation  ap_check&!buff.ca_inc.up
-        if talent.incarnationChoseOfElune and useCDs() and isChecked("Incarnation/Celestial Alignment") and
-                debuff.sunfire.remain("target") > 8 and debuff.moonfire.remain("target") > 12 and not pewbuff and
-                (debuff.stellarFlare.remain("target") > 6 or not talent.stellarFlare) and power >= 40 and getTTD("target") >= 30 or hasBloodLust() then
-            if cast.incarnationChoseOfElune("player") then
-                return true
-            end
-        end
-
-        if not talent.incarnationChoseOfElune and useCDs() and isChecked("Incarnation/Celestial Alignment") and
-                power >= 40 and getTTD("target") >= 20 and not pewbuff and
-                (not traits.livelySpirit.active or buff.livelySpirit.exists() or solo or (traits.livelySpirit.active and cd.innervate.remain() >= 30)) and
-                debuff.sunfire.remain("target") > 2 and debuff.moonfire.remain("target") > 2 and
-                (debuff.stellarFlare.remain("target") > 1 or not talent.stellarFlare) or
-                hasBloodLust()
-        then
-            if cast.celestialAlignment("player") then
-                return true
-            end
-        end
-
-        --	fury_of_elune
-        if talent.furyOfElune and isChecked("Fury Of Elune") and (#enemies.yards8t >= getValue("Fury of Elune Targets") or isBoss()) and getTTD("target") >= 8
-                and (isChecked("Group Fury with CD") and (pewbuff or cd.celestialAlignment.remain() > 30 or cd.incarnationChoseOfElune.remain() > 30) or not isChecked("Group Fury with CD")) then
-            if cast.furyOfElune(getBiggestUnitCluster(45, 1.25)) then
-                return true
-            end
-        end
-
-
         -- Force Of Nature / treants
-        if talent.forceOfNature and cast.able.forceOfNature() and br.player.power.astralPower.deficit() > 20 then
+        if talent.forceOfNature and cast.able.forceOfNature() and astral_def > 20 then
             if br.player.mode.forceOfNature == 1 and getTTD("target") >= 10
                     and (isChecked("Group treants with CD") and (pewbuff or cd.celestialAlignment.remain() > 30 or cd.incarnationChoseOfElune.remain() > 30) or not isChecked("Group treants with CD"))
                     and (#enemies.yards12t >= getValue("Treant Targets") or isBoss())
@@ -603,19 +654,89 @@ local function runRotation()
             end
         end
 
-        --starLord cancellation
-        if talent.starlord and power >= 87 and buff.starLord.exists() and buff.starLord.remain() < 8 then
-            cancelBuff(279709)
-            --Print("Cancelling starLord at" .. buff.starLord.remain())
-            --RunMacroText("/cancelAura starlord")
-            return true
+        local groupTTD = 0
+        for i = 1, #enemies.yards45 do
+            thisUnit = enemies.yards45[i]
+            groupTTD = groupTTD + ttd(thisUnit)
+        end
+        --aPrint("Group TTD: " .. groupTTD)
+
+        -- Incarnation  ap_check&!buff.ca_inc.up
+        if useCDs() and isChecked("Incarnation/Celestial Alignment") then
+            if cast.able.incarnationChoseOfElune() and talent.incarnationChoseOfElune and
+                    debuff.sunfire.remain("target") > 8 and debuff.moonfire.remain("target") > 12 and not pewbuff and
+                    (debuff.stellarFlare.remain("target") > 6 or not talent.stellarFlare) and power >= 40 and groupTTD >= 30
+                    or hasBloodLust() and debuff.sunfire.exists("target") and debuff.moonfire.exists("target") and (debuff.stellarFlare.exists("target") or not talent.stellarFlare)
+            then
+                if cast.incarnationChoseOfElune() then
+                    return true
+                end
+            end
+            -- celestial_alignment,if=!buff.ca_inc.up&(!talent.starlord.enabled|buff.starlord.up)&(buff.memory_of_lucid_dreams.up|((cooldown.memory_of_lucid_dreams.remains>20|!essence.memory_of_lucid_dreams.major)&ap_check))&(!azerite.lively_spirit.enabled|buff.lively_spirit.up),target_if=(dot.sunfire.remains>2&dot.moonfire.ticking&(dot.stellar_flare.ticking|!talent.stellar_flare.enabled))
+
+            if cast.able.celestialAlignment() and useCDs() and isChecked("Incarnation/Celestial Alignment") then
+                if not pewbuff
+                        and (buff.starLord.exists or not talent.starlord)
+                        and (buff.memoryOfLucidDreams.exists() or ((cd.memoryOfLucidDreams.remains() > 20 or not essence.memoryOfLucidDreams.active) and power >= 40))
+                        and groupTTD >= 20 and not pewbuff and
+                        (not traits.livelySpirit.active or buff.livelySpirit.exists() or solo or (traits.livelySpirit.active and cd.innervate.remain() >= 30) or not isChecked("Auto Innervate")) and
+                        debuff.sunfire.remain("target") > 2 and debuff.moonfire.exists("target") and
+                        (debuff.stellarFlare.exists("target") or not talent.stellarFlare)
+                        or hasBloodLust() and debuff.sunfire.exists("target") and debuff.moonfire.exists("target") and (debuff.stellarFlare.exists("target") or not talent.stellarFlare)
+                then
+                    if cast.celestialAlignment() then
+                        return true
+                    end
+                end
+            end
         end
 
+
+
+        --	fury_of_elune
+        if talent.furyOfElune and isChecked("Fury Of Elune") and (#enemies.yards8t >= getValue("Fury of Elune Targets") or isBoss()) and groupTTD >= 8
+                and (isChecked("Group Fury with CD") and (pewbuff or cd.celestialAlignment.remain() > 30 or cd.incarnationChoseOfElune.remain() > 30) or not isChecked("Group Fury with CD")) then
+            if cast.furyOfElune(getBiggestUnitCluster(45, 1.25)) then
+                return true
+            end
+        end
+
+        --[[
+                --if streaking stars, rotate with solar_wrath
+                if (norepeat and not cast.last.solarWrath(1)) then
+                    if mode.DPS == 1 or mode.DPS == 2 then
+                        if cast.solarWrath(units.dyn45) then
+                            return true
+                        end
+                    end
+                    if mode.DPS == 3 then
+                        if cast.solarWrath("target") then
+                            return true
+                        end
+                    end
+                end]]
+
+
+        -- cancel_buff,name=starlord,if=buff.starlord.remains<3&!solar_wrath.ap_check
+
+        --starLord cancellation
+        --[[
+                if talent.starlord and power >= 87 and buff.starLord.exists() and buff.starLord.remain() < 8 then
+                    cancelBuff(279709)
+                    return true
+                end
+            ]]
+
+        if buff.starLord.exists() and buff.starLord.stack() == 3 and buff.starLord.remain() < 3 and astral_def < 8 then
+            cancelBuff(279709)
+        end
+
+
+        --    -- starfall,if=(buff.starlord.stack<3|buff.starlord.remains>=8)&spell_targets>=variable.sf_targets&(target.time_to_die+1)*spell_targets>cost%2.5
         if (talent.stellarDrift and #enemies.yards15t >= aoeTarget) or #enemies.yards12t >= aoeTarget then
             --Starfall
-            if power >= 50 or talent.soulOfTheForest and power >= 40 then
-                if #enemies.yards12t >= aoeTarget
-                        and (talent.starlord and (buff.starLord.remain() >= 8 or buff.starLord.stack() == 3) or not talent.starlord)
+            if power >= 50 or (talent.soulOfTheForest and power >= 40) then
+                if (talent.starlord and (buff.starLord.remain() >= 8 or buff.starLord.stack() < 3) or not talent.starlord)
                 then
                     if cast.starfall("best", false, aoeTarget, starfallRadius) then
                         return true
@@ -623,38 +744,52 @@ local function runRotation()
                 end
             end
         else
-            --starsurge
-            if (traits.streakingStars.active and pewbuff and not cast.last.starsurge(1)) or not traits.streakingStars.active or not pewbuff then
-                if talent.starlord and power >= 40 and cast.able.starsurge
-                        and (buff.starLord.stack() < 3 and (buff.starLord.remain() >= 8) or not buff.starLord.exists()) then
-                    if traits.arcanicPulsar.active and (buff.arcanicPulsar.stack() < 8 or (power >= 75 and buff.arcanicPulsar.stack() == 8)) or not traits.arcanicPulsar.active then
-                        if cast.starsurge(units.dyn45) then
-                            --Print("Stacks: " .. buff.starLord.stack() .. " Remain: " .. buff.starLord.remain() .. " pulsar: " .. buff.arcanicPulsar.stack())
-                            return true
-                        end
-                    end
-                elseif not talent.starlord and power >= 40 and cast.able.starsurge then
-                    if (buff.arcanicPulsar.stack() < 8 or pewbuff) or
-                            buff.lunarEmpowerment.stack() + buff.solarEmpowerment.stack() < 4 and buff.solarEmpowerment.stack() < 3 and buff.lunarEmpowerment.stack() < 3 then
-                        if cast.starsurge(units.dyn45) then
-                            return
-                        end
-                    end
+
+            -- starsurge,if=(talent.starlord.enabled&(buff.starlord.stack<3|buff.starlord.remains>=5&buff.arcanic_pulsar.stack<8)|!talent.starlord.enabled&(buff.arcanic_pulsar.stack<8|buff.ca_inc.up))&spell_targets.starfall<variable.sf_targets&buff.lunar_empowerment.stack+buff.solar_empowerment.stack<4&buff.solar_empowerment.stack<3&buff.lunar_empowerment.stack<3&(!variable.az_ss|!buff.ca_inc.up|!prev.starsurge)|target.time_to_die<=execute_time*astral_power%40|!solar_wrath.ap_check
+            if cast.able.starsurge() and
+                    (
+                            (talent.starlord and (buff.starLord.stack() < 3 or buff.starLord.remain() >= 5 and buff.arcanicPulsar.stack() < 8)
+                                    or not talent.starlord and (buff.arcanicPulsar.stack() < 8 or pewbuff)
+                            )
+                                    and (buff.lunarEmpowerment.stack() + buff.solarEmpowerment.stack()) < 4 and buff.solarEmpowerment.stack() < 3 and buff.lunarEmpowerment.stack() < 3
+                                    and (not traits.streakingStars.active or not pewbuff or not cast.last.starsurge(1))
+                                    or ttd(units.dyn45) <= (br.player.gcd * power / 40)
+                                    or astral_def <= 8
+                    ) then
+                if cast.starsurge(units.dyn45) then
+                    return
                 end
             end
+            --[[
+
+                        --starsurge
+                        if cast.able.starsurge() and (traits.streakingStars.active and pewbuff and not cast.last.starsurge(1)) or not traits.streakingStars.active or not pewbuff then
+                            if ((talent.starlord and (buff.starLord.stack() < 3 or buff.starLord.remain() >= 5 or not buff.starLord.exists()
+                                    and buff.arcanicPulsar.stack() < 8) or not talent.starlord and (buff.arcanicPulsar.stack() < 8 or pewbuff))
+                                    and buff.lunarEmpowerment.stack() + buff.solarEmpowerment.stack() < 4
+                                    and buff.solarEmpowerment.stack() < 3 and buff.lunarEmpowerment.stack() < 3
+                                    and (not traits.arcanicPulsar.active or not pewbuff or not not cast.last.starsurge(1))
+                                    or ttd(unit.dyn45) <= (br.player.gcd * power / 40) or astral_def <= 8 or power == 100) then
+                                if cast.starsurge(unit.dyn45) then
+                                    return
+                                end
+                            end
+                        end
+            ]]
         end
 
 
-        --dots and roots
+        --dots
 
-        local root_UnitList = {}
-        if isChecked("Freehold - root grenadier") then
-            root_UnitList[129758] = "Irontide Grenadier"
+        local sunfire_target = 0
+        local sunfire_radius = 8
+        if traits.highNoon.active then
+            sunfire_target = #enemies.yards11t
+            sunfire_radius = 11
+        else
+            sunfire_target = #enemies.yards8t
+            sunfire_radius = 8
         end
-        if isChecked("Atal - root Spirit of Gold") then
-            root_UnitList[131009] = "Spirit of Gold"
-        end
-
         if mode.DPS < 4 then
             for i = 1, #enemies.yards45 do
                 if mode.DPS < 3 then
@@ -663,116 +798,213 @@ local function runRotation()
                     thisUnit = "target"
                 end
 
-                if cast.able.entanglingRoots() then
-                    if (root_UnitList[GetObjectID(thisUnit)] ~= nil and getBuffRemain(thisUnit, 226510) == 0) then
-                        if cast.entanglingRoots(thisUnit) then
-                            return true
-                        end
-                    end
-                end
-
-                if (buff.incarnationChoseOfElune.exists() or buff.celestialAlignment.exists()) and not isChecked("Ignore dots during pewbuff")
+                if not noDamageCheck(thisUnit) and (buff.incarnationChoseOfElune.exists() or buff.celestialAlignment.exists()) and not isChecked("Ignore dots during pewbuff")
                         or not (buff.incarnationChoseOfElune.exists() or buff.celestialAlignment.exists()) then
 
-                    --[[
-                    actions+=/sunfire,target_if=refreshable,if=ap_check&floor(target.time_to_die%(2*spell_haste))*spell_targets>=ceil(floor(2%spell_targets)*1.5)+2*spell_targets
-                    &(spell_targets>1+talent.twin_moons.enabled|dot.moonfire.ticking)&(!variable.az_ss|!buff.ca_inc.up|!prev.sunfire)&(buff.ca_inc.remains>remains|!buff.ca_inc.up)
-                    (ttd(thisUnit)/(2*hasteAmount))*#enemies.yards12t >ceiling(floor(2/#enemies.yards12t)*1.5) + 2 * #enemies.yards12t and (#enemies.yards12t
-                    ]]
-
                     if isChecked("Safe Dots") and
-                            (
-                                    (inInstance and #tanks > 0 and getDistance(thisUnit, tanks[1].unit) <= 10)
-                                            or (inInstance and #tanks == 0)
-                                            or solo
-                                            or (inInstance and #tanks > 0 and getDistance(tanks[1].unit) >= 90)
+                            ((inInstance and #tanks > 0 and getDistance(thisUnit, tanks[1].unit) <= 10)
+                                    or (inInstance and #tanks == 0)
+                                    or (inRaid and #tanks > 1 and (getDistance(thisUnit, tanks[1].unit) <= 10 or (getDistance(thisUnit, tanks[2].unit) <= 10)))
+                                    or solo
+                                    or (inInstance and #tanks > 0 and getDistance(tanks[1].unit) >= 90)
                             ) or not isChecked("Safe Dots") then
-                        if debuff.sunfire.count() < getOptionValue("Max Sunfire Targets") then
-                            if astralPowerDeficit >= 7 and not debuff.sunfire.exists(thisUnit) and ttd(thisUnit) > 5.4 and ((norepeat and lastSpellCast ~= spell.sunfire) or not norepeat) then
-                                if castSpell(thisUnit, spell.sunfire, true, false, false, true, false, true, true, false) then
+
+                        --quickdots
+                        if cast.able.sunfire()
+                                and
+                                (
+                                        (buff.incarnationChoseOfElune.exists() and buff.incarnationChoseOfElune.remains() < gcd
+                                                or buff.celestialAlignment.exists() and buff.celestialAlignment.remains() < gcd)
+                                )
+                                and traits.streakingStars.active and debuff.moonfire.remain(thisUnit) > debuff.sunfire.remain(thisUnit) then
+                            if cast.sunfire(thisUnit) then
+                                --
+                                br.addonDebug("QuickDot: Sunfire: " .. buff.celestialAlignment.remains())
+                                return
+                            end
+                        end
+                        if cast.able.moonfire()
+                                and ((buff.incarnationChoseOfElune.exists() and buff.incarnationChoseOfElune.remain() < gcd)
+                                or (buff.celestialAlignment.exists() and buff.celestialAlignment.remain() < gcd))
+                                and traits.streakingStars.active then
+                            if cast.moonfire(thisUnit) then
+                                br.addonDebug("QuickDot: Moonfire: " .. buff.celestialAlignment.remains())
+                                return
+                            end
+                        end
+
+                        local moonfiretalent = 0
+                        if talent.twinMoons then
+                            moonfiretalent = moonfiretalent + 1
+                        end
+
+                        -- sunfire,target_if=refreshable,if=ap_check&floor(target.time_to_die%(2*spell_haste))*spell_targets>=ceil(floor(2%spell_targets)*1.5)+2*spell_targets&(spell_targets>1+talent.twin_moons.enabled|dot.moonfire.ticking)&(!variable.az_ss|!buff.ca_inc.up|!prev.sunfire)&(buff.ca_inc.remains>remains|!buff.ca_inc.up)
+
+                        if debuff.sunfire.count() == 0 then
+                            if traits.highNoon.active then
+                                if cast.sunfire(getBiggestUnitCluster(45, sunfire_radius)) then
+                                    br.addonDebug("Initial Sunfire - Cluster(" .. sunfire_radius .. ")")
                                     return true
                                 end
                             end
                         end
-                        --[[
-                        Print(GetHaste())
-                        Print(hasteAmount)
-                        Print("TTD: ".. ttd(thisUnit))
-                        Print(floor(ttd(thisUnit) / (2 * hasteAmount)))
-              ]]
-                        if debuff.moonfire.count() < getOptionValue("Max Moonfire Targets") then
-                            if astralPowerDeficit >= 7 and not debuff.moonfire.exists(thisUnit) and ttd(thisUnit) > 6.6 and ((norepeat and lastSpellCast ~= spell.moonfire) or not norepeat) then
-                                if castSpell(thisUnit, spell.moonfire, true, false, false, true, false, true, true, false) then
+
+                        if cast.able.sunfire() and (debuff.sunfire.count() < getOptionValue("Max Sunfire Targets") or debuff.sunfire.exists(thisUnit)) or isBoss(thisUnit) and
+                                astral_def >= 3 then
+                            if not debuff.sunfire.exists(thisUnit) then
+                                if (
+                                        floor(ttd(thisUnit) / (2 * hasteAmount)) * sunfire_target >= ceil(floor(2 / sunfire_target) * 1.5) + 2 * sunfire_target
+                                                and (sunfire_target > 1 + moonfiretalent or debuff.moonfire.exists(thisUnit))
+                                                and (not traits.streakingStars.active or not pewbuff or lastSpellCast ~= spell.sunfire)
+                                                and ((buff.incarnationChoseOfElune.remain() > debuff.sunfire.remain(thisUnit)
+                                                or buff.celestialAlignment.exists() and buff.celestialAlignment.remain() < debuff.sunfire.remain(thisUnit)) or not pewbuff)
+                                                or isBoss(thisUnit)
+                                ) then
+                                    if cast.sunfire(thisUnit) then
+                                        br.addonDebug("Initial Sunfire - non-Cluster")
+                                        return true
+                                    end
+                                end
+                            elseif debuff.sunfire.exists(thisUnit) and debuff.sunfire.remain(thisUnit) < 5 and ttd(thisUnit) > 5 then
+                                if cast.sunfire(thisUnit) then
+                                    br.addonDebug("Refreshing sunfire - remain: " .. debuff.sunfire.remain(thisUnit))
                                     return true
                                 end
                             end
                         end
-                        if debuff.stellarFlare.count() < getOptionValue("Max Stellar Flare Targets") and not isMoving("player") then
-                            if talent.stellarFlare and astralPowerDeficit >= 12 and not debuff.stellarFlare.exists(thisUnit) and ttd(thisUnit) > 7 and not cast.last.stellarFlare() then
-                                if castSpell(thisUnit, spell.stellarFlare, true, false, false, true, false, true, true, false) then
+
+                        if talent.twinMoons and debuff.moonfire.count() == 0 then
+                            if cast.moonfire(getBiggestUnitCluster(45, 15)) then
+                                br.addonDebug("Initial moonfire - Cluster")
+                                return true
+                            end
+                        end
+
+                        if cast.able.moonfire() and (debuff.moonfire.count() < getOptionValue("Max Moonfire Targets") or debuff.moonfire.exists(thisUnit)) or isBoss(thisUnit) and
+                                astral_def >= 3 then
+                            if not debuff.moonfire.exists(thisUnit) then
+                                if
+                                (floor(ttd(thisUnit) / (2 * hasteAmount)) * #enemies.yards8t >= 6
+                                        and (not traits.streakingStars.active or not pewbuff or lastSpellCast ~= spell.moonfire)
+                                        and
+                                        (
+                                                (buff.incarnationChoseOfElune.exists() and buff.incarnationChoseOfElune.remain() > debuff.moonfire.remain(thisUnit)
+                                                        or buff.celestialAlignment.exists() and buff.celestialAlignment.remain() > debuff.moonfire.remain(thisUnit)
+                                                ) or not pewbuff
+                                        )
+                                        or isBoss(thisUnit)
+                                )
+                                then
+                                    if cast.moonfire(thisUnit) then
+                                        br.addonDebug("Initial Moonfire")
+                                        return true
+                                    end
+                                end
+                            elseif debuff.moonfire.exists(thisUnit) and debuff.moonfire.remain(thisUnit) < 6 and ttd(thisUnit) > 5 then
+                                if cast.moonfire(thisUnit) then
+                                    br.addonDebug("Refreshing moonfire - remain: " .. debuff.moonfire.remain(thisUnit))
+
                                     return true
                                 end
                             end
                         end
+
+                        if cast.able.stellarFlare() and lastSpellCast ~= spell.stellarFlare and (debuff.stellarFlare.count() < getOptionValue("Max Stellar Flare Targets") or debuff.stellarFlare.exists(thisUnit)) or isBoss(thisUnit) and
+                                astral_def >= 8 then
+                            if not debuff.stellarFlare.exists(thisUnit) then
+                                if (floor(ttd(thisUnit) / (2 * hasteAmount)) >= 5) or isBoss(thisUnit) then
+                                    if cast.stellarFlare(thisUnit) then
+                                        br.addonDebug("Initial stellarFlare")
+                                        return true
+                                    end
+                                end
+                            elseif debuff.stellarFlare.exists(thisUnit) and debuff.stellarFlare.remain(thisUnit) < 6 and ttd(thisUnit) > debuff.stellarFlare.remain(thisUnit) + 5 then
+                                if cast.stellarFlare(thisUnit) then
+                                    br.addonDebug("Refreshing stellarFlare - remain: " .. debuff.stellarFlare.remain(thisUnit))
+                                    return true
+                                end
+                            end
+                        end
+
+                        --new/half/full moon ...will we ever use them ;)
+                        if cast.able.newMoon(thisUnit) and (power <= 90) then
+                            if cast.newMoon(thisUnit) then
+                                return
+                            end
+                        end
+                        -- half_moon,if=ap_check
+                        if cast.able.halfMoon(thisUnit) and (power <= 80) then
+                            if cast.halfMoon(thisUnit) then
+                                return
+                            end
+                        end
+                        -- full_moon,if=ap_check
+                        if cast.able.fullMoon(thisUnit) and (power <= 60) then
+                            if cast.fullMoon(thisUnit) then
+                                return
+                            end
+                        end
                     end
                 end
-                --refresh dots
+            end
 
-                if astralPowerDeficit >= 7 and debuff.moonfire.exists(thisUnit) and debuff.moonfire.remain(thisUnit) < 6.6
-                        and floor(ttd(thisUnit) / (2 * hasteAmount)) >= 6 and ((norepeat and lastSpellCast ~= spell.moonfire) or not norepeat) then
-                    if castSpell(thisUnit, spell.moonfire, true, false, false, true, false, true, true, false) then
+            -- lunar_strike,if=buff.solar_empowerment.stack<3&(ap_check|buff.lunar_empowerment.stack=3)&((buff.warrior_of_elune.up|buff.lunar_empowerment.up|spell_targets>=2&!buff.solar_empowerment.up)&(!variable.az_ss|!buff.ca_inc.up)|variable.az_ss&buff.ca_inc.up&prev.solar_wrath)
+            if cast.able.lunarStrike() and (astral_def >= 12 or buff.lunarEmpowerment.stack() == 3) then
+                if (traits.streakingStars.active and pewbuff and not cast.last.lunarStrike(1) or not traits.streakingStars.active or not pewbuff) then
+                    if traits.streakingStars.active and pewbuff and cast.last.solarWrath(1)
+                            or buff.warriorOfElune.exists()
+                            or (buff.lunarEmpowerment.exists() and #enemies.yards8t >= 2)
+                            or buff.lunarEmpowerment.stack() == 3 and buff.solarEmpowerment.stack() < 3
+                    then
+                        --[[ if cast.lunarStrike(units.dyn45) then
+                             return true
+                         end]]
+
+                        if mode.DPS < 3 then
+                            if cast.lunarStrike(getBiggestUnitCluster(45, 8)) then
+                                br.addonDebug("Lunarstrike(cluster) Solar: " .. buff.solarEmpowerment.stack() .. " Lunar: " .. buff.lunarEmpowerment.stack())
+                                return true
+                            end
+                        elseif mode.DPS == 3 then
+                            if cast.lunarStrike(units.dyn45) then
+                                br.addonDebug("Lunarstrike Solar: " .. buff.solarEmpowerment.stack() .. " Lunar: " .. buff.lunarEmpowerment.stack())
+                                return true
+                            end
+                        end
+
+                    end
+                end
+            end
+
+            --    if cast.able.solarWrath() and (azSs < 3 or not buff.caInc.exists() or not prev.solar_wrath) then
+            if cast.able.solarWrath() and not noDamageCheck(units.dyn45)
+                    and (traits.streakingStars.active and pewbuff and not cast.last.solarWrath(1) or not traits.streakingStars.active or not pewbuff) then
+                if cast.solarWrath(units.dyn45) then
+                    br.addonDebug("Wrath - Solar: " .. buff.solarEmpowerment.stack() .. " Lunar: " .. buff.lunarEmpowerment.stack())
+                    return
+                end
+            end
+
+            --fallback / moving
+            if ((traits.streakingStars.active and pewbuff and not cast.last.sunfire(1)) or not traits.streakingStars.active or not pewbuff) then
+                if cast.sunfire(units.dyn45) then
+                    if not isMoving("player") then
+                        br.addonDebug("FAIL! (Sunfire) Lunarstacks: " .. buff.lunarEmpowerment.stack() .. " Solarstacks: " .. buff.solarEmpowerment.stack() .. " Astral: " .. power .. " TTD: " .. ttd("target"))
+                    else
+                        br.addonDebug("Fallback: Moving - sunfire")
+                        return
+                    end
+                end
+            else
+                if cast.moonfire(units.dyn45) then
+                    if isMoving("player") then
+                        br.addonDebug("FAIL! (moonfire) Lunarstacks: " .. buff.lunarEmpowerment.stack() .. " Solarstacks: " .. buff.solarEmpowerment.stack() .. " Astral: " .. power .. " TTD: " .. ttd("target"))
+                    else
+                        br.addonDebug("Fallback: Moving - moonfire")
                         return true
                     end
                 end
-                if astralPowerDeficit >= 7 and debuff.sunfire.exists(thisUnit) and debuff.sunfire.remain(thisUnit) < 5.4 and ttd(thisUnit) > 5.4 and ((norepeat and lastSpellCast ~= spell.sunfire) or not pewbuff) then
-                    if castSpell(thisUnit, spell.sunfire, true, false, false, true, false, true, true, false) then
-                        return true
-                    end
-                end
-                if talent.stellarFlare and astralPowerDeficit >= 12 and debuff.stellarFlare.exists(thisUnit) and debuff.stellarFlare.remain(thisUnit) < 7.2 and floor(ttd(thisUnit) / (2 * hasteAmount)) >= 5 and not cast.last.stellarFlare() then
-                    if castSpell(thisUnit, spell.stellarFlare, true, false, false, true, false, true, true, false) then
-                        return true
-                    end
-                end
             end
-        end
-
-
-
-        --lunar_strike
-        if buff.solarEmpowerment.stack() < 3 and
-                (astralPowerDeficit >= 12 or buff.lunarEmpowerment.stack() == 3) and
-                ((buff.warriorOfElune.exists() or buff.lunarEmpowerment.exists() or #enemies.yards8t >= 2 and
-                        not buff.solarEmpowerment.exists()) and
-                        (not norepeat or norepeat and cast.last.solarWrath(1))) then
-            if cast.lunarStrike(getBiggestUnitCluster(45, 8)) then
-                return true
-            end
-        end
-        --[[if buff.owlkinFrenzy.exists()
-                or buff.solarEmpowerment.stack() < 3 and (buff.lunarEmpowerment.stack() == 3 or astralPowerDeficit >= 12 )
-                and ((buff.warriorOfElune.exists() or buff.lunarEmpowerment.stack() > 0 or (#enemies.yards8t >= 2 and not buff.solarEmpowerment.exists()))
-                and (norepeat and cast.last.solarWrath(1)) then
-          --if cast.lunarStrike(units.dyn45) then
-          if cast.lunarStrike(getBiggestUnitCluster(45, 8)) then
-            return true
-          end
-          --end
-        ]]
-        --solar_wrath,if=variable.az_ss<3|!buff.ca_inc.up|!prev.solar_wrath
-        if ((norepeat and not cast.last.solarWrath(1)) or not pewbuff or not traits.streakingStars.active) then
-            if cast.solarWrath(units.dyn45) then
-            end
-        end
-
-        if not norepeat or norepeat and cast.last.sunfire(1) then
-            if cast.sunfire(units.dyn45) then
-            end
-        end
-
-        if cast.moonfire(units.dyn45)
-        then
-            return true
         end
     end
 
@@ -791,15 +1023,25 @@ local function runRotation()
             end
         end
 
-
-        --Potion or Stone
+        -- Pot/Stoned
         if isChecked("Potion/Healthstone") and php <= getValue("Potion/Healthstone") then
-            if canUseItem(5512) then
-                useItem(5512)
-            elseif canUseItem(getHealthPot()) then
-                useItem(getHealthPot())
+            if inCombat and (hasHealthPot() or hasItem(5512) or hasItem(166799)) then
+                if canUseItem(5512) then
+                    br.addonDebug("Using Healthstone")
+                    useItem(5512)
+                elseif hasItem(156634) and canUseItem(156634) then
+                    br.addonDebug("Using Silas' Vial of Continuous Curing")
+                    useItem(156634)
+                elseif hasItem(166799) and canUseItem(166799) then
+                    br.addonDebug("Using Emerald of Vigor")
+                    useItem(166799)
+                elseif canUseItem(healPot) then
+                    br.addonDebug("Using Health Pot")
+                    useItem(healPot)
+                end
             end
         end
+
         -- Renewal
         if isChecked("Renewal") and talent.renewal and php <= getValue("Renewal") then
             if cast.renewal("player") then
@@ -825,7 +1067,7 @@ local function runRotation()
             end
         end
         -- Rebirth
-        if isChecked("Rebirth") and cd.rebirth.remains() <= gcd and not isMoving("player") then
+        if inCombat and isChecked("Rebirth") and cd.rebirth.remain() <= gcd and not isMoving("player") then
             if getOptionValue("Rebirth") == 1 then
                 local tanks = getTanksTable()
                 for i = 1, #tanks do
@@ -955,18 +1197,75 @@ local function runRotation()
             end
         end
 
-        if isChecked("Auto Soothe") then
-            for i = 1, #enemies.yards45 do
-                local thisUnit = enemies.yards45[i]
-                if canDispel(thisUnit, spell.soothe) then
+
+    end
+    local function isCC(unit)
+        if getOptionCheck("Don't break CCs") then
+            return isLongTimeCCed(Unit)
+        end
+        return false
+    end
+    local function root_cc()
+
+
+
+        local root_UnitList = {}
+        if isChecked("Freehold - root grenadier") then
+            root_UnitList[129758] = "Irontide Grenadier"
+        end
+        if isChecked("Atal - root Spirit of Gold") then
+            root_UnitList[131009] = "Spirit of Gold"
+        end
+        if isChecked("All - root Emissary of the Tides") then
+            root_UnitList[155434] = "Emissary of the Tides"
+        end
+
+        for i = 1, #enemies.yards45 do
+            thisUnit = enemies.yards45[i]
+
+            if isChecked("Auto Soothe") then
+                if cast.able.soothe() and canDispel(thisUnit, spell.soothe) then
                     if cast.soothe(thisUnit) then
                         return true
                     end
                 end
             end
+
+
+            --Enchanted emmisary == 155432
+            if isChecked("Punt Enchanted Emissary") and inInstance then
+                if GetObjectID(thisUnit) == 155432 then
+                    if #tanks > 0 and getDistance(tank, thisUnit) <= 25 then
+                        br.addonDebug("Punting Emissary - Range from tank: " .. getDistance(tank, thisUnit))
+                        if cast.moonfire(thisUnit) then
+                            return true
+                        end
+                    end
+                end
+            end
+
+            if isChecked("Freehold - root grenadier") or isChecked("Atal - root Spirit of Gold") or isChecked("All - root Emissary of the Tides") or isChecked("KR - Minions of Zul") then
+                --br.addonDebug("Mob: " .. thisUnit .. " Health: " .. getHP(thisUnit))
+                if cast.able.massEntanglement() and isCC(thisUnit) and getHP(thisUnit) > 90 then
+                    if (root_UnitList[GetObjectID(thisUnit)] ~= nil and getBuffRemain(thisUnit, 226510) <= 3) then
+                        if cast.massEntanglement(thisUnit) then
+                            br.addonDebug("Mass Rooting: " .. thisUnit)
+                            return true
+                        end
+                    end
+                end
+                if cast.able.entanglingRoots() and isCC(thisUnit) and getHP(thisUnit) > 90 then
+                    if (root_UnitList[GetObjectID(thisUnit)] ~= nil and getBuffRemain(thisUnit, 226510) <= 3) then
+                        if cast.entanglingRoots(thisUnit) then
+                            br.addonDebug("Rooting: " .. thisUnit)
+                            return true
+                        end
+                    end
+                end
+            end
+
         end
     end
-
     local function PreCombat()
         -- Pre-Pull Timer
         if isChecked("Pre-Pull Timer") and GetObjectExists("target") and not UnitIsDeadOrGhost("target") and UnitCanAttack("target", "player") then
@@ -1122,12 +1421,12 @@ local function runRotation()
                     return
                 end
             elseif StF and not CA and power >= 40 then
-                if talent.incarnationChoseOfElune and cd.incarnationChoseOfElune.remains() <= 3 then
+                if talent.incarnationChoseOfElune and cd.incarnationChoseOfElune.remain() <= 3 then
                     if cast.incarnationChoseOfElune("player") then
                         br.addonDebug("Opener: Inc cast")
                         CA = true
                     end
-                elseif not talent.incarnationChoseOfElune and cd.celestialAlignment.remains() <= 3 then
+                elseif not talent.incarnationChoseOfElune and cd.celestialAlignment.remain() <= 3 then
                     if cast.celestialAlignment("player") then
                         br.addonDebug("Opener: CA cast")
                         CA = true
@@ -1189,9 +1488,15 @@ local function runRotation()
                     return true
                 end
             end
+
+            if root_cc() then
+                return true
+            end
+
             if ABOpener == false and isChecked("Opener") and (GetObjectExists("target") and isBoss("target")) then
                 actionList_Opener()
             end
+
             if mode.rotation ~= 4 then
                 if dps() then
                     return true

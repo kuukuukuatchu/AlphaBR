@@ -181,7 +181,7 @@ function castGroundAtBestLocation(spellID, radius, minUnits, maxRange, minRange,
                 else
                   tX, tY, tZ = GetFuturePostion(combination, castTime)
                 end
-                if(j==#val) then
+                if(j==#val) and temp.xi ~= nil then
                     temp.xii = tX;
                     temp.yii = tY;
                     temp.zii = tZ;
@@ -732,7 +732,7 @@ function br.DBM:getPulltimer(time, specificID)
     if br.DBM.Timer then
         if IsAddOnLoaded('DBM-Core') then
             local specificID = specificID or "Pull in"
-            local hasPulltimer = false
+            local hasPullTimer = false
             local isBelowTime = false
             local pullTimer = 0
             for i = 1, #br.DBM.Timer do
@@ -743,26 +743,23 @@ function br.DBM:getPulltimer(time, specificID)
                 --if br.DBM.Timer[i].id == specificID then
                 is_find , _ = string.find(br.DBM.Timer[i].id , tostring(specificID))
                 if is_find ~= nil then
-                    hasPulltimer = true
+                    hasPullTimer = true
                     pullTimer = br.DBM.Timer[i].timer
-
                     -- if a time is given set var to true
                     if time then
                         if pullTimer <= time then
                             isBelowTime = true
                         end
+                        if hasPullTimer and isBelowTime then
+                            return true
+                        else
+                            return false
+                        end
+                    else
+                        if hasPullTimer then
+                            return pullTimer
+                        end
                     end
-                end
-            end
-            if time ~= nil then
-                if hasPullTimer and isBelowTime then
-                    return true
-                else
-                    return false
-                end
-            else
-                if hasPullTimer then
-                    return pullTimer
                 end
             end
         elseif IsAddOnLoaded("BigWigs") then
@@ -780,18 +777,16 @@ function br.DBM:getPulltimer(time, specificID)
                         if currentTimer <= time then
                             isBelowTime = true
                         end
+                        if hasTimer and isBelowTime then
+                            return true
+                        else
+                            return false
+                        end
+                    else
+                        if hasTimer then
+                            return currentTimer
+                        end
                     end
-                end
-            end
-            if time ~= nil then
-                if hasTimer and isBelowTime then
-                    return true
-                else
-                    return false
-                end
-            else
-                if hasTimer then
-                    return currentTimer
                 end
             end
         end
@@ -864,18 +859,16 @@ end
                             if currentTimer <= time then
                                 isBelowTime = true
                             end
+                            if hasTimer and isBelowTime then
+                                return true
+                            else
+                                return false
+                            end
+                        else
+                            if hasTimer then
+                                return currentTimer
+                            end
                         end
-                    end
-                end
-                if time ~= nil then
-                    if hasTimer and isBelowTime then
-                        return true
-                    else
-                        return false
-                    end
-                else
-                    if hasTimer then
-                        return currentTimer
                     end
                 end
             elseif IsAddOnLoaded("BigWigs") then
@@ -892,18 +885,16 @@ end
                             if currentTimer <= time then
                                 isBelowTime = true
                             end
+                            if hasTimer and isBelowTime then
+                                return true
+                            else
+                                return false
+                            end
+                        else
+                            if hasTimer then
+                                return currentTimer
+                            end
                         end
-                    end
-                end
-                if time ~= nil then
-                    if hasTimer and isBelowTime then
-                        return true
-                    else
-                        return false
-                    end
-                else
-                    if hasTimer then
-                        return currentTimer
                     end
                 end
             end
@@ -952,7 +943,7 @@ end
 
 function PullTimerRemain(returnBool)
     if returnBool == nil then returnBool = false end
-    if _brPullTimer == nil or _brPullTimer == 0 or _brPullTimer - GetTime() < 0 then
+    if br.DBM:getPulltimer() == 999 then
         if returnBool == false then
             return 999
         else
@@ -960,7 +951,7 @@ function PullTimerRemain(returnBool)
         end
     else
         if returnBool == false then
-            return _brPullTimer - GetTime()
+            return br.DBM:getPulltimer()
         else
             return true
         end
