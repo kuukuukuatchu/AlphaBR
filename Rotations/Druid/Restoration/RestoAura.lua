@@ -240,8 +240,8 @@ local function createOptions()
 		-- Well of Existence
 			br.ui:createCheckbox(section, "Well of Existence")
 		-- Life Binder's Invocation
-			br.ui:createSpinner(section, "Life Binder's Invocation", 85, 1, 100, 5, "Health threshold to use")
-            br.ui:createSpinner(section, "Life Binder's Invocation Targets", 5, 1, 40, 1, "Number of targets to use")
+			br.ui:createSpinner(section, "Life-Binder's Invocation", 85, 1, 100, 5, "Health threshold to use")
+            br.ui:createSpinnerWithout(section, "Life-Binder's Invocation Targets", 5, 1, 40, 1, "Number of targets to use")
 		 br.ui:checkSectionState(section)
 		-- Defensive Options
 		section = br.ui:createSection(br.ui.window.profile, "Defensive")
@@ -440,13 +440,15 @@ local function runRotation()
 	enemies.get(40)
 	friends.yards40 = getAllies("player", 40)
 
-	if inInstance and select(3,GetInstanceInfo()) == 8 then
+	if inInstance and select(3, GetInstanceInfo()) == 8 then
 		for i = 1, #tanks do
 			local ourtank = tanks[i].unit
 			local Burststack = getDebuffStacks(ourtank, 240443)
 			if Burststack >= getOptionValue("Bursting") then
 				burst = true
 				break
+			else 
+				burst = false
 			end
 		end
 	end
@@ -1012,7 +1014,7 @@ local function runRotation()
 					end
 				end
 			end
-			if isChecked("Life-Binder's Invocation") and essence.lifeBindersInvocation.active and cd.lifeBindersInvocation.remain() <= gcd and getLowAllies(getOptionValue("Life-Binder's Invocation")) >= getOptionValue("Life-Binder's Invocation Targets") then
+			if isChecked("Life-Binder's Invocation") and essence.lifeBindersInvocation.active and cd.lifeBindersInvocation.remain() <= gcdMax and getLowAllies(getOptionValue("Life-Binder's Invocation")) >= getOptionValue("Life-Binder's Invocation Targets") then
                 if cast.lifeBindersInvocation() then
                     br.addonDebug("Casting Life-Binder's Invocation")
                     return true
@@ -1582,7 +1584,7 @@ local function runRotation()
 			end
 		end
 		-- Refreshment
-		if isChecked("Well of Existence") and essence.refreshment.active and cd.refreshment.remain() <= gcd and UnitBuffID("player",296138) and select(16,UnitBuffID("player",296138,"EXACT")) >= 15000 and lowest.hp <= getValue("Shadow Mend") then
+		if isChecked("Well of Existence") and essence.refreshment.active and cd.refreshment.remain() <= gcdMax and UnitBuffID("player",296138) and select(16,UnitBuffID("player",296138,"EXACT")) >= 15000 and lowest.hp <= getValue("Regrowth") then
 			if cast.refreshment(lowest.unit) then br.addonDebug("Casting Refreshment") return true end
 		end
 		-- Concentrated Flame

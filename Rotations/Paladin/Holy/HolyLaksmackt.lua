@@ -77,6 +77,11 @@ local function createOptions()
             br.ui:createSpinner(section, "Arcane Torrent Dispel", 1, 0, 20, 1, "", "|cffFFFFFFMinimum Torrent Targets")
             br.ui:createSpinner(section, "Arcane Torrent Mana", 30, 0, 95, 1, "", "|cffFFFFFFMinimum When to use for mana")
         end
+        if br.player.race == "LightforgedDraenei" then
+            --lightsJudgment
+            br.ui:createSpinner(section, "Light's Judgment", 1, 0, 20, 1, "", "Minimum Judgement Targets")
+        end
+
         br.ui:createCheckbox(section, "Mass Rez")
         -- Critical
         br.ui:createSpinner(section, "Critical HP", 30, 0, 100, 5, "", "|cffFFFFFFHealth Percent to Critical Heals")
@@ -202,6 +207,8 @@ local function createOptions()
         br.ui:createSpinner(section, "Ever Rising Tide - Mana", 30, 0, 100, 5, "", "min mana to use")
         br.ui:createSpinner(section, "Ever Rising Tide - Health", 30, 0, 100, 5, "", "health threshold to pop at")
         br.ui:createSpinner(section, "Well of Existence  - Health", 30, 0, 100, 5, "", "health threshold to pop at")
+        br.ui:createSpinner(section, "Seed of Eonar", 80, 0, 100, 5, "Health Percent to Cast At")
+        br.ui:createSpinnerWithout(section, "Seed of Eonar Targets", 3, 0, 40, 1, "Minimum hurting friends")
         br.ui:checkSectionState(section)
 
         -------------------------
@@ -217,7 +224,6 @@ local function createOptions()
         br.ui:createDropdownWithout(section, "Holy Light Infuse", { "|cffFFFFFFNormal", "|cffFFFFFFOnly Infuse" }, 2, "|cffFFFFFFOnly Use Infusion Procs.")
         --Holy Shock
         br.ui:createSpinner(section, "Holy Shock", 80, 0, 100, 5, "", "|cffFFFFFFHealth Percent to Cast At")
-        br.ui:createCheckbox(section, "Holy Shock on CD (lowest)")
         --Bestow Faith
         br.ui:createSpinner(section, "Bestow Faith", 80, 0, 100, 5, "", "|cffFFFFFFHealth Percent to Cast At")
         br.ui:createDropdownWithout(section, "Bestow Faith Target", { "|cffFFFFFFAll", "|cffFFFFFFTanks", "|cffFFFFFFSelf", "|cffFFFFFFSelf+LotM" }, 4, "|cffFFFFFFTarget for BF")
@@ -267,6 +273,7 @@ local function createOptions()
         br.ui:createCheckbox(section, "Judgment - DPS")
         -- Holy Shock
         br.ui:createCheckbox(section, "Holy Shock Damage")
+        br.ui:createCheckbox(section, "Aggressive Glimmer", "tries to keep one glimmer on target")
         -- Crusader Strike
         br.ui:createCheckbox(section, "Crusader Strike")
         br.ui:checkSectionState(section)
@@ -646,6 +653,14 @@ local function runRotation()
         end
     end
 
+    -- Light's Judgment
+    if isChecked("Light's Judgment") and race == "LightforgedDraenei" and getSpellCD(255647) == 0 then
+        if #enemies.yards40 >= getValue("Light's Judgment") then
+            if cast.lightsJudgment(getBiggestUnitCluster(40, 5)) then
+                return true
+            end
+        end
+    end
     bossHelper()
     -----------------
     --- Rotations ---
@@ -1112,11 +1127,25 @@ local function runRotation()
                 end
             end
         end
-
+        --Seed of Eonar
+        if isChecked("Seed of Eonar") and essence.lifeBindersInvocation.active and cast.able.lifeBindersInvocation and not moving then
+            for i = 1, #br.friend do
+                if UnitInRange(br.friend[i].unit) then
+                    local lowHealthCandidates = getUnitsToHealAround(br.friend[i].unit, 30, getValue("Seed of Eonar"), #br.friend)
+                    if #lowHealthCandidates >= getValue("Seed of Eonar Targets") and not moving or burst == true then
+                        if cast.lifeBindersInvocation() then
+                            return true
+                        end
+                    end
+                end
+            end
+        end
         if isChecked("Group Avenger w/ Wrath") then
-            if cast.able.holyAvenger() and (buff.avengingWrathCrit.remain() >= 15 or buff.avengingCrusader.remain() >= 15) then
+            if cast.able.holyAvenger()
+                    and (buff.avengingWrath.exists() or buff.avengingCrusader.exists())
+                    and ((buff.avengingWrath.remain() > 12 and buff.avengingWrath.remain() < 17) or (buff.avengingCrusader.remain() > 12 and buff.avengingCrusader.remain() < 19)) then
                 if cast.holyAvenger() then
-                    br.addonDebug("Grouping HA w/wings")
+                    br.addonDebug("Grouping HA w/wings - Wings remain:" .. buff.avengingWrath.remain())
                     return true
                 end
             end
@@ -1723,9 +1752,22 @@ local function runRotation()
 
         --Glimmer support
 
+        if isChecked("Aggressive Glimmer") and (mode.DPS == 1 or mode.DPS == 3) and inCombat and UnitIsEnemy("target", "player")
+                and  isChecked("Critical HP") and lowest.hp > getValue("Critical HP")  then
+            if not debuff.glimmerOfLight.exists("target") then
+                if cast.holyShock("target") then
+                    br.addonDebug("glimmerOfLight on target")
+                    return true
+                end
+            end
+        end
+
         if mode.Glimmer == 3 and (inInstance or inRaid) and #tanks > 0 then
-            if not buff.glimmerOfLight.exists(tanks[1].unit) and not UnitBuffID(tanks[1].unit, 115191) and getLineOfSight(tanks[1].unit, "player") then
-                if cast.holyShock(tanks[1].unit) then
+            for i = 1, #tanks do
+                local thisUnit = tanks[i].unit
+                if not buff.glimmerOfLight.exists(thisUnit) and not UnitBuffID(thisUnit, 115191) and getLineOfSight(thisUnit, "player") then
+                    if cast.holyShock(thisUnit) then
+                    end
                 end
             end
         end
@@ -1840,118 +1882,122 @@ local function runRotation()
 
 
         --and getDebuffStacks(br.friend[i].unit, 209858) < getValue("Necrotic Rot")
-        for i = 1, #br.friend do
-            if br.friend[i].hp < 100 and UnitInRange(br.friend[i].unit) or GetUnitIsUnit(br.friend[i].unit, "player") then
-                --count grievance stacks here
-                if isChecked("Grievous Wounds") then
-                    local CurrentBleedstack = getDebuffStacks(br.friend[i].unit, 240559)
-                    if getDebuffStacks(br.friend[i].unit, 240559) > 0 then
-                        BleedFriendCount = BleedFriendCount + 1
+
+        if #br.friend > 0 then
+            for i = 1, #br.friend do
+                if br.friend[i].hp < 100 and UnitInRange(br.friend[i].unit) or GetUnitIsUnit(br.friend[i].unit, "player") then
+                    --count grievance stacks here
+                    if isChecked("Grievous Wounds") then
+                        local CurrentBleedstack = getDebuffStacks(br.friend[i].unit, 240559)
+                        if getDebuffStacks(br.friend[i].unit, 240559) > 0 then
+                            BleedFriendCount = BleedFriendCount + 1
+                        end
+                        if CurrentBleedstack > BleedStack then
+                            BleedStack = CurrentBleedstack
+                            BleedFriend = br.friend[i]
+                            --debug stuff
+                            --Print("Griev Debug Target: " .. BleedFriend.unit .. " Stacks: " ..CurrentBleedstack .. " HP: " .. BleedFriend.hp)
+                        end
                     end
-                    if CurrentBleedstack > BleedStack then
-                        BleedStack = CurrentBleedstack
-                        BleedFriend = br.friend[i]
-                        --debug stuff
-                        --Print("Griev Debug Target: " .. BleedFriend.unit .. " Stacks: " ..CurrentBleedstack .. " HP: " .. BleedFriend.hp)
+
+                    if isChecked("Mastery bonus") and inRaid then
+                        if br.friend[i].hp <= getValue("Holy Shock") and not buff.beaconOfFaith.exists(br.friend[i].unit) and not buff.beaconOfVirtue.exists(br.friend[i].unit) and br.friend[i].distance <= (10 * master_coff) then
+                            holyshocktarget = br.friend[i].unit
+                        end
+                        if holyshocktarget == nil and br.friend[i].hp <= getValue("Holy Shock") and not buff.beaconOfFaith.exists(br.friend[i].unit) and not buff.beaconOfVirtue.exists(br.friend[i].unit) and br.friend[i].distance <= (20 * master_coff) then
+                            holyshocktarget = br.friend[i].unit
+                        end
+                        if holyshocktarget == nil and br.friend[i].hp <= getValue("Holy Shock") and not buff.beaconOfFaith.exists(br.friend[i].unit) and not buff.beaconOfVirtue.exists(br.friend[i].unit) and br.friend[i].distance <= (30 * master_coff) then
+                            holyshocktarget = br.friend[i].unit
+                        end
                     end
-                end
-                if isChecked("Mastery bonus") and inRaid then
-                    if br.friend[i].hp <= getValue("Holy Shock") and not buff.beaconOfFaith.exists(br.friend[i].unit) and not buff.beaconOfVirtue.exists(br.friend[i].unit) and br.friend[i].distance <= (10 * master_coff) then
+
+                    if holyshocktarget == nil and br.friend[i].hp <= getValue("Holy Shock") and (not inInstance or (inInstance and getDebuffStacks(br.friend[i].unit, 209858) < getValue("Necrotic Rot"))) then
                         holyshocktarget = br.friend[i].unit
                     end
-                    if holyshocktarget == nil and br.friend[i].hp <= getValue("Holy Shock") and not buff.beaconOfFaith.exists(br.friend[i].unit) and not buff.beaconOfVirtue.exists(br.friend[i].unit) and br.friend[i].distance <= (20 * master_coff) then
-                        holyshocktarget = br.friend[i].unit
+                    if br.friend[i].hp <= 90 and buff.divineShield.exists("player") and not GetUnitIsUnit(br.friend[i].unit, "player") then
+                        lightOfTheMartyrDS = br.friend[i].unit
                     end
-                    if holyshocktarget == nil and br.friend[i].hp <= getValue("Holy Shock") and not buff.beaconOfFaith.exists(br.friend[i].unit) and not buff.beaconOfVirtue.exists(br.friend[i].unit) and br.friend[i].distance <= (30 * master_coff) then
-                        holyshocktarget = br.friend[i].unit
+                    if br.friend[i].hp <= getValue("LoM after FoL") and (br.friend[i].role == "TANK" or UnitGroupRolesAssigned(br.friend[i].unit) == "TANK") and getSpellCD(20473) >= gcd then
+                        lightOfTheMartyrTANK = br.friend[i].unit
                     end
-                end
+                    if br.friend[i].hp <= getValue("LoM after FoL") and getSpellCD(20473) >= gcd and not GetUnitIsUnit(br.friend[i].unit, "player") then
+                        lightOfTheMartyrHS = br.friend[i].unit
+                    end
+                    if br.friend[i].hp <= getValue("Light of the Martyr") and not GetUnitIsUnit(br.friend[i].unit, "player") and (not inInstance or (inInstance and getDebuffStacks(br.friend[i].unit, 209858) < getValue("Necrotic Rot"))) then
+                        lightOfTheMartyrHP = br.friend[i].unit
+                    end
 
-                if holyshocktarget == nil and br.friend[i].hp <= getValue("Holy Shock") and (not inInstance or (inInstance and getDebuffStacks(br.friend[i].unit, 209858) < getValue("Necrotic Rot"))) then
-                    holyshocktarget = br.friend[i].unit
-                end
-                if br.friend[i].hp <= 90 and buff.divineShield.exists("player") and not GetUnitIsUnit(br.friend[i].unit, "player") then
-                    lightOfTheMartyrDS = br.friend[i].unit
-                end
-                if br.friend[i].hp <= getValue("LoM after FoL") and (br.friend[i].role == "TANK" or UnitGroupRolesAssigned(br.friend[i].unit) == "TANK") and getSpellCD(20473) >= gcd then
-                    lightOfTheMartyrTANK = br.friend[i].unit
-                end
-                if br.friend[i].hp <= getValue("LoM after FoL") and getSpellCD(20473) >= gcd and not GetUnitIsUnit(br.friend[i].unit, "player") then
-                    lightOfTheMartyrHS = br.friend[i].unit
-                end
-                if br.friend[i].hp <= getValue("Light of the Martyr") and not GetUnitIsUnit(br.friend[i].unit, "player") and (not inInstance or (inInstance and getDebuffStacks(br.friend[i].unit, 209858) < getValue("Necrotic Rot"))) then
-                    lightOfTheMartyrHP = br.friend[i].unit
-                end
+                    --Flash of Light
+                    if br.friend[i].hp <= getValue("FoL Tanks") and (br.friend[i].role == "TANK" or UnitGroupRolesAssigned(br.friend[i].unit) == "TANK") and (not inInstance or (inInstance and getDebuffStacks(br.friend[i].unit, 209858) < getValue("Necrotic Rot"))) then
+                        folTarget = br.friend[i].unit
+                    end
 
-                --Flash of Light
-                if br.friend[i].hp <= getValue("FoL Tanks") and (br.friend[i].role == "TANK" or UnitGroupRolesAssigned(br.friend[i].unit) == "TANK") and (not inInstance or (inInstance and getDebuffStacks(br.friend[i].unit, 209858) < getValue("Necrotic Rot"))) then
-                    folTarget = br.friend[i].unit
-                end
+                    if isChecked("Mastery bonus") and inRaid then
+                        if folTarget == nil and br.friend[i].hp <= getValue("FoL Infuse") and br.friend[i].distance <= (10 * master_coff) and buff.infusionOfLight.remain("player") > gcd then
+                            folTarget = br.friend[i].unit
+                        elseif br.friend[i].hp <= getValue("Flash of Light") and br.friend[i].distance <= (10 * master_coff) then
+                            folTarget = br.friend[i].unit
+                        end
+                        if folTarget == nil and br.friend[i].hp <= getValue("FoL Infuse") and br.friend[i].distance <= (20 * master_coff) and buff.infusionOfLight.remain("player") > gcd then
+                            folTarget = br.friend[i].unit
+                        elseif folTarget == nil and br.friend[i].hp <= getValue("Flash of Light") and br.friend[i].distance <= (20 * master_coff) then
+                            folTarget = br.friend[i].unit
+                        end
+                        if folTarget == nil and br.friend[i].hp <= getValue("FoL Infuse") and br.friend[i].distance <= (30 * master_coff) and buff.infusionOfLight.remain("player") > gcd then
+                            folTarget = br.friend[i].unit
+                        elseif folTarget == nil and br.friend[i].hp <= getValue("Flash of Light") and br.friend[i].distance <= (30 * master_coff) then
+                            folTarget = br.friend[i].unit
+                        end
+                    end
 
-                if isChecked("Mastery bonus") and inRaid then
-                    if folTarget == nil and br.friend[i].hp <= getValue("FoL Infuse") and br.friend[i].distance <= (10 * master_coff) and buff.infusionOfLight.remain("player") > gcd then
+                    if folTarget == nil and br.friend[i].hp <= getValue("FoL Infuse") and (not inInstance or (inInstance and getDebuffStacks(br.friend[i].unit, 209858) < getValue("Necrotic Rot"))) and buff.infusionOfLight.remain("player") > gcd then
                         folTarget = br.friend[i].unit
-                    elseif br.friend[i].hp <= getValue("Flash of Light") and br.friend[i].distance <= (10 * master_coff) then
-                        folTarget = br.friend[i].unit
-                    end
-                    if folTarget == nil and br.friend[i].hp <= getValue("FoL Infuse") and br.friend[i].distance <= (20 * master_coff) and buff.infusionOfLight.remain("player") > gcd then
-                        folTarget = br.friend[i].unit
-                    elseif folTarget == nil and br.friend[i].hp <= getValue("Flash of Light") and br.friend[i].distance <= (20 * master_coff) then
+                    elseif folTarget == nil and br.friend[i].hp <= getValue("Flash of Light") and (not inInstance or (inInstance and getDebuffStacks(br.friend[i].unit, 209858) < getValue("Necrotic Rot"))) then
                         folTarget = br.friend[i].unit
                     end
-                    if folTarget == nil and br.friend[i].hp <= getValue("FoL Infuse") and br.friend[i].distance <= (30 * master_coff) and buff.infusionOfLight.remain("player") > gcd then
-                        folTarget = br.friend[i].unit
-                    elseif folTarget == nil and br.friend[i].hp <= getValue("Flash of Light") and br.friend[i].distance <= (30 * master_coff) then
-                        folTarget = br.friend[i].unit
+                    if isChecked("Mastery bonus") and inRaid then
+                        if br.friend[i].hp <= getValue("Bestow Faith") and not GetUnitIsUnit(br.friend[i].unit, "player") and br.friend[i].distance <= (10 * master_coff) then
+                            lightOfTheMartyrBF10 = br.friend[i].unit
+                        end
+                        if br.friend[i].hp <= getValue("Bestow Faith") and not GetUnitIsUnit(br.friend[i].unit, "player") and br.friend[i].distance <= (20 * master_coff) then
+                            lightOfTheMartyrBF20 = br.friend[i].unit
+                        end
+                        if br.friend[i].hp <= getValue("Bestow Faith") and not GetUnitIsUnit(br.friend[i].unit, "player") and br.friend[i].distance <= (30 * master_coff) then
+                            lightOfTheMartyrBF30 = br.friend[i].unit
+                        end
                     end
-                end
-                if folTarget == nil and br.friend[i].hp <= getValue("FoL Infuse") and (not inInstance or (inInstance and getDebuffStacks(br.friend[i].unit, 209858) < getValue("Necrotic Rot"))) and buff.infusionOfLight.remain("player") > gcd then
-                    folTarget = br.friend[i].unit
-                elseif folTarget == nil and br.friend[i].hp <= getValue("Flash of Light") and (not inInstance or (inInstance and getDebuffStacks(br.friend[i].unit, 209858) < getValue("Necrotic Rot"))) then
-                    folTarget = br.friend[i].unit
-                end
-
-                if isChecked("Mastery bonus") and inRaid then
-                    if br.friend[i].hp <= getValue("Bestow Faith") and not GetUnitIsUnit(br.friend[i].unit, "player") and br.friend[i].distance <= (10 * master_coff) then
-                        lightOfTheMartyrBF10 = br.friend[i].unit
+                    if br.friend[i].hp <= getValue("Bestow Faith") and not GetUnitIsUnit(br.friend[i].unit, "player") and (not inInstance or (inInstance and getDebuffStacks(br.friend[i].unit, 209858) < getValue("Necrotic Rot"))) then
+                        lightOfTheMartyrBF40 = br.friend[i].unit
                     end
-                    if br.friend[i].hp <= getValue("Bestow Faith") and not GetUnitIsUnit(br.friend[i].unit, "player") and br.friend[i].distance <= (20 * master_coff) then
-                        lightOfTheMartyrBF20 = br.friend[i].unit
+                    if isChecked("Mastery bonus") and inRaid then
+                        if br.friend[i].hp <= getValue("Holy Light") and br.friend[i].distance <= (10 * master_coff) then
+                            holyLight10 = br.friend[i].unit
+                        end
+                        if br.friend[i].hp <= getValue("Holy Light") and br.friend[i].distance <= (20 * master_coff) then
+                            holyLight20 = br.friend[i].unit
+                        end
+                        if br.friend[i].hp <= getValue("Holy Light") and br.friend[i].distance <= (30 * master_coff) then
+                            holyLight30 = br.friend[i].unit
+                        end
                     end
-                    if br.friend[i].hp <= getValue("Bestow Faith") and not GetUnitIsUnit(br.friend[i].unit, "player") and br.friend[i].distance <= (30 * master_coff) then
-                        lightOfTheMartyrBF30 = br.friend[i].unit
+                    if br.friend[i].hp <= getValue("Holy Light") and br.friend[i].hp >= getValue("Critical HP") and (not inInstance or (inInstance and getDebuffStacks(br.friend[i].unit, 209858) < getValue("Necrotic Rot"))) then
+                        holyLight40 = br.friend[i].unit
                     end
-                end
-                if br.friend[i].hp <= getValue("Bestow Faith") and not GetUnitIsUnit(br.friend[i].unit, "player") and (not inInstance or (inInstance and getDebuffStacks(br.friend[i].unit, 209858) < getValue("Necrotic Rot"))) then
-                    lightOfTheMartyrBF40 = br.friend[i].unit
-                end
-                if isChecked("Mastery bonus") and inRaid then
-                    if br.friend[i].hp <= getValue("Holy Light") and br.friend[i].distance <= (10 * master_coff) then
-                        holyLight10 = br.friend[i].unit
+                    if isChecked("Mastery bonus") and inRaid then
+                        if br.friend[i].hp <= getValue("Moving LotM") and not GetUnitIsUnit(br.friend[i].unit, "player") and br.friend[i].distance <= (10 * master_coff) then
+                            lightOfTheMartyrM10 = br.friend[i].unit
+                        end
+                        if br.friend[i].hp <= getValue("Moving LotM") and not GetUnitIsUnit(br.friend[i].unit, "player") and br.friend[i].distance <= (20 * master_coff) then
+                            lightOfTheMartyrM20 = br.friend[i].unit
+                        end
+                        if br.friend[i].hp <= getValue("Moving LotM") and not GetUnitIsUnit(br.friend[i].unit, "player") and br.friend[i].distance <= (30 * master_coff) then
+                            lightOfTheMartyrM30 = br.friend[i].unit
+                        end
                     end
-                    if br.friend[i].hp <= getValue("Holy Light") and br.friend[i].distance <= (20 * master_coff) then
-                        holyLight20 = br.friend[i].unit
+                    if br.friend[i].hp <= getValue("Moving LotM") and not GetUnitIsUnit(br.friend[i].unit, "player") and (not inInstance or (inInstance and getDebuffStacks(br.friend[i].unit, 209858) < getValue("Necrotic Rot"))) then
+                        lightOfTheMartyrM40 = br.friend[i].unit
                     end
-                    if br.friend[i].hp <= getValue("Holy Light") and br.friend[i].distance <= (30 * master_coff) then
-                        holyLight30 = br.friend[i].unit
-                    end
-                end
-                if br.friend[i].hp <= getValue("Holy Light") and br.friend[i].hp >= getValue("Critical HP") and (not inInstance or (inInstance and getDebuffStacks(br.friend[i].unit, 209858) < getValue("Necrotic Rot"))) then
-                    holyLight40 = br.friend[i].unit
-                end
-                if isChecked("Mastery bonus") and inRaid then
-                    if br.friend[i].hp <= getValue("Moving LotM") and not GetUnitIsUnit(br.friend[i].unit, "player") and br.friend[i].distance <= (10 * master_coff) then
-                        lightOfTheMartyrM10 = br.friend[i].unit
-                    end
-                    if br.friend[i].hp <= getValue("Moving LotM") and not GetUnitIsUnit(br.friend[i].unit, "player") and br.friend[i].distance <= (20 * master_coff) then
-                        lightOfTheMartyrM20 = br.friend[i].unit
-                    end
-                    if br.friend[i].hp <= getValue("Moving LotM") and not GetUnitIsUnit(br.friend[i].unit, "player") and br.friend[i].distance <= (30 * master_coff) then
-                        lightOfTheMartyrM30 = br.friend[i].unit
-                    end
-                end
-                if br.friend[i].hp <= getValue("Moving LotM") and not GetUnitIsUnit(br.friend[i].unit, "player") and (not inInstance or (inInstance and getDebuffStacks(br.friend[i].unit, 209858) < getValue("Necrotic Rot"))) then
-                    lightOfTheMartyrM40 = br.friend[i].unit
                 end
             end
         end

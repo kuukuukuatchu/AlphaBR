@@ -58,6 +58,7 @@ local function createOptions()
             br.ui:createCheckbox(section,"PWS Insanity Gain")
             -- Auto Buff Fortitude
             br.ui:createCheckbox(section,"Power Word: Fortitude", "Check to auto buff Fortitude on party.")
+            br.ui:createCheckbox(section, "Pull Spell")
             -- Out of Combat Attack
             --br.ui:createCheckbox(section,"Pull OoC", "Check to Engage the Target out of Combat.")
             -- Opener
@@ -109,7 +110,7 @@ local function createOptions()
             br.ui:createSpinnerWithout(section, "  Lucid Dreams Insanity",  50,  25,  100,  1, "Insanity Power when to use Lucid Dreams.")
             -- Shadowfiend
             br.ui:createCheckbox(section, "Shadowfiend / Mindbender", "Use Shadowfiend or Mindbender on CD")
-            br.ui:createSpinner(section, "  Mindbender in VF", 19, 0, 50, 1, "Set to desired Void Form stacks to use at.")
+            br.ui:createSpinner(section, "Mindbender in VF", 19, 0, 50, 1, "Set to desired Void Form stacks to use at.")
             -- Surrender To Madness
             br.ui:createCheckbox(section,"Surrender To Madness")
             -- Dispersion
@@ -1038,22 +1039,22 @@ local function runRotation()
     --Shadowfiend / Mindbender
         -- mindbender,if=talent.mindbender.enabled|(buff.voidform.stack>18|target.time_to_die<15)
         if isChecked("Shadowfiend / Mindbender") and talent.mindbender and useCDs() then
-            if isChecked("  Mindbender in VF") and getOptionValue("  Mindbender in VF") > 0 then
-                if buff.voidForm.stack() >= getOptionValue("  Mindbender in VF") then
+            if isChecked("Mindbender in VF") and getOptionValue("Mindbender in VF") > 0 then
+                if buff.voidForm.stack() >= getOptionValue("Mindbender in VF") then
                     if cast.mindbender() then dPrint("clv SFMB VF Stack") return end
                 end
-            elseif not isChecked("  Mindbender in VF") and useCDs() then
+            elseif not isChecked("Mindbender in VF") and useCDs() then
                 if not buff.voidForm.exists() or buff.voidForm.stack() >= 1 then
                     if cast.mindbender() then dPrint("clv SFMB CD") return end
                 end
             end
         end
         if isChecked("Shadowfiend / Mindbender") and not talent.mindbender and useCDs() and dotsUp then
-            if isChecked("  Mindbender in VF") and getOptionValue("  Mindbender in VF") > 0 then
-                if buff.voidForm.stack() >= getOptionValue("  Mindbender in VF") then
+            if isChecked("Mindbender in VF") and getOptionValue("Mindbender in VF") > 0 then
+                if buff.voidForm.stack() >= getOptionValue("Mindbender in VF") then
                     if cast.shadowfiend() then dPrint("clv SF CD") return end
                 end
-            elseif not isChecked("  Mindbender in VF") and ttd("target") < 15 and useCDs() then
+            elseif not isChecked("Mindbender in VF") and ttd("target") < 15 and useCDs() then
                 if cast.shadowfiend() then dPrint("clv SF CD") return end
             end
         end
@@ -1261,7 +1262,7 @@ local function runRotation()
         --     return true end
         --end
         if mode.voidForm == 1 and not buff.voidForm.exists() and cast.able.voidEruption() and not moving then
-            if cast.voidErupt("target") then dPrint("vE") return end
+            if cast.voidEruption("target") then dPrint("vE") return end
         end
         -- if buff.voidForm.exists() and cast.last.voidEruption() and preVoidErupt and not moving then preVoidErupt = false
         --     if not talent.shadowWordVoid then
@@ -1284,7 +1285,7 @@ local function runRotation()
         if isChecked("Dark Ascension") and dotsUp and useCDs() then
             if power <= 60 and not buff.voidForm.exists() then
                 if cast.darkAscension(units.dyn40) then
-                Print("DA no VF")
+                --Print("DA no VF")
                  return end
             end
         end
@@ -1345,8 +1346,9 @@ local function runRotation()
     --Shadowfiend / Mindbender
         -- mindbender,if=talent.mindbender.enabled|(buff.voidform.stack>18|target.time_to_die<15)
         if isChecked("Shadowfiend / Mindbender") and talent.mindbender and useCDs() then
-            if isChecked("  Mindbender in VF") and getOptionValue("  Mindbender in VF") > 0 then
-                if buff.voidForm.stack() >= getOptionValue("  Mindbender in VF") or ttd("target") < 15 then
+            if isChecked("Mindbender in VF") and getOptionValue("Mindbender in VF") > 0 then
+                if buff.voidForm.stack() >= getOptionValue("Mindbender in VF") 
+                or ttd("target") < 15 then
                     if cast.mindbender() then dPrint("SFMB VF Stack") return end
                 end
             elseif not isChecked("  Mindbender in VF") and ttd("target") < 15 and useCDs() then
@@ -1356,11 +1358,11 @@ local function runRotation()
             end
         end
         if isChecked("Shadowfiend / Mindbender") and not talent.mindbender and useCDs() and dotsUp then
-            if isChecked("  Mindbender in VF") and getOptionValue("  Mindbender in VF") > 0 then
-                if buff.voidForm.stack() >= getOptionValue("  Mindbender in VF") or ttd("target") < 15 then
+            if isChecked("Mindbender in VF") and getOptionValue("Mindbender in VF") > 0 then
+                if buff.voidForm.stack() >= getOptionValue("Mindbender in VF") or ttd("target") < 15 then
                     if cast.shadowfiend() then dPrint("SF CD") return end
                 end
-            elseif not isChecked("  Mindbender in VF") and ttd("target") < 15 and useCDs() then
+            elseif not isChecked("Mindbender in VF") and ttd("target") < 15 and useCDs() then
                 if cast.shadowfiend() then dPrint("SF CD") return end
             end
         end
@@ -1595,6 +1597,9 @@ local function runRotation()
 ---------------------------------
         --if not inCombat then --  and GetObjectExists("target") and not UnitIsDeadOrGhost("target") and UnitCanAttack("target", "player")
             if actionList_PreCombat() then return end
+            if not inCombat and GetUnitExists("target") and isValidUnit("target") and getDistance("target","player") < 40 and isChecked("Pull Spell") then
+        if cast.shadowWordPain() then br.addonDebug("Casting Shadow Word Pain") return true end
+    end
         --end
 -----------------------------
 --- In Combat - Rotations ---
@@ -1611,13 +1616,12 @@ local function runRotation()
             --end
         -- Action List - Cleave
             -- run_action_list,name=cleave,if=active_enemies>1
-            if activeEnemies > 1 or (mode.rotation == 2 and not mode.rotation == 3) then --Print("Cleave")
-                --Print(mindblastTargets)
+            if activeEnemies > 1 or (mode.rotation == 2 and not mode.rotation == 3) then 
                 if actionList_Cleave() then return end
             end
         -- Action List - Main
             -- run_action_list,name=single,if=active_enemies=1
-            if activeEnemies == 1 or mode.rotation == 3 then --Print(insanityDrained) --Print("Single")
+            if activeEnemies == 1 or mode.rotation == 3 then
                 if actionList_Single() then return end
             end
         end -- End Combat Rotation

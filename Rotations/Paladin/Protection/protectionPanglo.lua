@@ -959,8 +959,11 @@ local function runRotation()
 				end
 			end
 			-- Racials
+			if isChecked("Racial") and cast.able.racial() and (not talent.seraphim or buff.seraphim.exists()) and race == "LightforgedDraenei" then
+				if cast.racial() then return end
+			end
 			if isChecked("Racial") then
-				if race == "Orc" or race == "Troll" and getSpellCD(racial) == 0 then
+				if (race == "Orc" or race == "Troll") and getSpellCD(racial) == 0 then
 					if castSpell("player", racial, false, false, false) then
 						return
 					end
@@ -1106,7 +1109,12 @@ local function runRotation()
 				end
 			end
 		end
-		-- Avenger's Shield
+		if getOptionValue("Use Concentrated Flame") == 1 or (getOptionValue("Use Concentrated Flame") == 3 and php > getValue("Concentrated Flame Heal")) then
+            if cast.concentratedFlame("target") then
+                return
+            end
+		end	
+			-- Avenger's Shield
 		if isChecked("Avenger's Shield") and cast.able.avengersShield() then
 			if cast.avengersShield() then
 				return
@@ -1124,11 +1132,6 @@ local function runRotation()
 				return
 			end
 		end
-		if getOptionValue("Use Concentrated Flame") == 1 or (getOptionValue("Use Concentrated Flame") == 3 and php > getValue("Concentrated Flame Heal")) then
-            if cast.concentratedFlame("target") then
-                return
-            end
-        end
 		-- Consecration
 		if isChecked("Consecration") and cast.able.consecration() and #enemies.yards5 >= 1 then
 			if cast.consecration("player") then

@@ -69,6 +69,7 @@ local function createOptions()
         br.ui:createCheckbox(section, "Cat Charge", "Use Wild Charge to close distance.", 1)
         br.ui:createCheckbox(section, "Break form for critical", 1)
         br.ui:createCheckbox(section, "Break form for dispel", 1)
+        br.ui:createCheckbox(section, "Break form for dots", 1)
         br.ui:createCheckbox(section, "auto stealth", 1)
         br.ui:createCheckbox(section, "auto dash", 1)
         br.ui:createSpinner(section, "Bear Frenzies Regen HP", 50, 0, 100, 1, "HP Threshold start regen")
@@ -88,7 +89,8 @@ local function createOptions()
         --("Emissary of the Tides"
         br.ui:createSpinnerWithout(section, "Temple of Seth Heal", 40, 0, 100, 5)
         br.ui:createCheckbox(section, "Shrine - Dispel Whisper of Power", "|cff15FF00Enables|cffFFFFFF/|cffD60000Disables |cffFFFFFFBubble Devour target|cffFFBB00.", 0)
-        br.ui:createSpinner(section, "Grievous Wounds", 5, 0, 20, 1, "HP Threshold to trust hots to do the job")
+        br.ui:createSpinner(section, "Grievous Wounds", 80, 0, 100, 5, "HP Threshold to trust hots to do the job")
+        br.ui:createCheckbox(section, "Decaying Mind", 1)
 
         br.ui:checkSectionState(section)
 
@@ -109,11 +111,11 @@ local function createOptions()
         br.ui:createCheckbox(section, "Efflorescence", "green circle - automated")
         br.ui:createCheckbox(section, "Cenarion Ward", "Cenarion Ward - wont use if smart hot is enabled")
         br.ui:createSpinner(section, "Regrowth Clearcasting", 80, 0, 100, 5, "|cffFFFFFFHealth Percent to Cast At")
-        br.ui:createSpinner(section, "Regrowth Tank", 50, 0, 100, 5, "|cffFFFFFFTank Health Percent priority Cast At")
-        br.ui:createSpinner(section, "Regrowth", 35, 0, 100, 5, "|cffFFFFFFHealth Percent to Cast At")
+        br.ui:createSpinner(section, "Regrowth Tank", 65, 0, 100, 5, "|cffFFFFFFTank Health Percent priority Cast At")
+        br.ui:createSpinner(section, "Regrowth", 50, 0, 100, 5, "|cffFFFFFFHealth Percent to Cast At")
         br.ui:createSpinner(section, "Wild Growth", 80, 0, 100, 5, "Health Percent to Cast At")
         br.ui:createSpinnerWithout(section, "Wild Growth Targets", 3, 0, 40, 1, "Minimum Wild Growth Targets")
-        br.ui:createSpinner(section, "Photosynthesis", 60, 0, 100, 5, "Health % for switching to healer")
+        br.ui:createSpinner(section, "Photosynthesis", 70, 0, 100, 5, "Health % for switching to healer")
         br.ui:createSpinnerWithout(section, "Photosynthesis Count", 3, 0, 40, 1, "Minimum hurt Targets")
         br.ui:createCheckbox(section, "pre-hot in combat", "apply pre-hotting routine while in combat")
         br.ui:checkSectionState(section)
@@ -138,7 +140,10 @@ local function createOptions()
         br.ui:createSpinner(section, "Ironbark", 30, 0, 100, 5, "Health Percent to Cast At")
         br.ui:createDropdownWithout(section, "Ironbark Target", { "|cffFFFFFFPlayer", "|cffFFFFFFTarget", "|cffFFFFFFMouseover", "|cffFFFFFFTank", "|cffFFFFFFHealer", "|cffFFFFFFHealer/Tank", "|cffFFFFFFAny" }, 7, "|cffFFFFFFcast Ironbark Target")
         br.ui:createSpinner(section, "Auto Innervate", 10, 0, 100, 50, "Health Percent to Cast At")
-        br.ui:createDropdown(section, "Revive", { "|cffFFFF00Selected Target", "|cffFF0000Mouseover Target" }, 1, "|ccfFFFFFFTarget to Cast On")
+        br.ui:createDropdown(section, "Revive", { "Target", "Mouseover" }, 1, "|ccfFFFFFFTarget to Cast On")
+        -- Rebirth
+        br.ui:createDropdown(section, "Rebirth", { "Target", "Mouseover", "Tank", "Healer", "Healer/Tank", "Any" }, 1, "|cffFFFFFFTarget to cast on")
+
         br.ui:createSpinner(section, "Mana Potion", 50, 0, 100, 1, "Mana Percent to Cast At")
 
         br.ui:checkSectionState(section)
@@ -150,16 +155,17 @@ local function createOptions()
         br.ui:createSpinnerWithout(section, "DPS Save mana", 40, 0, 100, 5, "|cffFFFFFFMana Percent no Cast Sunfire and Moonfire")
         br.ui:createSpinnerWithout(section, "DPS Min % health", 40, 0, 100, 5, "Don't DPS if under this health % in group (cat enforced w/key")
         br.ui:createCheckbox(section, "Safe Dots")
+        br.ui:createCheckbox(section, "Aggressive Dots")
         br.ui:checkSectionState(section)
 
         -- Trinkets
         section = br.ui:createSection(br.ui.window.profile, "Trinkets")
         br.ui:createSpinner(section, "Trinket 1", 70, 0, 100, 5, "Health Percent to Cast At")
         br.ui:createSpinnerWithout(section, "Min Trinket 1 Targets", 3, 1, 40, 1, "", "Minimum Trinket 1 Targets(This includes you)", true)
-        br.ui:createDropdownWithout(section, "Trinket 1 Mode", { "|cffFFFFFFNormal", "|cffFFFFFFTarget", "|cffFFFFFFGround" }, 1, "", "")
+        br.ui:createDropdownWithout(section, "Trinket 1 Mode", { "|cffFFFFFFNormal", "|cffFFFFFFTarget", "|cffFFFFFFGround", "|cffFFFFFFPocket-Sized CP" }, 1, "", "")
         br.ui:createSpinner(section, "Trinket 2", 70, 0, 100, 5, "Health Percent to Cast At")
         br.ui:createSpinnerWithout(section, "Min Trinket 2 Targets", 3, 1, 40, 1, "", "Minimum Trinket 2 Targets(This includes you)", true)
-        br.ui:createDropdownWithout(section, "Trinket 2 Mode", { "|cffFFFFFFNormal", "|cffFFFFFFTarget", "|cffFFFFFFGround" }, 1, "", "")
+        br.ui:createDropdownWithout(section, "Trinket 2 Mode", { "|cffFFFFFFNormal", "|cffFFFFFFTarget", "|cffFFFFFFGround", "|cffFFFFFFPocket-Sized CP" }, 1, "", "")
         -- br.ui:createCheckbox(section, "Advanced Trinket Support")
         br.ui:checkSectionState(section)
 
@@ -175,8 +181,6 @@ local function createOptions()
         br.ui:checkSectionState(section)
         -- Defensive Options
         section = br.ui:createSection(br.ui.window.profile, "Defensive")
-        -- Rebirth
-        br.ui:createDropdown(section, "Rebirth", { "|cffFFFFFFTarget", "|cffFFFFFFMouseover", "|cffFFFFFFTank", "|cffFFFFFFHealer", "|cffFFFFFFHealer/Tank", "|cffFFFFFFAny" }, 1, "|cffFFFFFFTarget to cast on")
         -- Healthstone
         br.ui:createSpinner(section, "Healthstone", 30, 0, 100, 5, "|cffFFFFFFHealth Percent to Cast At")
         -- Barkskin
@@ -192,8 +196,6 @@ local function createOptions()
         -- Interrupt Percentage
         br.ui:createSpinner(section, "InterruptAt", 95, 0, 95, 5, "|cffFFBB00Cast Percentage to use at.")
         br.ui:checkSectionState(section)
-        -- Healing Options
-        section = br.ui:createSection(br.ui.window.profile, "Healing")
 
 
     end
@@ -769,6 +771,21 @@ local function runRotation()
             end
         end
 
+        if isChecked("Aggressive Dots") and mode.DPS == 2 and lowest.hp > getValue("DPS Min % health") then
+            if not debuff.sunfire.exists("target") then
+                if cast.sunfire("target") then
+                    br.addonDebug("Initial Sunfire - non-Cluster")
+                    return true
+                end
+            end
+            if not debuff.moonfire.exists("target") then
+                if cast.moonfire("target") then
+                    br.addonDebug("Initial Moonfire - non-Cluster")
+                    return true
+                end
+            end
+        end
+
         if isChecked("Freehold - pig") then
             bossHelper()
         end
@@ -953,60 +970,63 @@ local function runRotation()
                 end
             end
             -- Rebirth
-            if isChecked("Rebirth") and not moving then
-                if getOptionValue("Rebirth") == 1 -- Target
-                        and UnitIsPlayer("target") and UnitIsDeadOrGhost("target") and GetUnitIsFriend("target", "player") then
-                    if cast.rebirth("target", "dead") then
-                        return true
+            if inCombat then
+                if isChecked("Rebirth") and not moving then
+                    if getOptionValue("Rebirth") == 1 -- Target
+                            and UnitIsPlayer("target") and UnitIsDeadOrGhost("target") and GetUnitIsFriend("target", "player") then
+                        if cast.rebirth("target", "dead") then
+                            return true
+                        end
                     end
-                end
-                if getOptionValue("Rebirth") == 2 -- Mouseover
-                        and UnitIsPlayer("mouseover") and UnitIsDeadOrGhost("mouseover") and GetUnitIsFriend("mouseover", "player") then
-                    if cast.rebirth("mouseover", "dead") then
-                        return true
+                    if getOptionValue("Rebirth") == 2 -- Mouseover
+                            and UnitIsPlayer("mouseover") and UnitIsDeadOrGhost("mouseover") and GetUnitIsFriend("mouseover", "player") then
+                        if cast.rebirth("mouseover", "dead") then
+                            return true
+                        end
                     end
-                end
-                if getOptionValue("Rebirth") == 3 then
-                    -- Tank
-                    for i = 1, #tanks do
-                        if UnitIsPlayer(tanks[i].unit) and UnitIsDeadOrGhost(tanks[i].unit) and GetUnitIsFriend(tanks[i].unit, "player") then
-                            if cast.rebirth(tanks[i].unit, "dead") then
-                                return true
+                    if getOptionValue("Rebirth") == 3 then
+                        -- Tank
+                        for i = 1, #tanks do
+                            if UnitIsPlayer(tanks[i].unit) and UnitIsDeadOrGhost(tanks[i].unit) and GetUnitIsFriend(tanks[i].unit, "player") then
+                                if cast.rebirth(tanks[i].unit, "dead") then
+                                    return true
+                                end
                             end
                         end
                     end
-                end
-                if getOptionValue("Rebirth") == 4 then
-                    -- Healer
-                    for i = 1, #br.friend do
-                        if UnitIsPlayer(br.friend[i].unit) and UnitIsDeadOrGhost(br.friend[i].unit) and GetUnitIsFriend(br.friend[i].unit, "player") and (UnitGroupRolesAssigned(br.friend[i].unit) == "HEALER" or br.friend[i].role == "HEALER") then
-                            if cast.rebirth(br.friend[i].unit, "dead") then
-                                return true
+                    if getOptionValue("Rebirth") == 4 then
+                        -- Healer
+                        for i = 1, #br.friend do
+                            if UnitIsPlayer(br.friend[i].unit) and UnitIsDeadOrGhost(br.friend[i].unit) and GetUnitIsFriend(br.friend[i].unit, "player") and (UnitGroupRolesAssigned(br.friend[i].unit) == "HEALER" or br.friend[i].role == "HEALER") then
+                                if cast.rebirth(br.friend[i].unit, "dead") then
+                                    return true
+                                end
                             end
                         end
                     end
-                end
-                if getOptionValue("Rebirth") == 5 then
-                    -- Tank/Healer
-                    for i = 1, #br.friend do
-                        if UnitIsPlayer(br.friend[i].unit) and UnitIsDeadOrGhost(br.friend[i].unit) and GetUnitIsFriend(br.friend[i].unit, "player") and (UnitGroupRolesAssigned(br.friend[i].unit) == "HEALER" or br.friend[i].role == "HEALER" or br.friend[i].role == "TANK" or UnitGroupRolesAssigned(br.friend[i].unit) == "TANK") then
-                            if cast.rebirth(br.friend[i].unit, "dead") then
-                                return true
+                    if getOptionValue("Rebirth") == 5 then
+                        -- Tank/Healer
+                        for i = 1, #br.friend do
+                            if UnitIsPlayer(br.friend[i].unit) and UnitIsDeadOrGhost(br.friend[i].unit) and GetUnitIsFriend(br.friend[i].unit, "player") and (UnitGroupRolesAssigned(br.friend[i].unit) == "HEALER" or br.friend[i].role == "HEALER" or br.friend[i].role == "TANK" or UnitGroupRolesAssigned(br.friend[i].unit) == "TANK") then
+                                if cast.rebirth(br.friend[i].unit, "dead") then
+                                    return true
+                                end
                             end
                         end
                     end
-                end
-                if getOptionValue("Rebirth") == 6 then
-                    -- Any
-                    for i = 1, #br.friend do
-                        if UnitIsPlayer(br.friend[i].unit) and UnitIsDeadOrGhost(br.friend[i].unit) and GetUnitIsFriend(br.friend[i].unit, "player") then
-                            if cast.rebirth(br.friend[i].unit, "dead") then
-                                return true
+                    if getOptionValue("Rebirth") == 6 then
+                        -- Any
+                        for i = 1, #br.friend do
+                            if UnitIsPlayer(br.friend[i].unit) and UnitIsDeadOrGhost(br.friend[i].unit) and GetUnitIsFriend(br.friend[i].unit, "player") then
+                                if cast.rebirth(br.friend[i].unit, "dead") then
+                                    return true
+                                end
                             end
                         end
                     end
                 end
             end
+
         end -- End Defensive Toggle
     end -- End Action List - Defensive
 
@@ -1077,7 +1097,7 @@ local function runRotation()
             end
         end
         --Seed of Eonar
-        if essence.lifeBindersInvocation.active and cast.able.lifeBindersInvocation and not moving then
+        if isChecked("Seed of Eonar") and essence.lifeBindersInvocation.active and cast.able.lifeBindersInvocation and not moving then
             for i = 1, #br.friend do
                 if UnitInRange(br.friend[i].unit) then
                     local lowHealthCandidates = getUnitsToHealAround(br.friend[i].unit, 30, getValue("Seed of Eonar"), #br.friend)
@@ -1222,6 +1242,7 @@ local function runRotation()
                             end
                         end
                     end
+
                 end
             end
             if isChecked("Trinket 2") and canUseItem(14) then
@@ -1270,6 +1291,18 @@ local function runRotation()
                                 end
                             end
                         end
+                    end
+                end
+            end
+
+            --pocket size computing device
+            if isChecked("Trinket 1") and canUseItem(13) and getOptionValue("Trinket 1 Mode") == 4
+                    or isChecked("Trinket 2") and canUseItem(14) and getOptionValue("Trinket 2 Mode") == 4 then
+                local Trinket13 = GetInventoryItemID("player", 13)
+                local Trinket14 = GetInventoryItemID("player", 14)
+                if (Trinket13 == 167555 or Trinket14 == 167555) and lowest.hp >= getOptionValue("Critical HP") and ttd("target") > 10 and not isMoving("player") then
+                    if canUseItem(167555) then
+                        br.player.use.pocketSizedComputationDevice()
                     end
                 end
             end
@@ -1340,7 +1373,7 @@ local function runRotation()
                     end
                 end
 
-                if cast.able.sunfire() and (debuff.sunfire.count() < getOptionValue("Max Sunfire Targets") or isBoss(thisUnit)) and ttd(thisUnit) > 5 then
+                if cast.able.sunfire() and (debuff.sunfire.count() < getOptionValue("Max Sunfire Targets") or not debuff.sunfire.exists("target") or isBoss(thisUnit)) and ttd(thisUnit) > 5 then
                     if not debuff.sunfire.exists(thisUnit) then
                         if cast.sunfire(thisUnit) then
                             br.addonDebug("Initial Sunfire - non-Cluster")
@@ -1354,7 +1387,7 @@ local function runRotation()
                     end
                 end
 
-                if cast.able.moonfire() and debuff.moonfire.count() < getOptionValue("Max Moonfire Targets") or isBoss(thisUnit) and ttd(thisUnit) > 5 then
+                if cast.able.moonfire() and debuff.moonfire.count() < getOptionValue("Max Moonfire Targets") or not debuff.moonfire.exists("target") or isBoss(thisUnit) and ttd(thisUnit) > 5 then
                     if not debuff.moonfire.exists(thisUnit) then
                         if cast.moonfire(thisUnit) then
                             br.addonDebug("Initial Moonfire")
@@ -1368,13 +1401,17 @@ local function runRotation()
                     end
                 end
 
-                if cast.concentratedFlame("target") then
-                    return true
+                if isChecked("ConcentratedFlame - DPS") and ttd("target") > 8 and not debuff.concentratedFlame.exists("target") then
+                    if cast.concentratedFlame("target") then
+                        return true
+                    end
                 end
 
                 -- Solar Wrath
-                if cast.solarWrath(units.dyn40) then
-                    return true
+                if not SpecificToggle("Cat Key") and not GetCurrentKeyBoardFocus() then
+                    if cast.solarWrath(units.dyn40) then
+                        return true
+                    end
                 end
             end
         end
@@ -1395,19 +1432,19 @@ local function runRotation()
 
 
         --[[
-A	1.00	rake,if=buff.shadowmeld.up|buff.prowl.up
-B	1.00	auto_attack
-C	35.73	moonfire,target_if=refreshable|(prev_gcd.1.sunfire&remains<duration*0.8&spell_targets.sunfire=1)
-D	17.10	sunfire,target_if=refreshable|(prev_gcd.1.moonfire&remains<duration*0.8)
-E	4.81	solar_wrath,if=energy<=50&!buff.cat_form.up
-F	15.95	cat_form,if=!buff.cat_form.up&energy>50
-G	0.78	ferocious_bite,if=(combo_points>3&target.time_to_die<3)|(combo_points=5&energy>=50&dot.rip.remains>14)&spell_targets.swipe_cat<5
-0.00	swipe_cat,if=spell_targets.swipe_cat>=6
-H	11.52	rip,target_if=refreshable&combo_points=5
-I	33.48	rake,target_if=refreshable
-J	28.64	swipe_cat,if=spell_targets.swipe_cat>=2
-0.00	shred
-]]
+    A	1.00	rake,if=buff.shadowmeld.up|buff.prowl.up
+    B	1.00	auto_attack
+    C	35.73	moonfire,target_if=refreshable|(prev_gcd.1.sunfire&remains<duration*0.8&spell_targets.sunfire=1)
+    D	17.10	sunfire,target_if=refreshable|(prev_gcd.1.moonfire&remains<duration*0.8)
+    E	4.81	solar_wrath,if=energy<=50&!buff.cat_form.up
+    F	15.95	cat_form,if=!buff.cat_form.up&energy>50
+    G	0.78	ferocious_bite,if=(combo_points>3&target.time_to_die<3)|(combo_points=5&energy>=50&dot.rip.remains>14)&spell_targets.swipe_cat<5
+    0.00	swipe_cat,if=spell_targets.swipe_cat>=6
+    H	11.52	rip,target_if=refreshable&combo_points=5
+    I	33.48	rake,target_if=refreshable
+    J	28.64	swipe_cat,if=spell_targets.swipe_cat>=2
+    0.00	shred
+    ]]
 
 
     end
@@ -1440,6 +1477,24 @@ J	28.64	swipe_cat,if=spell_targets.swipe_cat>=2
             end
         end
 
+        if isChecked("ConcentratedFlame - DPS") and ttd("target") > 8 and not debuff.concentratedFlame.exists("target") then
+            if cast.concentratedFlame("target") then
+                return true
+            end
+        end
+
+        --pocket size computing device
+        if isChecked("Trinket 1") and canUseItem(13) and getOptionValue("Trinket 1 Mode") == 4
+                or isChecked("Trinket 2") and canUseItem(14) and getOptionValue("Trinket 2 Mode") == 4 then
+            local Trinket13 = GetInventoryItemID("player", 13)
+            local Trinket14 = GetInventoryItemID("player", 14)
+            if (Trinket13 == 167555 or Trinket14 == 167555) and lowest.hp >= getOptionValue("Critical HP") and ttd("target") > 10 and not isMoving("player") then
+                if canUseItem(167555) then
+                    br.player.use.pocketSizedComputationDevice()
+                end
+            end
+        end
+
 
         --rush if we can -
         if talent.wildCharge and isChecked("Cat Charge") and #enemies.yards8 < 1 then
@@ -1459,11 +1514,11 @@ J	28.64	swipe_cat,if=spell_targets.swipe_cat>=2
 
             -- Ferocious Bite
             --ferocious_bite,if=(combo_points>3&target.time_to_die<3)|(combo_points=5&energy>=50&dot.rip.remains>14)&spell_targets.swipe_cat<5
-            if cat and combo > 3 and ttd(thisUnit) < 3 or (combo == 5 and br.player.power.energy.amount() >= 50 and debuff.rip.remain(thisUnit) > 14)
+            if cat and combo > 3 and ttd(thisUnit) < 3 or (combo == 5 and br.player.power.energy.amount() >= 40 and debuff.rip.remain(thisUnit) > 8)
                     and aoe_count < 5 then
                 if cast.ferociousBite(thisUnit)
                 then
-                    br.addonDebug("[CAT-DPS] Bite: " .. thisUnit .. " Combo points: " .. combo .. "ttd: " .. ttd(thisUnit))
+                    br.addonDebug("[CAT-DPS] Bite: " .. thisUnit .. " Combo points: " .. combo .. " ttd: " .. ttd(thisUnit))
                     return true
                 end
             end
@@ -1484,17 +1539,15 @@ J	28.64	swipe_cat,if=spell_targets.swipe_cat>=2
                 end
             end
 
-            -- Rake 	rake,target_if=refreshable
-            --TODO lets rake different targets
-            for i = 1, #enemies.yards5 do
-                local thisUnit = enemies.yards5[i]
-                if not (debuff.rake.exists(thisUnit) or debuff.rake.remain(thisUnit) < 4.5) and not noDamageCheck(thisUnit) and not UnitIsDeadOrGhost(thisUnit) then
-                    if cast.rake(thisUnit) then
-                        br.addonDebug("[CAT-DPS] Raking")
-                        return true
-                    end
+            -- Rake 	rake,target_if=refreshable   --and not noDamageCheck(thisUnit) and not UnitIsDeadOrGhost(thisUnit)
+            -- br.addonDebug("target: " .. thisUnit .. " Buff: " .. tostring(debuff.rake.exists(thisUnit)))
+            if (not debuff.rake.exists(thisUnit) or debuff.rake.remain(thisUnit) < 4.5) then
+                if cast.rake(thisUnit) then
+                    br.addonDebug("[CAT-DPS] Raking")
+                    return true
                 end
             end
+
 
             --swipe_cat,if=spell_targets.swipe_cat>=2
             if aoe_count >= 2 then
@@ -1510,7 +1563,9 @@ J	28.64	swipe_cat,if=spell_targets.swipe_cat>=2
             end
         end -- end cat loop
 
-        if SpecificToggle("Cat Key") and not GetCurrentKeyBoardFocus() and (isChecked("Break form for critical") and lowest.hp > getOptionValue("Critical HP") or not isChecked("Break form for critical"))
+        if SpecificToggle("Cat Key") and not GetCurrentKeyBoardFocus()
+                and (isChecked("Break form for critical") and lowest.hp > getOptionValue("Critical HP") or not isChecked("Break form for critical"))
+                and isChecked("Break form for dots") and (not debuff.moonfire.exists("target") or not debuff.sunfire.exists("target")) or not isChecked("Break form for dots")
         then
             return
         end
@@ -1607,6 +1662,12 @@ J	28.64	swipe_cat,if=spell_targets.swipe_cat>=2
 
     local function heal()
 
+        if isChecked("ConcentratedFlame - Heal") and getValue("ConcentratedFlame - Heal") <= lowest.hp then
+            if cast.concentratedFlame(lowest) then
+                return true
+            end
+        end
+
         if #tanks > 0 and inInstance then
             tank = tanks[1].unit
         else
@@ -1685,9 +1746,20 @@ J	28.64	swipe_cat,if=spell_targets.swipe_cat>=2
                         --Print("Griev Debug Target: " .. BleedFriend.unit .. " Stacks: " ..CurrentBleedstack .. " HP: " .. BleedFriend.hp)
                     end
                 end
+                if isChecked("Decaying Mind") then
+                    local CurrentBleedstack = getDebuffStacks(br.friend[i].unit, 278961)
+                    if getDebuffStacks(br.friend[i].unit, 278961) > 0 then
+                        BleedFriendCount = BleedFriendCount + 1
+                    end
+                    if CurrentBleedstack > BleedStack then
+                        BleedStack = CurrentBleedstack
+                        BleedFriend = br.friend[i]
+                        --debug stuff
+                        --Print("Griev Debug Target: " .. BleedFriend.unit .. " Stacks: " ..CurrentBleedstack .. " HP: " .. BleedFriend.hp)
+                    end
+                end
             end
         end
-
 
         -- Grievous stuff
         if BleedFriend ~= nil then
@@ -1725,7 +1797,7 @@ J	28.64	swipe_cat,if=spell_targets.swipe_cat>=2
 
         --Swiftmend
         --Print("Lowest is: " .. lowest.unit)
-        if lowest.hp <= getValue("Swiftmend") and (not inInstance or (inInstance and getDebuffStacks(lowest.unit, 209858) < getValue("Necrotic Rot"))) then
+        if (lowest.hp <= getValue("Swiftmend") or talent.soulOfTheForest and burst == true and not buff.soulOfTheForest.exists()) and (not inInstance or (inInstance and getDebuffStacks(lowest.unit, 209858) < getValue("Necrotic Rot"))) then
             if cast.swiftmend(lowest.unit) then
                 return true
             end
@@ -1737,7 +1809,7 @@ J	28.64	swipe_cat,if=spell_targets.swipe_cat>=2
                 if UnitInRange(br.friend[i].unit) then
                     local lowHealthCandidates = getUnitsToHealAround(br.friend[i].unit, 30, getValue("Wild Growth"), #br.friend)
                     --local lowHealthCandidates2 = getUnitsToHealAround(br.friend[i].unit, 30, getValue("Soul of the Forest + Wild Growth"), #br.friend)
-                    if (#lowHealthCandidates >= getValue("Wild Growth Targets") or freemana) and not moving then
+                    if (#lowHealthCandidates >= getValue("Wild Growth Targets") or freemana or buff.soulOfTheForest.exists()) and not moving then
                         if cast.wildGrowth(br.friend[i].unit) then
                             return true
                         end
@@ -1831,10 +1903,15 @@ J	28.64	swipe_cat,if=spell_targets.swipe_cat>=2
     end -- end heal
 
     local function travel_rest()
-        if not travel then
-            if cast.travelForm("Player") then
+        if SpecificToggle("Travel Key") and not GetCurrentKeyBoardFocus() then
+            if not travel then
+                CastSpellByID(783, "player")
                 return true
             end
+        end
+        if SpecificToggle("Travel Key") and not GetCurrentKeyBoardFocus()
+        then
+            return
         end
     end
 
@@ -1929,51 +2006,46 @@ J	28.64	swipe_cat,if=spell_targets.swipe_cat>=2
             end
         end
 
-        if SpecificToggle("Cat Key") and not GetCurrentKeyBoardFocus() and (isChecked("Break form for critical") and lowest.hp > getOptionValue("Critical HP") or not isChecked("Break form for critical")) then
+        if SpecificToggle("Cat Key") and not GetCurrentKeyBoardFocus()
+                and (isChecked("Break form for critical") and lowest.hp > getOptionValue("Critical HP") or not isChecked("Break form for critical"))
+        then
             return
         end
     end
 
     local function pre_combat()
         clearForm()
-        if not cat and not travel then
+        if not cat and not travel and not bear then
 
 
-            if #tanks > 0 then
+            if #tanks > 0 and mode.prehot == 1 then
                 -- cenarionWard
-                if (mode.prehot == 1 or mode.prehot == 3) and #tanks > 0 and not isChecked("Smart Hot") and talent.cenarionWard and isChecked("Cenarion Ward") and not buff.cenarionWard.exists(tanks[1].unit) and cast.able.cenarionWard(tank) then
+                if not isChecked("Smart Hot") and talent.cenarionWard and isChecked("Cenarion Ward") and not buff.cenarionWard.exists(tanks[1].unit) and cast.able.cenarionWard(tank) then
                     if cast.cenarionWard(tanks[1].unit) then
+                        br.addonDebug("[PRE-HOT]:CW on: " .. tanks[1].unit)
                         return true
                     end
                 end
 
-                if mode.prehot == 1 and #tanks > 0 and not buff.lifebloom.exists(tanks[1].unit) then
+                if not buff.lifebloom.exists(tanks[1].unit) then
                     if cast.lifebloom(tanks[1].unit) then
-                        return true
-                    end
-                elseif mode.prehot == 1 and #tanks == 0 and not buff.lifebloom.exists("player") then
-                    if cast.lifebloom("player") then
+                        br.addonDebug("[PRE-HOT]:Lifebloom on: " .. tanks[1].unit)
                         return true
                     end
                 end
-            end
 
+                --rejuvenation
 
-            --rejuvenation
-            if mode.prehot == 1 then
                 for i = 1, #br.friend do
-                    if not buff.rejuvenation.exists(br.friend[i].unit) then
-                        clearForm()
+
+                    if talent.germination and not buff.rejuvenationGermination.exists(br.friend[i].unit) then
                         if cast.rejuvenation(br.friend[i].unit) then
+                            br.addonDebug("[PRE-HOT]Germination on: " .. br.friend[1].name)
                             return true
                         end
-                    end
-                end
-            elseif mode.prehot == 3 then
-                for i = 1, #br.friend do
-                    if talent.germination and not buff.rejuvenationGermination.exists(br.friend[i].unit) then
-                        clearForm()
+                    elseif not buff.rejuvenation.exists(br.friend[i].unit) then
                         if cast.rejuvenation(br.friend[i].unit) then
+                            br.addonDebug("[PRE-HOT]Rejuv on: " .. br.friend[1].name)
                             return true
                         end
                     end
@@ -1988,7 +2060,7 @@ J	28.64	swipe_cat,if=spell_targets.swipe_cat>=2
     -- Print(tostring(mode.forms))
 
     -- Pause
-    if pause(true) or IsMounted() or flying or drinking or isCastingSpell(spell.tranquility) then
+    if pause() or IsMounted() or flying or drinking or isCastingSpell(spell.tranquility) or isCasting(293491) then
         --or stealthed (travel and not inCombat) or
         return true
     else
@@ -1997,13 +2069,34 @@ J	28.64	swipe_cat,if=spell_targets.swipe_cat>=2
         ---------------------------------
         if not inCombat and not UnitBuffID("player", 115834) then
 
+
+            if EWT ~= nil then
+                for i = 1, GetObjectCount() do
+                    local ID = ObjectID(GetObjectWithIndex(i))
+                    local object = GetObjectWithIndex(i)
+
+                    local x1, y1, z1 = ObjectPosition("player")
+                    local x2, y2, z2 = ObjectPosition(object)
+                    local distance = math.sqrt(((x2 - x1) ^ 2) + ((y2 - y1) ^ 2) + ((z2 - z1) ^ 2))
+
+                    if ID == 242405 and distance < 10 then
+                        --print(tostring(distance))
+                        InteractUnit(object)
+                    else
+                        --print("ID: " .. tostring(ID) .. " Object: " .. tostring(object))
+                    end
+                end
+            end
+
             if isChecked("Break form for dispel") then
                 if cleanse() then
                     return true
                 end
             end
             if mode.forms == 2 then
-                if SpecificToggle("Cat Key") and not GetCurrentKeyBoardFocus() and (isChecked("Break form for critical") and lowest.hp > getOptionValue("Critical HP") or not isChecked("Break form for critical")) then
+                if SpecificToggle("Cat Key") and not GetCurrentKeyBoardFocus()
+                        and (isChecked("Break form for critical") and lowest.hp > getOptionValue("Critical HP") or not isChecked("Break form for critical"))
+                then
                     cat_rest()
                     return true
                 elseif SpecificToggle("Bear Key") and not GetCurrentKeyBoardFocus() then
@@ -2048,7 +2141,11 @@ J	28.64	swipe_cat,if=spell_targets.swipe_cat>=2
                 end
             end
             if mode.forms == 2 then
-                if SpecificToggle("Cat Key") and not GetCurrentKeyBoardFocus() and (isChecked("Break form for critical") and lowest.hp > getOptionValue("Critical HP") or not isChecked("Break form for critical")) then
+                if SpecificToggle("Cat Key") and not GetCurrentKeyBoardFocus()
+                        and (isChecked("Break form for critical") and lowest.hp > getOptionValue("Critical HP") or not isChecked("Break form for critical"))
+                        and (isChecked("Break form for dots") and (debuff.moonfire.exists("target") and debuff.sunfire.exists("target"))
+                        or not isChecked("Break form for dots"))
+                then
                     cat_combat()
                     return true
                 elseif SpecificToggle("Bear Key") and not GetCurrentKeyBoardFocus() then
@@ -2073,7 +2170,7 @@ J	28.64	swipe_cat,if=spell_targets.swipe_cat>=2
                     return true
                 end
             end
-            if mode.forms == 3 and noform or mode.forms ~= 3 then
+            if mode.forms == 3 and noform or mode.forms ~= 3 or buff.incarnationTreeOfLife.exists() then
                 if cleanse() then
                     return true
                 end
@@ -2095,7 +2192,7 @@ J	28.64	swipe_cat,if=spell_targets.swipe_cat>=2
                 if heal() then
                     return true
                 end
-                if isChecked("pre-hot in combat") then
+                if isChecked("pre-hot in combat") or buff.incarnationTreeOfLife.exists() then
                     if pre_combat() then
                         return true
                     end

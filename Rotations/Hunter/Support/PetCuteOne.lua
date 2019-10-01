@@ -98,7 +98,7 @@ br.rotations.support["PetCuteOne"] = function()
         end
         -- Pet Attack / retreat
         if (inCombat or petCombat) and not buff.playDead.exists("pet") and not haltProfile then
-            PetAttack(petTarget)            
+            PetAttack(petTarget)
         elseif not inCombat or (inCombat and not isValidUnit(petTarget)) or haltProfile
             and IsPetAttackActive() and not isUnitCasting("player")
         then
@@ -139,7 +139,7 @@ br.rotations.support["PetCuteOne"] = function()
             local dispelledUnit = "player"
             for i = 1, #enemies.yards5p do
                 local thisUnit = enemies.yards5p[i]
-                if getOptionValue("Purge") == 1 or (getOptionValue("Purge") == 2 and UnitIsUnit(thisUnit,"target")) then
+                if getOptionValue("Purge") == 1 or (getOptionValue("Purge") == 2 and GetUnitIsUnit(thisUnit,"target")) then
                     if canDispel(thisUnit,spell.spiritShock) then
                         if cast.able.spiritShock(thisUnit,"pet") then
                             if cast.spiritShock(thisUnit,"pet") then dispelled = true; dispelledUnit = thisUnit; break end
@@ -206,7 +206,7 @@ br.rotations.support["PetCuteOne"] = function()
     end
     -- Mend Pet
     if isChecked("Mend Pet") and cast.able.mendPet() and petExists and not deadPet
-        and not buff.mendPet.exists("pet") and petHealth < getOptionValue("Mend Pet") and not haltProfile
+        and not buff.mendPet.exists("pet") and petHealth < getOptionValue("Mend Pet") and not haltProfile and not pause()
     then
         if cast.mendPet() then return end
     end

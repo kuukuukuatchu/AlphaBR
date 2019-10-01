@@ -407,7 +407,7 @@ local function runRotation()
         local hp = UnitHealth(thisUnit)
         if EasyWoWToolbox ~= nil then
             local castID, _, castTarget = UnitCastID("player")
-            if castID and castTarget and UnitIsUnit(unit, castTarget) and playerCasting then
+            if castID and castTarget and GetUnitIsUnit(unit, castTarget) and playerCasting then
                 hp = hp - calcDamage(castID, unit)
             end
             for k, v in pairs(spell.abilities) do
@@ -415,9 +415,9 @@ local function runRotation()
                     hp = hp - calcDamage(v, unit)
                 end
             end
-            if UnitIsVisible("pet") then
+            if GetUnitIsVisible("pet") then
                 castID, _, castTarget = UnitCastID("pet")
-                if castID and castTarget and UnitIsUnit(unit, castTarget) and UnitCastingInfo("pet") then
+                if castID and castTarget and GetUnitIsUnit(unit, castTarget) and UnitCastingInfo("pet") then
                     local castRemain = (select(5, UnitCastingInfo("pet")) / 1000) - GetTime()
                     if castRemain < 0.5 then
                         hp = hp - calcDamage(castID, unit)
@@ -575,7 +575,7 @@ local function runRotation()
             return true
         end
         for i = 1, #enemyTable40 do
-            if UnitIsUnit(enemyTable40[i].unit, "target") then
+            if GetUnitIsUnit(enemyTable40[i].unit, "target") then
                 targetUnit = enemyTable40[i]
             end
         end
@@ -890,6 +890,8 @@ local function runRotation()
 
     local function actionList_Cooldowns()
         if useCDs() and not moving and targetUnit.ttd >= getOptionValue("CDs TTD Limit") then
+            --actions.cooldowns=guardian_of_azeroth
+            if cast.guardianOfAzeroth() then return end
             -- actions.cooldowns=icy_veins
             if cast.icyVeins("player") then return true end
             -- actions.cooldowns+=/potion,if=prev_gcd.1.icy_veins|target.time_to_die<30

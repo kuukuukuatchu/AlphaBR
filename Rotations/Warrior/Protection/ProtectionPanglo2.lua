@@ -6,139 +6,53 @@ local rotationName = "Panglo2"
 local function createToggles()
     -- Rotation Button
     RotationModes = {
-        [1] = {
-            mode = "Auto",
-            value = 1,
-            overlay = "Automatic Rotation",
-            tip = "Enable Rotation",
-            highlight = 1,
-            icon = br.player.spell.thunderClap
-        },
-        [2] = {
-            mode = "Off",
-            value = 2,
-            overlay = "DPS Rotation Disabled",
-            tip = "Disable DPS Rotation",
-            highlight = 0,
-            icon = br.player.spell.enragedRegeneration
-        }
+        [1] = {mode = "Auto", value = 1, overlay = "Automatic Rotation", tip = "Enable Rotation", highlight = 1, icon = br.player.spell.thunderClap},
+        [2] = {mode = "Off", value = 2, overlay = "DPS Rotation Disabled", tip = "Disable DPS Rotation", highlight = 0, icon = br.player.spell.enragedRegeneration}
     }
     CreateButton("Rotation", 1, 0)
     -- Cooldown Button
     CooldownModes = {
-        [1] = {
-            mode = "Auto",
-            value = 1,
-            overlay = "Cooldowns Automated",
-            tip = "Automatic Cooldowns - Based on settings",
-            highlight = 1,
-            icon = br.player.spell.avatar
-        },
-        [2] = {
-            mode = "On",
-            value = 2,
-            overlay = "Cooldowns Enabled",
-            tip = "Cooldowns used regardless of target.",
-            highlight = 0,
-            icon = br.player.spell.avatar
-        },
-        [3] = {
-            mode = "Off",
-            value = 3,
-            overlay = "Cooldowns Disabled",
-            tip = "No Cooldowns will be used.",
-            highlight = 0,
-            icon = br.player.spell.avatar
-        }
+        [1] = {mode = "Auto", value = 1, overlay = "Cooldowns Automated", tip = "Automatic Cooldowns - Based on settings", highlight = 1, icon = br.player.spell.avatar},
+        [2] = {mode = "On", value = 2, overlay = "Cooldowns Enabled", tip = "Cooldowns used regardless of target.", highlight = 0, icon = br.player.spell.avatar},
+        [3] = {mode = "Off", value = 3, overlay = "Cooldowns Disabled", tip = "No Cooldowns will be used.", highlight = 0, icon = br.player.spell.avatar}
     }
     CreateButton("Cooldown", 2, 0)
     -- Defensive Button
     DefensiveModes = {
-        [1] = {
-            mode = "On",
-            value = 1,
-            overlay = "Defensive Enabled",
-            tip = "Includes Defensive Cooldowns.",
-            highlight = 1,
-            icon = br.player.spell.shieldWall
-        },
-        [2] = {
-            mode = "Off",
-            value = 2,
-            overlay = "Defensive Disabled",
-            tip = "No Defensives will be used.",
-            highlight = 0,
-            icon = br.player.spell.shieldWall
-        }
+        [1] = {mode = "On", value = 1, overlay = "Defensive Enabled", tip = "Includes Defensive Cooldowns.", highlight = 1, icon = br.player.spell.shieldWall},
+        [2] = {mode = "Off", value = 2, overlay = "Defensive Disabled", tip = "No Defensives will be used.", highlight = 0, icon = br.player.spell.shieldWall}
     }
     CreateButton("Defensive", 3, 0)
     -- Interrupt Button
     InterruptModes = {
-        [1] = {
-            mode = "On",
-            value = 1,
-            overlay = "Interrupts Enabled",
-            tip = "Includes Basic Interrupts.",
-            highlight = 1,
-            icon = br.player.spell.pummel
-        },
-        [2] = {
-            mode = "Off",
-            value = 2,
-            overlay = "Interrupts Disabled",
-            tip = "No Interrupts will be used.",
-            highlight = 0,
-            icon = br.player.spell.pummel
-        }
+        [1] = {mode = "On", value = 1, overlay = "Interrupts Enabled", tip = "Includes Basic Interrupts.", highlight = 1, icon = br.player.spell.pummel},
+        [2] = {mode = "Off", value = 2, overlay = "Interrupts Disabled", tip = "No Interrupts will be used.", highlight = 0, icon = br.player.spell.pummel}
     }
     CreateButton("Interrupt", 4, 0)
     -- Movement Button
     MoverModes = {
-        [1] = {
-            mode = "On",
-            value = 1,
-            overlay = "Mover Enabled",
-            tip = "Will use Charge/Heroic Leap.",
-            highlight = 1,
-            icon = br.player.spell.charge
-        },
-        [2] = {
-            mode = "Off",
-            value = 2,
-            overlay = "Mover Disabled",
-            tip = "Will NOT use Charge/Heroic Leap.",
-            highlight = 0,
-            icon = br.player.spell.charge
-        }
+        [1] = {mode = "On", value = 1, overlay = "Mover Enabled", tip = "Will use Charge/Heroic Leap.", highlight = 1, icon = br.player.spell.charge},
+        [2] = {mode = "Off", value = 2, overlay = "Mover Disabled", tip = "Will NOT use Charge/Heroic Leap.", highlight = 0, icon = br.player.spell.charge}
     }
     CreateButton("Mover", 5, 0)
     TauntModes = {
-        [1] = {
-            mode = "Dun",
-            value = 1,
-            overlay = "Taunt only in Dungeon",
-            tip = "Taunt will be used in dungeons.",
-            highlight = 1,
-            icon = br.player.spell.taunt
-        },
-        [2] = {
-            mode = "All",
-            value = 2,
-            overlay = "Auto Taunt Enabled",
-            tip = "Taunt will be used everywhere.",
-            highlight = 1,
-            icon = br.player.spell.taunt
-        },
-        [3] = {
-            mode = "Off",
-            value = 3,
-            overlay = "Auto Taunt Disabled",
-            tip = "Taunt will not be used.",
-            highlight = 0,
-            icon = br.player.spell.taunt
-        }
+        [1] = {mode = "Dun", value = 1, overlay = "Taunt only in Dungeon", tip = "Taunt will be used in dungeons.", highlight = 1, icon = br.player.spell.taunt},
+        [2] = {mode = "All", value = 2, overlay = "Auto Taunt Enabled", tip = "Taunt will be used everywhere.", highlight = 1, icon = br.player.spell.taunt},
+        [3] = {mode = "Off", value = 3, overlay = "Auto Taunt Disabled", tip = "Taunt will not be used.", highlight = 0, icon = br.player.spell.taunt}
     }
     CreateButton("Taunt", 6, 0)
+    -- Movement Button
+    ShieldModes = {
+        [1] = {mode = "On", value = 1, overlay = "Shield Block Enabled", tip = "Will use Shield Block", highlight = 1, icon = br.player.spell.shieldBlock},
+        [2] = {mode = "Off", value = 2, overlay = "Shield Block Disabled", tip = "Will NOT use Shield Block", highlight = 0, icon = br.player.spell.shieldBlock}
+    }
+    CreateButton("Shield", 0, 1)
+    -- Movement Button
+    ReflectModes = {
+        [1] = {mode = "On", value = 1, overlay = "Spell Reflect Enabled", tip = "Will use Spell Reflect", highlight = 1, icon = br.player.spell.spellReflection},
+        [2] = {mode = "Off", value = 2, overlay = "Spell Reflect Disabled", tip = "Will NOT use Spell Reflect", highlight = 0, icon = br.player.spell.spellReflection}
+    }
+    CreateButton("Reflect", 1, 1)
 end
 
 ---------------
@@ -153,35 +67,15 @@ local function createOptions()
         -----------------------
         section = br.ui:createSection(br.ui.window.profile, "General")
         -- br.ui:createDropdown(section,"leap test",{"behind","forward","random"}, 1)
-        br.ui:createCheckbox(
-            section,
-            "Open World Defensives",
-            "Use this checkbox to ensure defensives are used while in Open World"
-        )
+        br.ui:createCheckbox(section, "Open World Defensives", "Use this checkbox to ensure defensives are used while in Open World")
         -- Berserker Rage
         br.ui:createCheckbox(section, "Berserker Rage", "Check to use Berserker Rage")
         -- lol charge
         br.ui:createCheckbox(section, "Charge OoC")
         -- High Rage Dump
-        br.ui:createSpinner(
-            section,
-            "High Rage Dump",
-            85,
-            1,
-            100,
-            1,
-            "|cffFFFFFF Set to number of units to use Ignore Pain or Revenge at"
-        )
+        br.ui:createSpinner(section, "High Rage Dump", 85, 1, 100, 1, "|cffFFFFFF Set to number of units to use Ignore Pain or Revenge at")
         -- Aoe Threshold
-        br.ui:createSpinnerWithout(
-            section,
-            "Aoe Priority",
-            3,
-            1,
-            10,
-            1,
-            "Set number of units to prioritise TC and Revenge"
-        )
+        br.ui:createSpinnerWithout(section, "Aoe Priority", 3, 1, 10, 1, "Set number of units to prioritise TC and Revenge")
         -- Shout Check
         br.ui:createCheckbox(section, "Battle Shout", "Enable automatic party buffing")
         br.ui:createCheckbox(section, "Pig Catcher", "Catch the freehold Pig in the ring of booty")
@@ -192,25 +86,13 @@ local function createOptions()
         ------------------------
         section = br.ui:createSection(br.ui.window.profile, "Cooldowns")
         -- Trinkets
-        br.ui:createDropdownWithout(
-            section,
-            "Trinkets",
-            {"Always", "When CDs are enabled", "Never", "With Avatar"},
-            1,
-            "Decide when Trinkets will be used."
-        )
+        br.ui:createDropdownWithout(section, "Trinkets", {"Always", "When CDs are enabled", "Never", "With Avatar"}, 1, "Decide when Trinkets will be used.")
+        br.ui:createDropdownWithout(section, "Trinket 1 Mode", {"|cffFFFFFFNormal", "|cffFFFFFFGround"}, 1, "", "|cffFFFFFFSelect Trinkets mode.")
+        br.ui:createDropdownWithout(section, "Trinket 2 Mode", {"|cffFFFFFFNormal", "|cffFFFFFFGround"}, 1, "", "|cffFFFFFFSelect Trinkets mode.")
         -- Avatar
         br.ui:createCheckbox(section, "Avatar")
         -- Avatar Spinner
-        br.ui:createSpinnerWithout(
-            section,
-            "Avatar Mob Count",
-            5,
-            0,
-            10,
-            1,
-            "|cffFFFFFFEnemies to cast Avatar when using AUTO CDS"
-        )
+        br.ui:createSpinnerWithout(section, "Avatar Mob Count", 5, 0, 10, 1, "|cffFFFFFFEnemies to cast Avatar when using AUTO CDS")
         -- Demoralizing Shout
         br.ui:createDropdownWithout(section, "Demoralizing Shout - CD", {"Always", "When CDs are enabled", "Never"}, 1)
         -- Ravager
@@ -226,7 +108,7 @@ local function createOptions()
         section = br.ui:createSection(br.ui.window.profile, "Defensive")
         --Smart Spell reflect
         br.ui:createCheckbox(section, "Smart Spell Reflect", "Auto reflect spells in instances")
-        br.ui:createSpinnerWithout(section,"Smart Spell Reflect Percent", 65, 0, 95, 5, "Spell reflect when spell is X % complete, ex. 90 = 90% complete")
+        br.ui:createSpinnerWithout(section, "Smart Spell Reflect Percent", 65, 0, 95, 5, "Spell reflect when spell is X % complete, ex. 90 = 90% complete")
         -- Engi Belt stuff thanks to Lak
         br.ui:createSpinner(section, "Engineering Belt", 60, 0, 100, 5, "|cffFFBB00Health Percentage to use at.")
         -- Healthstone
@@ -294,6 +176,8 @@ local function runRotation()
         UpdateToggle("Holdcd", 0.25)
         br.player.mode.mover = br.data.settings[br.selectedSpec].toggles["Mover"]
         br.player.mode.taunt = br.data.settings[br.selectedSpec].toggles["Taunt"]
+        br.player.mode.shield = br.data.settings[br.selectedSpec].toggles["Shield"]
+        br.player.mode.reflect = br.data.settings[br.selectedSpec].toggles["Reflect"]
         --------------
         --- Locals ---
         --------------
@@ -303,11 +187,7 @@ local function runRotation()
         local cd = br.player.cd
         local charges = br.player.charges
         local deadMouse = UnitIsDeadOrGhost("mouseover")
-        local deadtar, attacktar, hastar, playertar =
-            deadtar or UnitIsDeadOrGhost("target"),
-            attacktar or UnitCanAttack("target", "player"),
-            hastar or GetObjectExists("target"),
-            UnitIsPlayer("target")
+        local deadtar, attacktar, hastar, playertar = deadtar or UnitIsDeadOrGhost("target"), attacktar or UnitCanAttack("target", "player"), hastar or GetObjectExists("target"), UnitIsPlayer("target")
         local debuff = br.player.debuff
         local enemies = br.player.enemies
         local falling, swimming, flying, moving = getFallTime(), IsSwimming(), IsFlying(), GetUnitSpeed("player") > 0
@@ -323,10 +203,7 @@ local function runRotation()
         local perk = br.player.perk
         local php = br.player.health
         local playerMouse = UnitIsPlayer("mouseover")
-        local power, powerMax, powerGen =
-            br.player.power.rage.amount(),
-            br.player.power.rage.max(),
-            br.player.power.rage.regen()
+        local power, powerMax, powerGen = br.player.power.rage.amount(), br.player.power.rage.max(), br.player.power.rage.regen()
         local pullTimer = br.DBM:getPulltimer()
         local race = br.player.race
         local racial = br.player.getRacial()
@@ -443,17 +320,17 @@ local function runRotation()
             [265881] = "Decaying Touch",
             [264153] = "Spit",
             [278444] = "Infest",
-			--Operation: Mechagn
-			[298669] = "Taze",
-			[300764] = "slimebolt",
-			[300650] = "suffocating smog",
-			[294195] = "arcing zap",
-			[291878] = "pulse blast"
+            --Operation: Mechagn
+            [298669] = "Taze",
+            [300764] = "slimebolt",
+            [300650] = "suffocating smog",
+            [294195] = "arcing zap",
+            [291878] = "pulse blast"
         }
-        local Storm_unitList={
-			[131009] = "Spirit of Gold",
-			[134388] = "A Knot of Snakes",
-			[129758] = "Irontide Grenadier",
+        local Storm_unitList = {
+            [131009] = "Spirit of Gold",
+            [134388] = "A Knot of Snakes",
+            [129758] = "Irontide Grenadier"
         }
         --- Quick maths ---
         local function mainTank()
@@ -492,10 +369,7 @@ local function runRotation()
                     return
                 end
             end
-            if
-                not isExplosive("target") and cast.able.revenge() and rage >= getValue("High Rage Dump") and
-                    (not ipCapCheck() or not mainTank())
-             then
+            if not isExplosive("target") and cast.able.revenge() and rage >= getValue("High Rage Dump") and (not ipCapCheck() or not mainTank()) then
                 --print("dumping R")
                 if cast.revenge() then
                     return
@@ -521,10 +395,7 @@ local function runRotation()
             if br.player.mode.taunt == 1 and inInstance then
                 for i = 1, #enemies.yards30 do
                     local thisUnit = enemies.yards30[i]
-                    if
-                        UnitThreatSituation("player", thisUnit) ~= nil and UnitThreatSituation("player", thisUnit) <= 2 and
-                            UnitAffectingCombat(thisUnit)
-                     then
+                    if UnitThreatSituation("player", thisUnit) ~= nil and UnitThreatSituation("player", thisUnit) <= 2 and UnitAffectingCombat(thisUnit) then
                         if cast.taunt(thisUnit) then
                             return
                         end
@@ -534,10 +405,7 @@ local function runRotation()
             if br.player.mode.taunt == 2 then
                 for i = 1, #enemies.yards30 do
                     local thisUnit = enemies.yards30[i]
-                    if
-                        UnitThreatSituation("player", thisUnit) ~= nil and UnitThreatSituation("player", thisUnit) <= 2 and
-                            UnitAffectingCombat(thisUnit)
-                     then
+                    if UnitThreatSituation("player", thisUnit) ~= nil and UnitThreatSituation("player", thisUnit) <= 2 and UnitAffectingCombat(thisUnit) then
                         if cast.taunt(thisUnit) then
                             return
                         end
@@ -548,25 +416,24 @@ local function runRotation()
             if isChecked("Battle Shout") and cast.able.battleShout() then
                 for i = 1, #br.friend do
                     local thisUnit = br.friend[i].unit
-                    if
-                        not UnitIsDeadOrGhost(thisUnit) and getDistance(thisUnit) < 100 and
-                            getBuffRemain(thisUnit, spell.battleShout) < 60
-                     then
+                    if not UnitIsDeadOrGhost(thisUnit) and getDistance(thisUnit) < 100 and getBuffRemain(thisUnit, spell.battleShout) < 60 then
                         if cast.battleShout() then
                             return
                         end
                     end
                 end
             end
-            if
-                inCombat and
-                    (getOptionValue("Trinkets") == 1 or (buff.avatar.exists() and getOptionValue("Trinkets") == 4))
-             then
-                if canTrinket(13) then
+            if inCombat and (getOptionValue("Trinkets") == 1 or (buff.avatar.exists() and getOptionValue("Trinkets") == 4)) then
+                if canTrinket(13) and getOptionValue("Trinket 1 Mode") == 1 then
                     useItem(13)
+                elseif canTrinket(13) and getOptionValue("Trinket 1 Mode") == 2 then
+                    useItemGround("target", 13, 40, 0, nil)
                 end
-                if canTrinket(14) then
+
+                if canTrinket(14) and getOptionValue("Trinket 2 Mode") == 1 then
                     useItem(14)
+                elseif canTrinket(14) and getOptionValue("Trinket 2 Mode") == 2 then
+                    useItemGround("target", 14, 40, 0, nil)
                 end
             end
         end
@@ -575,16 +442,52 @@ local function runRotation()
             if useInterrupts() then
                 if isChecked("Storm Bolt Logic") then
                     if cast.able.stormBolt() then
-                        local Storm_list={
-                        274400,274383,257756,276292,268273,256897,272542,272888,269266,258317,258864,259711,258917,264038,253239,269931,270084,270482,270506,270507,267433,
-                        267354,268702,268846,268865,258908,264574,272659,272655,267237,265568,277567,265540,268202,258058,257739,
+                        local Storm_list = {
+                            274400,
+                            274383,
+                            257756,
+                            276292,
+                            268273,
+                            256897,
+                            272542,
+                            272888,
+                            269266,
+                            258317,
+                            258864,
+                            259711,
+                            258917,
+                            264038,
+                            253239,
+                            269931,
+                            270084,
+                            270482,
+                            270506,
+                            270507,
+                            267433,
+                            267354,
+                            268702,
+                            268846,
+                            268865,
+                            258908,
+                            264574,
+                            272659,
+                            272655,
+                            267237,
+                            265568,
+                            277567,
+                            265540,
+                            268202,
+                            258058,
+                            257739
                         }
                         for i = 1, #enemies.yards20 do
                             local thisUnit = enemies.yards20[i]
                             local distance = getDistance(thisUnit)
-                            for k,v in pairs(Storm_list) do
-                                if (Storm_unitList[GetObjectID(thisUnit)]~=nil or UnitCastingInfo(thisUnit) == GetSpellInfo(v) or UnitChannelInfo(thisUnit) == GetSpellInfo(v)) and getBuffRemain(thisUnit,226510) == 0 and distance <= 20 then
-                                    if cast.stormBolt(thisUnit) then return end
+                            for k, v in pairs(Storm_list) do
+                                if (Storm_unitList[GetObjectID(thisUnit)] ~= nil or UnitCastingInfo(thisUnit) == GetSpellInfo(v) or UnitChannelInfo(thisUnit) == GetSpellInfo(v)) and getBuffRemain(thisUnit, 226510) == 0 and distance <= 20 then
+                                    if cast.stormBolt(thisUnit) then
+                                        return
+                                    end
                                 end
                             end
                         end
@@ -593,7 +496,7 @@ local function runRotation()
                 for i = 1, #enemies.yards20 do
                     thisUnit = enemies.yards20[i]
                     unitDist = getDistance(thisUnit)
-                    targetMe = UnitIsUnit("player", thisUnit) or false
+                    targetMe = GetUnitIsUnit("player", thisUnit) or false
                     if not isExplosive(thisUnit) and canInterrupt(thisUnit, getOptionValue("Interrupt At")) then
                         if isChecked("Pummel") and unitDist < 6 then
                             if cast.pummel(thisUnit) then
@@ -646,13 +549,11 @@ local function runRotation()
         --         FaceDirection("target")
         --         -- FaceDirection("player")
         --         CastSpellByName(GetSpellInfo(spell.intercept))
-        --     end  
+        --     end
         -- end
         local function actionList_Moving()
             if br.player.mode.mover == 1 then
-                if
-                    cast.able.intercept("target") and getDistance("player", "target") >= 8 and getDistance("player", "target") <= 25
-                 then
+                if cast.able.intercept("target") and getDistance("player", "target") >= 8 and getDistance("player", "target") <= 25 then
                     CastSpellByName(GetSpellInfo(spell.intercept))
                 end
             end
@@ -676,11 +577,7 @@ local function runRotation()
                         return
                     end
                 end
-                if
-                    isChecked("Racial") and (race == "Orc" or race == "Troll" or race == "LightforgedDraenei") and
-                        useCDs() and
-                        buff.avatar.exists()
-                 then
+                if isChecked("Racial") and (race == "Orc" or race == "Troll" or race == "LightforgedDraenei") and useCDs() and buff.avatar.exists() then
                     if cast.racial("player") then
                         return
                     end
@@ -689,14 +586,17 @@ local function runRotation()
                     CastSpellByName("Berserking")
                 end
                 --Use Trinkets
-                if
-                    (getOptionValue("Trinkets") == 2 or (buff.avatar.exists() and getOptionValue("Trinkets") == 4))
-                 then
-                    if canTrinket(13) then
+                if inCombat and (getOptionValue("Trinkets") == 2 or (buff.avatar.exists() and getOptionValue("Trinkets") == 4)) then
+                    if canTrinket(13) and getOptionValue("Trinket 1 Mode") == 1 then
                         useItem(13)
+                    elseif canTrinket(13) and getOptionValue("Trinket 1 Mode") == 2 then
+                        useItemGround("target", 13, 40, 0, nil)
                     end
-                    if canTrinket(14) then
+
+                    if canTrinket(14) and getOptionValue("Trinket 2 Mode") == 1 then
                         useItem(14)
+                    elseif canTrinket(14) and getOptionValue("Trinket 2 Mode") == 2 then
+                        useItemGround("target", 14, 40, 0, nil)
                     end
                 end
             end
@@ -705,36 +605,24 @@ local function runRotation()
         local function actionList_Defensives()
             if useDefensive() then
                 --Spell Reflect logic
-                if isChecked("Smart Spell Reflect") then
+                if mode.reflect == 1 and isChecked("Smart Spell Reflect") then
                     for i = 1, #enemies.yards30 do
                         local thisUnit = enemies.yards30[i]
                         local _, _, _, startCast, endCast, _, _, _, spellcastID = UnitCastingInfo(thisUnit)
 
-                        if
-                            UnitTarget("player") and reflectID[spellcastID] and
-                                (((GetTime() * 1000) - startCast) / (endCast - startCast) * 100) > getOptionValue("Smart Spell Reflect Percent")
-                         then
+                        if UnitTarget("player") and reflectID[spellcastID] and (((GetTime() * 1000) - startCast) / (endCast - startCast) * 100) > getOptionValue("Smart Spell Reflect Percent") then
                             if cast.spellReflection() then
                                 return
                             end
                         end
                     end
                 end
-                if
-                    cast.able.shieldBlock() and mainTank() and
-                        (not buff.shieldBlock.exists() or (buff.shieldBlock.remain() <= (gcd * 1.5))) and
-                        not buff.lastStand.exists() and
-                        rage >= 30
-                 then
+                if mode.shield == 1 and cast.able.shieldBlock() and mainTank() and (not buff.shieldBlock.exists() or (buff.shieldBlock.remain() <= (gcd * 1.5))) and not buff.lastStand.exists() and rage >= 30 then
                     if cast.shieldBlock() then
                         return
                     end
                 end
-                if
-                    talent.bolster and isChecked("Last Stand Filler") and not buff.shieldBlock.exists() and
-                        cd.shieldBlock.remain() > gcd and
-                        mainTank()
-                 then
+                if talent.bolster and isChecked("Last Stand Filler") and not buff.shieldBlock.exists() and cd.shieldBlock.remain() > gcd and mainTank() then
                     if cast.lastStand() then
                         return
                     end
@@ -769,10 +657,7 @@ local function runRotation()
                         useItem(166799)
                     end
                 end
-                if
-                    isChecked("Demoralizing Shout") and php <= getOptionValue("Demoralizing Shout") and
-                    getOptionValue("Demoralizing Shout - CD") == 1
-                 then
+                if isChecked("Demoralizing Shout") and php <= getOptionValue("Demoralizing Shout") and getOptionValue("Demoralizing Shout - CD") == 1 then
                     if cast.demoralizingShout() then
                         return
                     end
@@ -787,24 +672,17 @@ local function runRotation()
                         return
                     end
                 end
-                if
-                    isChecked("Shield Wall") and php <= getOptionValue("Shield Wall") and cd.lastStand.remain() > 0 and
-                        not buff.lastStand.exists()
-                 then
+                if isChecked("Shield Wall") and php <= getOptionValue("Shield Wall") and cd.lastStand.remain() > 0 and not buff.lastStand.exists() then
                     if cast.shieldWall() then
                         return
                     end
                 end
-                if
-                    ((isChecked("Shockwave - HP") and php <= getOptionValue("Shockwave - HP")) or
-                        (isChecked("Shockwave - Units") and #enemies.yards8 >= getOptionValue("Shockwave - Units") and
-                            not moving))
-                 then
+                if ((isChecked("Shockwave - HP") and php <= getOptionValue("Shockwave - HP")) or (isChecked("Shockwave - Units") and #enemies.yards8 >= getOptionValue("Shockwave - Units") and not moving)) then
                     if cast.shockwave() then
                         return
                     end
                 end
-                if isChecked("Spell Reflection") and php <= getOptionValue("Spell Reflection") then
+                if mode.reflect == 1 and isChecked("Spell Reflection") and php <= getOptionValue("Spell Reflection") then
                     if cast.spellReflection() then
                         return
                     end
@@ -819,10 +697,7 @@ local function runRotation()
 
         local function actionList_Single()
             --Avatar units
-            if
-                isChecked("Avatar") and (#enemies.yards8 >= getOptionValue("Avatar Mob Count")) and
-                    br.player.mode.cooldown == 1
-             then
+            if isChecked("Avatar") and (#enemies.yards8 >= getOptionValue("Avatar Mob Count")) and br.player.mode.cooldown == 1 then
                 ---print("norm avatar")
                 if cast.avatar() then
                     return
@@ -858,20 +733,14 @@ local function runRotation()
             end
 
             --High Priority Thunder Clap
-            if
-                not isExplosive("target") and #enemies.yards8 >= getValue("Aoe Priority") or
-                    debuff.demoralizingShout.exists(units.dyn8)
-             then
+            if not isExplosive("target") and #enemies.yards8 >= getValue("Aoe Priority") or debuff.demoralizingShout.exists(units.dyn8) then
                 if cast.thunderClap() then
                     return
                 end
             end
 
             -- High Prio Revenge
-            if
-                not isExplosive("target") and #enemies.yards8 >= getValue("Aoe Priority") and
-                    (buff.revenge.exists() or rage >= getValue("High Rage Dump"))
-             then
+            if not isExplosive("target") and #enemies.yards8 >= getValue("Aoe Priority") and (buff.revenge.exists() or rage >= getValue("High Rage Dump")) then
                 if cast.revenge() then
                     return
                 end
@@ -906,19 +775,13 @@ local function runRotation()
             end
 
             --Less Victorious
-            if
-                php <= 75 and (talent.impendingVictory or buff.victorious.exists()) and
-                    not (cast.able.shieldSlam() or cast.able.thunderClap())
-             then
+            if php <= 75 and (talent.impendingVictory or buff.victorious.exists()) and not (cast.able.shieldSlam() or cast.able.thunderClap()) then
                 if cast.victoryRush() then
                     return
                 end
             end
             --Devestate
-            if
-                cd.shieldSlam.remain() > (gcdMax / 2) and
-                    (isExplosive("target") or cd.thunderClap.remain() > (gcdMax / 2))
-             then
+            if cd.shieldSlam.remain() > (gcdMax / 2) and (isExplosive("target") or cd.thunderClap.remain() > (gcdMax / 2)) then
                 if cast.devastate() then
                     return
                 end
@@ -944,10 +807,7 @@ local function runRotation()
                 end
             end
             -- High Prio revenge
-            if
-                not isExplosive("target") and #enemies.yards8 >= getValue("Aoe Priority") and
-                    (buff.revenge.exists() or rage >= getValue("High Rage Dump"))
-             then
+            if not isExplosive("target") and #enemies.yards8 >= getValue("Aoe Priority") and (buff.revenge.exists() or rage >= getValue("High Rage Dump")) then
                 if cast.revenge() then
                     return
                 end
@@ -959,10 +819,7 @@ local function runRotation()
                 end
             end
             -- Recover
-            if
-                not isExplosive("target") and not (cast.able.thunderClap()) and
-                    (buff.revenge.exists() or rage >= getValue("High Rage Dump"))
-             then
+            if not isExplosive("target") and not (cast.able.thunderClap()) and (buff.revenge.exists() or rage >= getValue("High Rage Dump")) then
                 if cast.revenge() then
                     return
                 end
@@ -981,10 +838,7 @@ local function runRotation()
         end
 
         --- Lets do things now
-        if
-            pause() or (IsMounted() or IsFlying() or UnitOnTaxi("player") or UnitInVehicle("player")) or
-                mode.rotation == 2
-         then
+        if pause() or (IsMounted() or IsFlying() or UnitOnTaxi("player") or UnitInVehicle("player")) or mode.rotation == 2 then
             return true
         else
             -- combat check
