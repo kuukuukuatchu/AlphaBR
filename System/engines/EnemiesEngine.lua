@@ -32,8 +32,9 @@ if not metaTable2 then
 	function br.unitSetup:new(unit)
 		-- Seeing if we have already cached this unit before
 		if br.unitSetup.cache[unit] then return false end
+		if UnitDebuffID("player",295249) and UnitIsPlayer(unit) then return false end
 		if br.unitBlacklist[GetObjectID(unit)] then return false end
-		if UnitIsUnit("player", unit) then return false end
+		if GetUnitIsUnit("player", unit) then return false end
 		local o = {}
 		setmetatable(o, br.unitSetup)
 		if unit and type(unit) == "string" then

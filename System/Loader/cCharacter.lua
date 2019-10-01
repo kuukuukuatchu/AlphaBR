@@ -158,6 +158,7 @@ function cCharacter:new(class)
 			self.queue = {} -- Reset Queue Casting Table out of combat
 			Print("Out of Combat - Queue List Cleared")
 		end
+		self.ignoreCombat = getOptionCheck("Ignore Combat")
 	end
 
 -- Updates toggle data

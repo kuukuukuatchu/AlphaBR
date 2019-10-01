@@ -2,8 +2,8 @@
 ## Title: |cffa330c9BadRotations
 ## Notes: |cffa330c9By CuteOne.
 ## Author: CuteOne
-## Version: 1.31.0
-## SavedVariablesPerCharacter: brdata, dungeondata, mdungeondata, raiddata, mraiddata
+## Version: 1.32.1
+## SavedVariablesPerCharacter: brdata, brprofile
 
 BadRotations.lua
 bindings.xml
@@ -45,6 +45,7 @@ System\Lists\LineOfSight.lua
 System\Lists\LongCC.lua
 System\Lists\Maps.lua
 System\Lists\NoTouchUnits.lua
+System\Lists\Pets.lua
 System\Lists\ShieldUnits.lua
 System\Lists\Specs.lua
 System\Lists\Spells.lua

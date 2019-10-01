@@ -352,11 +352,6 @@ br.lists.spells = {
             glyphs                          = {
 
             },
-            pets                            = {
-                activePet                   = activePet,
-                gargoyle                    = 27829,
-                risenSkulker                = 99541,
-            },
             talents                         = {
                 allWillServe                = 194916,
                 armyOfTheDead               = 276837,
@@ -380,7 +375,7 @@ br.lists.spells = {
                 unholyFrenzy                = 207289,
             },
             traits                          = {
-
+                magusOfTheDead              = 288417,
             },
         },
         -- All
@@ -485,6 +480,7 @@ br.lists.spells = {
             },
             traits                          = {
                 chaoticTransformation       = 288754,
+                eyesOfRage                  = 278500,
                 furiousGaze                 = 273231,
                 revolvingBlades             = 279581,
                 unboundChaos                = 275144,
@@ -1197,9 +1193,6 @@ br.lists.spells = {
             glyphs                          = {
 
             },
-            pets                            = {
-                activePet                   = activePet,
-            },
             talents                         = {
                 aMurderOfCrows              = 131894,
                 bindingShot                 = 109248,
@@ -1681,6 +1674,8 @@ br.lists.spells = {
                 whirlingDragonPunch         = 152175,
             },
             traits                          = {
+                gloryOfTheDawn              = 288634,
+                openPalmStrikes             = 279918,
                 swiftRoundhouse             = 277669,
             }
         },
@@ -2164,6 +2159,7 @@ br.lists.spells = {
                 voidTorrent                 = 205065,
             },
             buffs                           = {
+                chorusOfInsanity            = 279572,
                 dispersion                  = 47585,
                 harvestedThoughts           = 288343,
                 lingeringInsanity            = 199849,
@@ -3125,20 +3121,6 @@ br.lists.spells = {
             glyphs                          = {
                 glyphOfTheFelImp            = 219424,
             },
-            pets                            = {
-                darkglare                   = 103673,
-                demonicTyrant               = 135002,
-                doomguard                   = 78158,
-                dreadstlaker                = 98035,
-                felguard                    = 17252,
-                felhunter                   = 417,
-                imp                         = 416,
-                infernal                    = 78217,
-                succubus                    = 1863,
-                voidwalker                  = 1860,
-                wildImp                     = 55659,
-                wrathguard                  = 58965,
-            },
             talents                         = {
                 burningRush                 = 111400,
                 darkPact                    = 108416,
@@ -3398,6 +3380,8 @@ br.lists.spells = {
                 battlePotionOfAgility           = 279152,
                 battlePotionOfIntellect         = 279151,
                 battlePotionOfStrength          = 279153,
+                superiorBattlePotionOfAgility   = 298146,
+                potionOfUnbridledFury           = 300714,
                 blessingOfSacrifice 	        = 6940,
                 greaterBlessingOfKings 	        = 203538,
                 greaterBlessingOfWisdom	        = 203539,
@@ -3432,6 +3416,7 @@ br.lists.spells = {
                 heroism                         = 32182,
                 netherwinds                     = 160452,
                 norgannonsForesight             = 236373,
+                overchargeMana                  = 299624,
                 potionOfBurstingBlood           = 265514,
                 potionOfFocusedResolve          = 298317,
                 prolongedPower                  = 229206,
@@ -3475,7 +3460,7 @@ br.lists.spells = {
                 focusedAzeriteBeam              = 295258,
                 guardianOfAzeroth               = 299355,
                 heartEssence                    = 296208,
-                lifeBindersInvocation           = 299943,
+                lifeBindersInvocation           = 293032,
                 memoryOfLucidDreams             = 298357,
                 overchargeMana                  = 296072,
                 purifyingBlast                  = 299345,
@@ -3484,6 +3469,7 @@ br.lists.spells = {
                 standstill                      = 299882,
                 suppressingPulse                = 300009,
                 theUnboundForce                 = 299376,
+                visionOfPerfection              = 299370,
                 vitalityConduit                 = 299958,
                 worldveinResonance              = 295186
             },

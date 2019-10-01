@@ -60,6 +60,17 @@ function ObjectManagerUpdate(self)
 	end
 end
 
+function br.antiAfk()
+	if isChecked("Anti-Afk") and EasyWoWToolbox ~= nil then
+		if not IsHackEnabled("antiafk") and getOptionValue("Anti-Afk") == 1 then
+			SetHackEnabled("antiafk",true)
+		end
+	elseif isChecked("Anti-Afk") and EasyWoWToolbox ~= nil and getOptionValue("Anti-Afk") == 2 then
+		if IsHackEnabled("antiafk") then
+			SetHackEnabled("antiafk",false)
+		end
+	end
+end
 -- Key Pause from Beniamin
 -- local rotationPause
 -- local buttonName
@@ -106,6 +117,7 @@ local brcurrVersion
 local brUpdateTimer
 local collectGarbage = true
 function BadRotationsUpdate(self)
+	if br.disablePulse == true then return end
 	local startTime = debugprofilestop()
 	-- Check for Unlocker
 	if not EWT then
@@ -245,7 +257,7 @@ function BadRotationsUpdate(self)
 							groupSize = 1
 						end
 						if #br.friend < groupSize and br.timer:useTimer("Reform", 5) then
-							br.addonDebug("Group size ("..groupSize..") does not match #br.friend ("..#br.friend.."). Recreating br.friend.")
+							br.addonDebug("Group size ("..groupSize..") does not match #br.friend ("..#br.friend.."). Recreating br.friend.", true)
 							table.wipe(br.memberSetup.cache)
 							table.wipe(br.friend)
 							SetupTables()
@@ -297,6 +309,12 @@ function BadRotationsUpdate(self)
 					end
 					-- Accept dungeon queues
 					br:AcceptQueues()
+
+					-- Anti-Afk
+					br.antiAfk()
+					
+					-- Fishing
+					br.fishing()
 
 					-- Profession Helper
 					ProfessionHelper()

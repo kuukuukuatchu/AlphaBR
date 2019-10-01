@@ -140,6 +140,7 @@ function br.loader:new(spec,specName)
     end
 
     self.items = br.lists.items
+    self.pets  = br.lists.pets
 
     -- Update Talent Info
     local function getTalentInfo()
@@ -248,6 +249,26 @@ function br.loader:new(spec,specName)
         --     end
         -- end
 
+        function getEssenceRank(essenceName)
+            if GetSpellInfo(essenceName) == nil then
+                return 0
+            end
+            local essenceRank = 0
+            local essenceTable = C_AzeriteEssence.GetMilestones()
+            local icon = select(3,GetSpellInfo(essenceName))
+            for i = 1, #essenceTable do
+                local milestone = essenceTable[i]
+                if milestone.slot ~= nil and milestone.unlocked == true then
+                    local eRank = C_AzeriteEssence.GetEssenceInfo(C_AzeriteEssence.GetMilestoneEssence(milestone.ID)).rank
+                    local eIcon = C_AzeriteEssence.GetEssenceInfo(C_AzeriteEssence.GetMilestoneEssence(milestone.ID)).icon
+                    if icon == eIcon then
+                        essenceRank = eRank
+                    end
+                end
+                return essenceRank
+            end
+        end
+
         -- Get Azerite Essence Info
         for k,v in pairs(self.spell.essences) do
             local heartEssence = self.spell.essences['heartEssence']
@@ -333,7 +354,7 @@ function br.loader:new(spec,specName)
             return enemyTable  -- Backwards compatability for old way
         end
 
-        if self.spell.pets ~= nil then
+        if self.pets ~= nil then
             if self.pet.active == nil then self.pet.active = {} end
             self.pet.active.exists = function()
                 return GetObjectExists("pet")
@@ -348,7 +369,7 @@ function br.loader:new(spec,specName)
                 return count
             end
 
-            for k,v in pairs(self.spell.pets) do
+            for k,v in pairs(self.pets) do
                 if self.pet[k] == nil then self.pet[k] = {} end
 
                 local pet = self.pet[k]
@@ -407,7 +428,7 @@ function br.loader:new(spec,specName)
             if self.use.able        == nil then self.use.able   = {} end -- Useable Item Check Functions
 
             br.api.items(self.cd,k,v,"cd")
-            
+
             br.api.items(self.charges,k,v,"charges")
 
             br.api.items(self.equiped,k,v,"equiped")
@@ -419,21 +440,23 @@ function br.loader:new(spec,specName)
 
         -- Cycle through Abilities List
         for k,v in pairs(self.spell.abilities) do
-            if self.cast            == nil then self.cast               = {} end        -- Cast Spell Functions
-            if self.cast.debug      == nil then self.cast.debug         = {} end        -- Cast Spell Debugging
-            if self.cast.able       == nil then self.cast.able          = {} end        -- Cast Spell Available
-            if self.cast.active     == nil then self.cast.active        = {} end        -- Cast Spell Active
-            if self.cast.cost       == nil then self.cast.cost          = {} end        -- Cast Spell Cost
-            if self.cast.pool       == nil then self.cast.pool          = {} end        -- Cast Spell Pooling
-            if self.cast.current    == nil then self.cast.current       = {} end        -- Cast Spell Current
-            if self.cast.inFlight   == nil then self.cast.inFlight      = {} end        -- Cast Spell In Flight
-            if self.cast.last       == nil then self.cast.last          = {} end        -- Cast Spell Last
-            if self.cast.range      == nil then self.cast.range         = {} end        -- Cast Spell Range
-            if self.cast.regen      == nil then self.cast.regen         = {} end        -- Cast Spell Regen
-            if self.cast.safe       == nil then self.cast.safe          = {} end        -- Case Spell Safe
-            if self.cast.time       == nil then self.cast.time          = {} end        -- Cast Spell Time
-            if self.charges         == nil then self.charges            = {} end        -- Spell Charge Functions
-            if self.cd              == nil then self.cd                 = {} end        -- Spell Cooldown Functions
+            if self.cast                == nil then self.cast               = {} end    -- Cast Spell Functions
+            if self.cast.debug          == nil then self.cast.debug         = {} end    -- Cast Spell Debugging
+            if self.cast.able           == nil then self.cast.able          = {} end    -- Cast Spell Available
+            if self.cast.active         == nil then self.cast.active        = {} end    -- Cast Spell Active
+            if self.cast.cost           == nil then self.cast.cost          = {} end    -- Cast Spell Cost
+            if self.cast.pool           == nil then self.cast.pool          = {} end    -- Cast Spell Pooling
+            if self.cast.current        == nil then self.cast.current       = {} end    -- Cast Spell Current
+            if self.cast.inFlight       == nil then self.cast.inFlight      = {} end    -- Cast Spell In Flight
+            if self.cast.last           == nil then self.cast.last          = {} end    -- Cast Spell Last
+            if self.cast.last.time      == nil then self.cast.last.time     = {} end    -- Cast Spell Last Time
+            if self.cast.range          == nil then self.cast.range         = {} end    -- Cast Spell Range
+            if self.cast.regen          == nil then self.cast.regen         = {} end    -- Cast Spell Regen
+            if self.cast.safe           == nil then self.cast.safe          = {} end    -- Case Spell Safe
+            if self.cast.time           == nil then self.cast.time          = {} end    -- Cast Spell Time
+            if self.cast.timeSinceLast  == nil then self.cast.timeSinceLast = {} end    -- Cast Spell Time Since Last 
+            if self.charges             == nil then self.charges            = {} end    -- Spell Charge Functions
+            if self.cd                  == nil then self.cd                 = {} end    -- Spell Cooldown Functions
 
             -- Build Spell Charges
             br.api.spells(self.charges,k,v,"charges")
@@ -614,7 +637,6 @@ function br.loader:new(spec,specName)
 ------------------------
 --- CUSTOM FUNCTIONS ---
 ------------------------
-
     function useAoE()
         local rotation = self.mode.rotation
         if (rotation == 1 and #self.enemies.get(8) >= 3) or rotation == 2 then

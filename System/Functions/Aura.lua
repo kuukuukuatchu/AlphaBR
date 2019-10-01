@@ -35,8 +35,8 @@ function UnitBuffID(unit, spellID, filter)
 			end
 		end
 	else
-		if filter ~= nil then return AuraUtil.FindAuraByName(spellName, unit, filter) end
-		return AuraUtil.FindAuraByName(spellName, unit)
+		if filter ~= nil and strfind(strupper(filter), "PLAYER") then return AuraUtil.FindAuraByName(spellName, unit, "HELPFUL|PLAYER") end
+		return AuraUtil.FindAuraByName(spellName, unit, "HELPFUL")
 	end
 end
 
@@ -99,6 +99,10 @@ local function Dispel(unit,stacks,buffDuration,buffRemain,buffSpellID,buff)
 			else
 				return false
 			end
+		elseif buffSpellID == 296737 and not isChecked("Range Check Arcane Bomb") then
+			return true
+		elseif buffSpellID == 303657 and isChecked("Arcane Burst") then
+			return true
 		elseif novaEngineTables.DispelID[buffSpellID] ~= nil then
 			if stacks >= novaEngineTables.DispelID[buffSpellID].stacks
 			then

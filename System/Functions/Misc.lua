@@ -19,19 +19,19 @@ end
 
 function getFallDistance()
 	local zDist
-	local _, _, position = GetObjectPosition("player")
+	 local _, _, position = GetObjectPosition("player")
 
-	if zCoord == nil then
-		zCoord = position
-	end
-	if not IsFalling() or IsFlying() then
-		zCoord = position
-	end
-	if position - zCoord < 0 then
-		zDist = math.sqrt(((position - zCoord) ^ 2))
-	else
+	 if zCoord == nil then
+	 	zCoord = position
+	 end
+	 if not IsFalling() or IsFlying() then
+	 	zCoord = position
+	 end
+	 if position - zCoord < 0 then
+	 	zDist = math.sqrt(((position - zCoord) ^ 2))
+	 else
 		zDist = 0
-	end
+	 end
 
 	return zDist
 end
@@ -208,8 +208,10 @@ function isGarrMCd(Unit)
 end
 -- if isInCombat("target") then
 function isInCombat(Unit)
-	if br.player ~= nil then
-		return br.player.inCombat
+	if UnitAffectingCombat(Unit) or isChecked("Ignore Combat") then
+		return true
+	else
+		return false
 	end
 end
 -- if isInDraenor() then
@@ -378,12 +380,12 @@ end
 
 function enemyListCheck(Unit)
 	local distance = getDistance(Unit, "player")
-	local mcCheck = (isChecked("Attack MC Targets") and	(not GetUnitIsFriend(Unit, "player") or (UnitIsCharmed(Unit) and UnitCanAttack("player", Unit)))) or not GetUnitIsFriend(Unit, "player")
+	local mcCheck =	(isChecked("Attack MC Targets") and (not GetUnitIsFriend(Unit, "player") or UnitIsCharmed(Unit))) or not GetUnitIsFriend(Unit, "player")
 	--local playerObj = GetObjectWithGUID(UnitGUID("player"))
 	return GetObjectExists(Unit) and not UnitIsDeadOrGhost(Unit) and UnitInPhase(Unit) and UnitCanAttack("player", Unit) and
 		distance < 50 and
 		not isCritter(Unit) and
-		mcCheck and isSafeToAttack(Unit) and
+		mcCheck and
 		not GetUnitIsUnit(Unit, "pet") and
 		UnitCreator(Unit) ~= ObjectPointer("player") and
 		GetObjectID(Unit) ~= 11492 and
@@ -400,18 +402,19 @@ function isValidUnit(Unit)
 	local threatBypassUnit = br.lists.threatBypass[GetObjectID(Unit)] ~= nil
 	local burnUnit = getOptionCheck("Forced Burn") and isBurnTarget(Unit) > 0
 	local isCC = getOptionCheck("Don't break CCs") and isLongTimeCCed(Unit) or false
+	local mcCheck = (isChecked("Attack MC Targets") and	(not GetUnitIsFriend(Unit, "player") or (UnitIsCharmed(Unit) and UnitCanAttack("player", Unit)))) or not GetUnitIsFriend(Unit, "player")
 	if playerTarget and br.units[UnitTarget("player")] == nil and not enemyListCheck("target") then
 		return false
 	end
 	if not pause(true) and Unit ~= nil and
-		(br.units[Unit] ~= nil or Unit == "target" or threatBypassUnit or burnUnit) and getHP(Unit) > 0 
-		and not isCC and (dummy or burnUnit or (not UnitIsTapDenied(Unit) and		
-		((not hostileOnly and reaction < 5) or (hostileOnly and (reaction < 4 or playerTarget or targeting)))))
+		(br.units[Unit] ~= nil or Unit == "target" or threatBypassUnit or burnUnit) and
+		mcCheck and not isCC and (dummy or burnUnit or (not UnitIsTapDenied(Unit) and isSafeToAttack(Unit) and		
+			((not hostileOnly and reaction < 5) or (hostileOnly and (reaction < 4 or playerTarget or targeting)))))
 	 then
 		local instance = IsInInstance()
 		local distanceToTarget = getDistance("target",Unit)
 		local distanceToPlayer = getDistance("player",Unit)
-		local inCombat = (br.player and br.player.inCombat) or UnitAffectingCombat("player") or (GetObjectExists("pet") and UnitAffectingCombat("pet"))
+		local inCombat = UnitAffectingCombat("player") or (GetObjectExists("pet") and UnitAffectingCombat("pet"))
 		local unitThreat = hasThreat(Unit) or targeting or isInProvingGround() or burnUnit or threatBypassUnit
 		return unitThreat 
 			or ((not instance and (playerTarget or (distanceToTarget < 8 and (reaction < 4 or isDummy())))) 
@@ -518,8 +521,8 @@ function pause(skipCastingCheck)
 	local lastCast = br.lastCast.tracker[1]
 	if br.pauseCast - GetTime() <= 0 then
 		local hasted = (1-UnitSpellHaste("player")/100)
-		if lastCast == 295258 and getSpellCD(295258) == br.player.gcdMax then br.pauseCast = GetTime() + getCastTime(295258) + (getCastTime(295261) * hasted) end
-		if lastCast == 293491 and GetItemCooldown(167555) <= br.player.gcdMax then br.pauseCast = GetTime() + getCastTime(293491) + (2.5 * hasted) end
+		if lastCast == 295258 and getSpellCD(295258) == 0 then br.pauseCast = GetTime() + getCastTime(295258) + (getCastTime(295261) * hasted) end
+		if lastCast == 293491 and GetItemCooldown(167555) == 0 then br.pauseCast = GetTime() + getCastTime(293491) + (2.5 * hasted) end
 	end
 	if GetTime() < br.pauseCast then
 		return true
@@ -564,8 +567,8 @@ function pause(skipCastingCheck)
 		-- or (UnitIsDeadOrGhost("target") and not UnitIsPlayer("target"))
 		UnitBuffID("player", 257427) or -- Eating
 		UnitBuffID("player", 274914) or -- Drinking
-		UnitDebuffID("player", 252753) or
-		UnitBuffID("player", 115834) -- Potion of Replenishment (BFA Mana channel) Apparently a debuff
+		UnitDebuffID("player", 252753) or -- Potion of Replenishment (BFA Mana channel) Apparently a debuff
+		UnitBuffID("player", 114018)
 		-- or UnitBuffID("target",117961) --Impervious Shield - Qiang the Merciless
 		-- or UnitDebuffID("player",135147) --Dead Zone - Iron Qon: Dam'ren
 		-- or (((UnitHealth("target")/UnitHealthMax("target"))*100) > 10 and UnitBuffID("target",143593)) --Defensive Stance - General Nagrazim
@@ -760,13 +763,52 @@ function talentAnywhere()
 		end
 	end
 end
+function getEssenceRank(essenceName)
+	if GetSpellInfo(essenceName) == nil then
+		return 0
+	end
+	local essenceRank = 0
+	local essenceTable = C_AzeriteEssence.GetMilestones()
+	local icon = select(3,GetSpellInfo(essenceName))
+	for i = 1, #essenceTable do
+		local milestone = essenceTable[i]
+		if milestone.slot ~= nil and milestone.unlocked == true then
+			local eRank = C_AzeriteEssence.GetEssenceInfo(C_AzeriteEssence.GetMilestoneEssence(milestone.ID)).rank
+			local eIcon = C_AzeriteEssence.GetEssenceInfo(C_AzeriteEssence.GetMilestoneEssence(milestone.ID)).icon
+			if icon == eIcon then
+				essenceRank = eRank
+			end
+		end
+		return essenceRank
+	end
+end
 
-function br.addonDebug(msg)
+function br.addonDebug(msg,system)
 	if msg == nil then
 		return
 	end
-	if isChecked("Addon Debug Messages") then
-		print(br.classColor .. "[BadRotations] Debug: |cffFFFFFF" .. msg)
+	if isChecked("Addon Debug Messages") then 
+		if system == true and (getValue("Addon Debug Messages") == 1 or getValue("Addon Debug Messages") == 3) then
+			print(br.classColor .. "[BadRotations] System Debug: |cffFFFFFF" .. tostring(msg))
+		elseif system == false and (getValue("Addon Debug Messages") == 2 or getValue("Addon Debug Messages") == 3) then
+			print(br.classColor .. "[BadRotations] Profile Debug: |cffFFFFFF" .. tostring(msg))
+		end
 	end
 end
+
+function br.store(key, value)
+	if br.profile == nil then
+		br.profile = {}
+	end
+	br.profile[key] = value
+	return true
+  end
+  
+  function br.fetch(key, default)
+	if br.profile == nil then
+		br.profile = {}
+	end
+	local value = br.profile[key]
+	return value == nil and default or value
+  end
 
