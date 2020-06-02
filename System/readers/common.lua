@@ -112,9 +112,6 @@ function br.read.commonReaders()
 	Frame:RegisterEvent("PLAYER_REGEN_ENABLED")
 	local function LeavingCombat(self, event, ...)
 		if event == "PLAYER_REGEN_ENABLED" then
-			-- wipe interupts table
-			--br.im:debug("Wiping casters table as we left combat.")
-			--  table.wipe(br.im.casters)
 			-- start loot manager
 			if lM then
 				if not IsMounted("player") then
@@ -253,7 +250,7 @@ function br.read.commonReaders()
 	end
 	--Frame:SetScript("OnEvent", addonReader)
 	GameTooltip:HookScript("OnTooltipSetUnit", function(self)
-		if EWT and GetObjectCount() ~= nil then
+		if br.unlocked --[[EWT]] and GetObjectCountBR() ~= nil then
 			local name,lunit = self:GetUnit()
 			if not UnitIsVisible(lunit) then
 				return
@@ -264,7 +261,7 @@ function br.read.commonReaders()
 			local targeting = isTargeting(unit)
 			local hasThreat = hasThreat(unit) or targeting or isInProvingGround() or burnUnit
 			local reaction = GetUnitReaction(unit, "player") or 10
-			if isChecked("Target Validation Debug") and not UnitIsPlayer(unit) then
+			if isChecked("Target Validation Debug") and (not UnitIsPlayer(unit) or UnitIsCharmed(unit)) then
 				if isValidUnit(unit) then
 					self:AddLine("Unit is Valid",0,1,0)
 				elseif not (br.units[unit] ~= nil or GetUnitIsUnit(unit,"target") or br.lists.threatBypass[GetObjectID(unit)] ~= nil or burnUnit) then
@@ -587,6 +584,12 @@ function br.read.commonReaders()
 			-- Print("Error "..errorMsg..": "..messageErr)
 			-- 51 = "Your Pet is Dead"
 			-- 203 = "Cannot attack while dead"
+			-- 278 = "Your Pet is not Dead" / "Your pet is dead. Use Revive Pet"
+			if errorMsg == 278 then
+				local revive = GetSpellInfo(50769) -- Used for string matching error messasge.
+				local match = string.find(messageErr,revive) ~= nil
+				if match then deadPet = true else deadPet = false end
+			end
 			if not UnitIsDeadOrGhost("player") and (UnitIsDeadOrGhost("pet") or not UnitExists("pet")) and (errorMsg == 51 or errorMsg == 203) then --or errorMsg == 277 or errorMsg == 275 then
 				deadPet = true
 				-- if deadPet == false then

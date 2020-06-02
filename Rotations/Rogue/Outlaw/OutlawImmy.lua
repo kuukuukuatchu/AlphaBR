@@ -20,52 +20,64 @@ local function createToggles()
         [2] = { mode = "", value = 2 , overlay = "", tip = "", highlight = 0, icon = br.player.spell.crimsonVial}
     };
     CreateButton("Rotation",1,0)
+    -- Cooldown Button
+    CooldownModes = {
+        [1] = { mode = "Auto", value = 1 , overlay = "Cooldowns Automated", tip = "Automatic Cooldowns - Boss Detection.", highlight = 1, icon = br.player.spell.adrenalineRush },
+        [2] = { mode = "On", value = 2 , overlay = "Cooldowns Enabled", tip = "Cooldowns used regardless of target.", highlight = 0, icon = br.player.spell.adrenalineRush },
+        [3] = { mode = "Off", value = 3 , overlay = "Cooldowns Disabled", tip = "No Cooldowns will be used.", highlight = 0, icon = br.player.spell.adrenalineRush }
+     };
+    CreateButton("Cooldown",2,0)
 -- Blade Flurry Button
     BladeFlurryModes = {
         [1] = { mode = "", value = 1 , overlay = "", tip = "", highlight = 1, icon = br.player.spell.bladeFlurry},
         [2] = { mode = "", value = 2 , overlay = "", tip = "", highlight = 0, icon = br.player.spell.bladeFlurry}
     };
-    CreateButton("BladeFlurry",2,0)
+    CreateButton("BladeFlurry",3,0)
     NoBTEModes = {
         [1] = { mode = "best", value = 1 , overlay = "", tip = "", highlight = 1, icon = br.player.spell.betweenTheEyes},
         [2] = { mode = "target", value = 2 , overlay = "", tip = "", highlight = 1, icon = br.player.spell.betweenTheEyes},
         [3] = { mode = "off", value = 3 , overlay = "", tip = "", highlight = 0, icon = br.player.spell.betweenTheEyes}
     };
-    CreateButton("NoBTE",2,1)    
+    CreateButton("NoBTE",3,1)    
 -- Defensive Button
     SpecialModes = {
         [1] = { mode = "", value = 1 , overlay = "", tip = "", highlight = 1, icon = br.player.spell.adrenalineRush},
         [2] = { mode = "", value = 2 , overlay = "", tip = "", highlight = 0, icon = br.player.spell.adrenalineRush},
     };
-    CreateButton("Special",4,0)
+    CreateButton("Special",5,0)
     TiersevenModes = {
         [1] = { mode = "", value = 1 , overlay = "", tip = "", highlight = 1, icon = br.player.spell.bladeRush},
         [2] = { mode = "", value = 2 , overlay = "", tip = "", highlight = 0, icon = br.player.spell.bladeRush},
     };
-    CreateButton("Tierseven",4,1)    
+    CreateButton("Tierseven",5,1)    
 -- Interrupt Button
     InterruptModes = {
         [1] = { mode = "", value = 1 , overlay = "", tip = "", highlight = 1, icon = br.player.spell.kick},
         [2] = { mode = "", value = 2 , overlay = "", tip = "", highlight = 0, icon = br.player.spell.kick}
     };
-    CreateButton("Interrupt",3,0)
+    CreateButton("Interrupt",4,0)
         StunModes = {
         [1] = { mode = "", value = 1 , overlay = "", tip = "", highlight = 1, icon = br.player.spell.gouge},
         [2] = { mode = "", value = 2 , overlay = "", tip = "", highlight = 0, icon = br.player.spell.gouge}
     };
-    CreateButton("Stun",3,1)
+    CreateButton("Stun",4,1)
     MFDModes = {
         [1] = { mode = "Tar", value = 1 , overlay = "", tip = "", highlight = 1, icon = br.player.spell.markedForDeath},
         [2] = { mode = "Adds", value = 2 , overlay = "", tip = "", highlight = 1, icon = br.player.spell.markedForDeath},
         [3] = { mode = "reset", value = 3 , overlay = "", tip = "", highlight = 1, icon = br.player.spell.markedForDeath},
         [4] = { mode = "Off", value = 4 , overlay = "", tip = "", highlight = 0, icon = br.player.spell.markedForDeath}
     };
-    CreateButton("MFD",5,0)
+    CreateButton("MFD",6,0)
     RollforoneModes = {
         [1] = { mode = "any", value = 1 , overlay = "", tip = "", highlight = 0, icon = br.player.spell.rollTheBones},
         [2] = { mode = "simc", value = 2 , overlay = "", tip = "", highlight = 1, icon = br.player.spell.rollTheBones}
     };
-    CreateButton("Rollforone",5,1)    
+    CreateButton("Rollforone",6,1)
+    EssenceModes = {
+        [1] = { mode = "Off", value = 1 , overlay = "Essence disabled", tip = "Won't use essence", highlight = 0, icon = br.player.spell.bloodOfTheEnemy},
+        [2] = { mode = "On", value = 2 , overlay = "Essence enabled", tip = "Will use essence", highlight = 1, icon = br.player.spell.bloodOfTheEnemy},
+    };
+    CreateButton("Essence",7,0)  
 end
 
 forpro = false
@@ -94,9 +106,12 @@ local function createOptions()
         ------------------------
         section = br.ui:createSection(br.ui.window.profile,  "Offensive")
             br.ui:createCheckbox(section, "Trinkets")
+            br.ui:createCheckbox(section, "AdrenalineRush", "|cffFFFFFF Will use Adrenaline Rush")
             br.ui:createCheckbox(section, "Vanish")
             br.ui:createCheckbox(section, "Racial")
             br.ui:createSpinnerWithout(section, "BF HP Limit", 15, 0, 105, 1, "|cffFFFFFFHP *10k hp for Blade FLurry to be used")
+            -- Cooldowns Time To Die Limit
+            br.ui:createSpinnerWithout(section,  "BF Time To Die Limit",  30,  0,  40,  1,  "|cffFFFFFFTarget Time to die limit for using cooldowns (in sec).")
             br.ui:createSpinner(section, "Pistol Shot out of range", 85,  5,  100,  5,  "|cffFFFFFFCheck to use Pistol Shot out of range and energy to use at.")
             -- br.ui:createSpinnerWithout(section, "MFD Sniping",  1,  0.5,  3,  0.1,  "|cffFFBB00Increase to have BR cast MFD on dying units quicker, too high might cause suboptimal casts")
         br.ui:checkSectionState(section)
@@ -113,7 +128,16 @@ local function createOptions()
             br.ui:createCheckbox(section, "Ambush Opener", "Will use ambush as soon as target is in range")
             br.ui:createCheckbox(section, "PickPocket", "Will PickPocket before ambush ^^ for tmog")
         br.ui:checkSectionState(section)
-         -------------------------
+
+        section = br.ui:createSection(br.ui.window.profile, "Essences")
+            br.ui:createCheckbox(section, "BotE", "Blood of the Enemy")
+            br.ui:createCheckbox(section, "CLF", "Condensed Life-Force")
+            br.ui:createDropdownWithout(section, "Use Concentrated Flame", {"DPS", "Heal", "Hybrid", "Never"}, 1)
+            br.ui:createSpinnerWithout(section, "Concentrated Flame Heal", 70, 10, 90, 5)
+            br.ui:createCheckbox(section, "CoS", "Strife Stack ooc with detection")
+        br.ui:checkSectionState(section)
+
+        -------------------------
         --- INTERRUPT OPTIONS ---
         -------------------------
         section = br.ui:createSection(br.ui.window.profile, "Interrupts")
@@ -129,16 +153,29 @@ local function createOptions()
             br.ui:createSpinner(section,  "Interrupt At",  0,  0,  100,  5,  "|cffFFBB00Cast Percentage to use at.")
         br.ui:checkSectionState(section)
 
-            -------------------------
-            --- DEFENSIVE OPTIONS ---
-            -------------------------
-            section = br.ui:createSection(br.ui.window.profile, "Defensive")
-            br.ui:createSpinner(section, "Healing Potion/Healthstone", 60, 0, 100, 5, "|cffFFBB00Health Percentage to use at.")
-            br.ui:createSpinner(section, "Crimson Vial", 10, 0, 100, 5, "|cffFFBB00Health Percentage to use at.")
-            br.ui:createSpinner(section, "Feint", 10, 0, 100, 5, "|cffFFBB00Health Percentage to use at.")
-            br.ui:createSpinner(section, "Riposte", 10, 0, 100, 5, "|cffFFBB00Health Percentage to use at.")
-            br.ui:createSpinner(section, "Engineer's' Belt", 10, 0, 100, 5, "|cffFFBB00Health Percentage to use at.")
-            br.ui:checkSectionState(section)
+        ------------------------
+        --- CORRUPTION 8.3 -----
+        ------------------------
+        section = br.ui:createSection(br.ui.window.profile, "Corruption")
+            br.ui:createSpinnerWithout(section, "Corruption Immunity", 75, 0, 100, 5, "Health Percentage to use corruption immunities.")
+            br.ui:createDropdown(section, "Use Cloak", { "Snare", "Eye", "THING", "Never" }, 4, "", "")
+            br.ui:createDropdown(section, "Cloak of Shadows Corruption", { "Snare", "Eye", "THING", "Never" }, 4, "", "")
+            br.ui:createCheckbox(section, "Vanish THING", "|cffFFFFFF Will use Vanish when Thing from beyond spawns")
+            br.ui:createCheckbox(section, "Shadowmeld THING", "|cffFFFFFF Will use shadowmeld when Thing from beyond spawns")
+            br.ui:createCheckbox(section, "Blind THING", "|cffFFFFFF Will use blind on Thing from beyond")
+        br.ui:checkSectionState(section)
+
+        -------------------------
+        --- DEFENSIVE OPTIONS ---
+        -------------------------
+        section = br.ui:createSection(br.ui.window.profile, "Defensive")
+        br.ui:createDropdown(section, "Auto Tricks", {"|cff00FF00Focus", "|cffFF0000Tank"},  1, "Tricks of the Trade target." )
+        br.ui:createSpinner(section, "Healing Potion/Healthstone", 60, 0, 100, 5, "|cffFFBB00Health Percentage to use at.")
+        br.ui:createSpinner(section, "Crimson Vial", 10, 0, 100, 5, "|cffFFBB00Health Percentage to use at.")
+        br.ui:createSpinner(section, "Feint", 10, 0, 100, 5, "|cffFFBB00Health Percentage to use at.")
+        br.ui:createSpinner(section, "Riposte", 10, 0, 100, 5, "|cffFFBB00Health Percentage to use at.")
+        br.ui:createSpinner(section, "Engineer's Belt", 10, 0, 100, 5, "|cffFFBB00Health Percentage to use at.")
+        br.ui:checkSectionState(section)
 
         ----------------------
         --- TOGGLE OPTIONS ---
@@ -185,6 +222,7 @@ local function runRotation()
 --- Toggles ---
 ---------------
         UpdateToggle("Rotation",0.25)
+        UpdateToggle("Cooldown",0.25)
         UpdateToggle("Interrupt",0.25)
         UpdateToggle("BladeFlurry",0.25)
         br.player.mode.bladeflurry = br.data.settings[br.selectedSpec].toggles["BladeFlurry"]
@@ -194,6 +232,7 @@ local function runRotation()
         br.player.mode.special = br.data.settings[br.selectedSpec].toggles["Special"]
         br.player.mode.tierseven = br.data.settings[br.selectedSpec].toggles["Tierseven"]
         br.player.mode.nobte = br.data.settings[br.selectedSpec].toggles["NoBTE"]
+        br.player.mode.essence = br.data.settings[br.selectedSpec].toggles["Essence"]
 --------------
 --- Locals ---
 --------------
@@ -209,6 +248,7 @@ local function runRotation()
         local cd                                            = br.player.cd
         local combo, comboDeficit, comboMax                 = br.player.power.comboPoints.amount(), br.player.power.comboPoints.deficit(), br.player.power.comboPoints.max()
         local debuff                                        = br.player.debuff
+        local essence                                       = br.player.essence
         -- local pullTimer                                     = br.BossMods:getPulltimer()
         local enemies                                       = br.player.enemies
         local gcd                                           = getSpellCD(61304)
@@ -232,6 +272,7 @@ local function runRotation()
         local talent                                        = br.player.talent
         local traits                                        = br.player.traits
         local ttm                                           = br.player.power.energy.ttm()
+        local ttdd                                          = getTTD
         local units                                         = br.player.units
         local use                                           = br.player.use
         local lootDelay                                     = getOptionValue("LootDelay")
@@ -263,6 +304,22 @@ local function runRotation()
       spread = true
     end
 
+    --Tricks from sir fisker
+    local tricksUnit
+    if isChecked("Auto Tricks") and GetSpellCooldown(spell.tricksOfTheTrade) == 0 and inCombat then
+        if getOptionValue("Auto Tricks") == 1 and GetUnitIsFriend("player", "focus") and getLineOfSight("player", "focus") then
+            tricksUnit = "focus"
+        elseif getOptionValue("Auto Tricks") == 2 then
+            for i = 1, #br.friend do
+                local thisUnit = br.friend[i].unit
+                if UnitGroupRolesAssigned(thisUnit) == "TANK" and not UnitIsDeadOrGhost(thisUnit) and getLineOfSight("player", thisUnit) then
+                    tricksUnit = thisUnit
+                    break
+                end
+            end
+        end
+    end
+
         dotHPLimit = getOptionValue("BF HP Limit") * 10000
 
         
@@ -270,8 +327,11 @@ local function runRotation()
         
 --______________________________________
     
+    enemies.get(40)
     enemies.get(20,nil,nil,nil,spell.pistolShot)
     enemies.get(20,nil,true,nil,spell.pistolShot)
+    enemies.get(5)
+    enemies.get(8)
 
     local function PickPocketable(Unit)
         if Unit == nil then Unit = "target" end
@@ -303,6 +363,12 @@ local function runRotation()
         return ttdSec
     end
 
+    local groupTTD = 0
+    for i = 1, #enemies.yards5 do
+        thisUnit = enemies.yards5[i]
+        groupTTD = groupTTD + ttdd(thisUnit)
+    end
+
     local function getapdmg(offHand)
           local useOH = offHand or false
           local wdpsCoeff = 6
@@ -326,7 +392,7 @@ local function runRotation()
         local rtcoef       = 0.35
         local auramult      = 1.13
         local versmult      = (1 + ((GetCombatRatingBonus(CR_VERSATILITY_DAMAGE_DONE) + GetVersatilityBonus(CR_VERSATILITY_DAMAGE_DONE)) / 100))
-        if talent.DeeperStratagem then dsmod = 1.05 else dsmod = 1 end 
+        if talent.deeperStratagem then dsmod = 1.05 else dsmod = 1 end 
         return(
                 apMod * combo * rtcoef * auramult * dsmod * versmult
                 )
@@ -572,33 +638,61 @@ local function runRotation()
         local function rtbReroll()
             if mode.rollforone == 1 then 
                 if buff.rollTheBones.count > 0 then return false end
-            else
-                if buff.bladeFlurry.exists("player") and bftargets >= 2 then
-                    -- print("aoe roll")
-                    return ((buff.rollTheBones.count < 2 and not buff.grandMelee.exists() and not buff.ruthlessPrecision.exists() and not buff.broadside.exists()) or
-                        (buff.rollTheBones.count == 2 and ((buff.skullAndCrossbones.exists() and buff.trueBearing.exists()) or (buff.skullAndCrossbones.exists() and buff.buriedTreasure.exists())))) and true or false
-                elseif traits.snakeeyes.rank > 0 then
-                    if traits.snakeeyes.rank >= 2 then
-                        if (buff.snakeeeyes.stack() >= 2 - (buff.broadside.exists() and 1 or 0)) then
-                            return false
-                        else
-                            return true
-                        end
-                    elseif buff.rollTheBones.count < 2 or (traits.snakeeyes.rank >= 3 and buff.rollTheBones.count < 5) then
-                        return true
-                    end
-                elseif traits.deadshot.rank > 0 or traits.aceupyoursleeve.rank > 0 then 
-                    -- print("123")
-                    return (buff.rollTheBones.count < 2 and (buff.loadedDice.exists() or (buff.ruthlessPrecision.remain() <= br.player.cd.betweenTheEyes.remain()))) and true or false
+            elseif bftargets >= 3 then 
+				local sac
+				if buff.skullAndCrossbones.exists("player") then sac = 1 else sac = 0 end
+                return ((buff.rollTheBones.count - sac) < 2 and (buff.loadedDice.exists("player") or not (buff.ruthlessPrecision.exists("player") or buff.grandMelee.exists("player") or (talent.deeperStratagem and buff.broadside.exists("player"))))) and true or false
+            --# Reroll for 2+ buffs or Deadshot with Ruthless Precision or Ace up your Sleeve.
+            elseif traits.aceupyoursleeve.rank >= 1 or traits.deadshot.rank >= 1 then 
+                return (buff.rollTheBones.count < 2 and (buff.loadedDice.exists() or (cd.betweenTheEyes.remain() >= buff.ruthlessPrecision.remain()))) and true or false
                 --rtb_reroll,value=rtb_buffs<2&(buff.loaded_dice.up|!buff.grand_melee.up&!buff.ruthless_precision.up)
-                else 
-                    -- print("123312")
-                    return (buff.rollTheBones.count < 2 and (buff.loadedDice.exists() or (not buff.grandMelee.exists() and not buff.ruthlessPrecision.exists()))) and true or false 
+            else 
+            	-- print("last roll")
+                return (buff.rollTheBones.count < 2 and (not buff.grandMelee.exists() or not buff.ruthlessPrecision.exists() or buff.loadedDice.exists())) and true or false 
+            end
+        end
+
+        -- Corruption stuff
+        -- 1 = snare,  2 = eye,  3 = thing, 4 = never   -- snare = 315176
+        if php <= getOptionValue("Corruption Immunity") then
+            if br.player.equiped.shroudOfResolve and canUseItem(br.player.items.shroudOfResolve) and isChecked("Use Cloak") then
+                if getValue("Use Cloak") == 1 and debuff.graspingTendrils.exists("player")
+                    or getValue("Use Cloak") == 2 and debuff.eyeOfCorruption.exists("player")
+                    or getValue("Use Cloak") == 3 and debuff.grandDelusions.exists("player") then
+                    if br.player.use.shroudOfResolve() then end
+                end
+            end
+            if isChecked("Cloak of Shadows Corruption") and not canUseItem(br.player.items.shroudOfResolve) or getValue("Use Cloak") == 4 then
+                if getValue("Cloak of Shadows Corruption") == 1 and debuff.graspingTendrils.exists("player") 
+                    or getValue("Cloak of Shadows Corruption") == 2 and debuff.eyeOfCorruption.exists("player")
+                    or getValue("Cloak of Shadows Corruption") == 3 and debuff.grandDelusions.exists("player") then
+                    if cast.cloakOfShadows() then return true end
+                end
+            end
+            if debuff.grandDelusions.exists("player") and (not canUseItem(br.player.items.shroudOfResolve) or not isChecked("Use Cloak") or not getValue("Use Cloak") == 3) and 
+             (cd.cloakOfShadows.exists() or not isChecked("Cloak of Shadows Corruption") or getValue("Cloak of Shadows Corruption") == 3) then
+                if isChecked("Vanish THING") then
+                    if cast.vanish("player") then return true end
+                elseif isChecked("Shadowmeld THING") then
+                    if cast.shadowmeld() then return true end    
+                elseif isChecked("Blind THING") then
+                    for i = 1, GetObjectCountBR() do
+                        local object = GetObjectWithIndex(i)
+                        local ID = ObjectID(object)                        
+                        if ID == 161895 then
+                            local x1, y1, z1 = ObjectPosition("player")
+                            local x2, y2, z2 = ObjectPosition(object)
+                            local distance = math.sqrt(((x2 - x1) ^ 2) + ((y2 - y1) ^ 2) + ((z2 - z1) ^ 2))
+                            if distance <= 10 then
+                                if cast.blind(object) then return end
+                            end
+                        end
+                    end
                 end
             end
         end
-        --actions+=/variable,name=ambush_condition,value=combo_points.deficit>=2+2*(talent.ghostly_strike.enabled&cooldown.ghostly_strike.remains<1)+buff.broadside.up&energy>60&!buff.skull_and_crossbones.up
 
+        --actions+=/variable,name=ambush_condition,value=combo_points.deficit>=2+2*(talent.ghostly_strike.enabled&cooldown.ghostly_strike.remains<1)+buff.broadside.up&energy>60&!buff.skull_and_crossbones.up
         local function ambushCondition()
             if comboDeficit >= 2 + 2 * ((talent.ghostlyStrike and cd.ghostlyStrike.remain() < 1) and 1 or 0) + (buff.broadside.exists() and 1 or 0) and power > 60 and not buff.skullAndCrossbones.exists() then
                 return true
@@ -716,12 +810,11 @@ local function runRotation()
           
           if not stealth then
             -- Health Pot/Healthstone
-            if isChecked("Healing Potion/Healthstone") and (use.able.healthstone() or canUseItem(152494)) and php <= getOptionValue("Healing Potion/Healthstone") and inCombat and (hasItem(152494) or has.healthstone())
-            then
+            if isChecked("Healing Potion/Healthstone") and (use.able.healthstone() or canUseItem(169451)) and php <= getOptionValue("Healing Potion/Healthstone") and inCombat and (hasItem(169451) or has.healthstone()) then
                 if use.able.healthstone() then
                     use.healthstone()
-                elseif canUseItem(152494) then
-                    useItem(152494)
+                elseif canUseItem(169451) then
+                    useItem(169451)
                 end
             end
             -- Crimson Vial
@@ -739,7 +832,7 @@ local function runRotation()
             -- Evasion
             if isChecked("Riposte") and php <= getOptionValue("Riposte") and inCombat then
               if cast.riposte() then
-                return
+                return true
               end
             end
             if isChecked("Engineer's Belt") and php <= getOptionValue("Engineer's Belt") and inCombat then
@@ -767,7 +860,7 @@ local function runRotation()
         local function actionList_Cooldowns()
             local startTime = debugprofilestop()
         -- Trinkets
-            if isChecked("Trinkets") then
+            if isChecked("Trinkets") and not hasEquiped(169311, 13) and not hasEquiped(169311, 14) then
                 if hasBloodLust() or (ttd("target") <= 20 and isBoss("target"))  then
                     if canUseItem(13) then
                         useItem(13)
@@ -777,33 +870,91 @@ local function runRotation()
                     end
                 end
             end
-    
+
+            -- # Razor Coral
+            if isChecked("Trinkets") and targetDistance < 5 then
+                if hasEquiped(169311, 13) and (not debuff.razorCoral.exists(units.dyn5) or (buff.adrenalineRush.remain() > 10 and (debuff.razorCoral.stack() >= 20 or (debuff.razorCoral.stack() >= 10 and buff.seethingRage.exists())))) then
+                    useItem(13)
+                elseif hasEquiped(169311, 14) and (not debuff.razorCoral.exists(units.dyn5) or (buff.adrenalineRush.remain() > 10 and (debuff.razorCoral.stack() >= 20 or (debuff.razorCoral.stack() >= 10 and buff.seethingRage.exists())))) then
+                    useItem(14)
+                end
+            end
+
+            -- # Pop Razor Coral right before Dribbling Inkpod proc to increase it's chance to crit (at 32-30% of HP)
+            if isChecked("Trinkets") then
+                if hasEquiped(169311, 13) and canUseItem(13) and hasEquiped(169319, 14) and getHP("target") < 31 then
+                    useItem(13)
+                elseif hasEquiped(169311, 14) and canUseItem(14) and hasEquiped(169319, 13) and getHP("target") < 31 then
+                    useItem(14)
+                end
+            end
+
+            --Essences 8.2
+            if mode.essence == 2 then
+                -- Essence: Reaping Flames
+                -- reaping_flames,if=target.health.pct>80|target.health.pct<=20|target.time_to_pct_20>30
+                if cast.able.reapingFlames() then
+                    for i = 1, #enemies.yards40 do
+                        local thisUnit = enemies.yards40[i]
+                        local thisHP = getHP(thisUnit)
+                    if ((essence.reapingFlames.rank >= 2 and thisHP > 80) or thisHP <= 20 or getTTD(thisUnit,20) > 30) then
+                        if cast.reapingFlames(thisUnit) then return true end
+                        end
+                    end
+                end
+                -- # Blood of the Enemy
+                if essence.bloodOfTheEnemy.active and isChecked("BotE") and not rtbReroll() and cd.betweenTheEyes.remain() < 5 then 
+                    if buff.bladeFlurry.exists("player") and bftargets >= 3 then
+                        if cast.bloodOfTheEnemy() then return true end
+                    elseif isBoss("target") and buff.adrenalineRush.exists() then
+                        if cast.bloodOfTheEnemy() then return true end
+                    end
+                end
+                -- # Guardian of Azeroth
+                if essence.guardianOfAzeroth.active and isChecked("CLF") and buff.adrenalineRush.remain() > 10 then
+                    if cast.guardianOfAzeroth() then return true end
+                end
+                -- Crucible of flame
+                if cast.able.concentratedFlame() then 
+                    if getOptionValue("Use Concentrated Flame") ~= 1 and php <= getValue("Concentrated Flame Heal") then
+                        if cast.concentratedFlame("player") then
+                            return
+                        end
+                    end
+                    if getOptionValue("Use Concentrated Flame") == 1 or (getOptionValue("Use Concentrated Flame") == 3 and php > getValue("Concentrated Flame Heal")) then
+                        if cast.concentratedFlame("target") then
+                            return
+                        end
+                    end	
+                end
+            end
+
     -- Non-NE Racial
             --blood_fury
             --berserking
             --arcane_torrent,if=energy.deficit>40
-            if mode.special == 1 and isChecked("Racial") and (race == "Orc" or race == "MagharOrc" or race == "DarkIronDwarf" or race == "Troll") then
+            if useCDs() and isChecked("Racial") and (race == "Orc" or race == "MagharOrc" or race == "DarkIronDwarf" or race == "Troll" or "MagharOrc") then
                 if cast.racial("player") then return true end
             end
 
-            if mode.special == 1 and not buff.adrenalineRush.exists() and ttd("target") >= 10 then
+            if useCDs() and isChecked("AdrenalineRush") and not buff.adrenalineRush.exists() and ttd("target") >= 10 then
                 if cast.adrenalineRush("player") then
-                    if isChecked("Trinkets") then
+                    if isChecked("Trinkets") and not hasEquiped(169311, 13) then
                         if canUseItem(13) then
                             useItem(13)
                         end
-                        if canUseItem(14) then
+                        if canUseItem(14) and not hasEquiped(169311, 14) then
                             useItem(14)
                         end
                     end
                 return true end
             end    
 
-            if bladeFlurrySync() and comboDeficit >= (1 + (buff.broadside.exists() and 1 or 0)) then
+            if talent.ghostlyStrike and bladeFlurrySync() and comboDeficit >= (1 + (buff.broadside.exists() and 1 or 0)) then
                 if cast.ghostlyStrike("target") then return true end
             end
 
-            if mode.tierseven == 1 and bladeFlurrySync() and (ttm > 5 or power < 15) then
+            if talent.killingSpree and mode.tierseven == 1 and bladeFlurrySync() and (ttm > 5 or power < 15) then
                 if cast.killingSpree("target") then return true end
             end
     -- Blade Rush
@@ -829,7 +980,9 @@ local function runRotation()
             if not inCombat and not stealthingAll then
                 if isChecked("Stealth") then
                     if getOptionValue("Stealth") == 1 or #enemies.yards20nc > 0 then
-                        if cast.stealth("player") then end
+                        if (not IsMounted() and not IsFlying()) then
+                            if cast.stealth("player") then end
+                        end
                     end
                 end
             end
@@ -905,7 +1058,7 @@ local function runRotation()
         local function actionList_Build()
             local startTime = debugprofilestop()      
 
-            if comboDeficit >= (1 + (buff.broadside.exists() and 1 or 0) + (talent.quickDraw and 1 or 0)) and buff.opportunity.exists() and (buff.wits.stack() < 25 or power < 45 or buff.deadShot.exists()) then
+            if not stealthingAll and comboDeficit >= (1 + (buff.broadside.exists() and 1 or 0) + (talent.quickDraw and 1 or 0)) and buff.opportunity.exists() and (buff.wits.stack() < 25 or power < 45 or buff.deadShot.exists()) then
                 cast20yards("pistolShot",true)
             end
 
@@ -1275,8 +1428,13 @@ local function runRotation()
         -- end
 
 
-        if mode.bladeflurry == 1 and buff.rollTheBones.remain >= 5 and bftargets >= 2 and not buff.bladeFlurry.exists() and charges.bladeFlurry.frac() >= 1.5 then
+        if mode.bladeflurry == 1 and buff.rollTheBones.remain >= 5 and bftargets >= 2 and not buff.bladeFlurry.exists() and charges.bladeFlurry.frac() >= 1.5 and groupTTD >= getOptionValue("BF Time To Die Limit") then
             if cast.bladeFlurry("player") then return true end
+        end
+
+        --tricks
+        if tricksUnit ~= nil and validTarget and targetDistance < 5 and UnitThreatSituation("player") and UnitThreatSituation("player") >= 2 then
+            cast.tricksOfTheTrade(tricksUnit)
         end
 
 
@@ -1298,13 +1456,13 @@ local function runRotation()
 
             if actionList_Interrupts() then end
 
-            if isChecked("Vanish") and ambushCondition() and cd.vanish.remain() <= 0.2 and getDistance("target") <= 5 and mode.special == 1 and (not solo or isDummy("target")) then
+            if isChecked("Vanish") and ambushCondition() and cd.vanish.remain() <= 0.2 and getDistance("target") <= 5 and useCDs() and not solo then
                 if gcd > 0.2 then return true end
                 if cast.pool.ambush() then return true end
                 if CastSpellByID(1856) then return true end
             end
 
-            if (mode.special == 1 or mode.tierseven == 1) and #enemyTable5 >= 1 then
+            if (useCDs() or mode.tierseven == 1) and #enemyTable5 >= 1 then
                 if actionList_Cooldowns() then return end
             end
 
@@ -1331,7 +1489,7 @@ local function runRotation()
             if isChecked("Pistol Shot out of range") and isValidUnit("target") and #enemyTable5 == 0 and not stealthingAll and power >= getOptionValue("Pistol Shot out of range") and (comboDeficit >= 1 or ttm <= 1.2) then
                 if cast.pistolShot("target") then return true end
             end
-            if mode.special == 1 and isChecked("Racial") then
+            if useCDs() and isChecked("Racial") then
                 if race == "BloodElf" and powerDeficit >= (15 + powerRegen) then
                     if cast.racial("player") then return true end
                 elseif race == "Nightborne" then

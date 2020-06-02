@@ -1,6 +1,5 @@
-local brMainThread = nil
 deadPet = false
-local keyPause
+
 
 function br:Engine()
 	-- Hidden Frame
@@ -36,91 +35,56 @@ function getUpdateRate()
 	else
 		updateRate = getOptionValue("Bot Update Rate")
 	end
---	if updateRate < 0.2 then
---		updateRate = 0.2
--- 	end
 	return updateRate
 end
 
 function ObjectManagerUpdate(self)
 	-- Check for Unlocker
-    if EWT then
-		if EasyWoWToolbox ~= nil then -- Only EWT support
+	if br.unlocked == false then
+		br.unlocked = loadUnlockerAPI()
+	end
+    -- if EWT then
+		if br.unlocked then --EasyWoWToolbox ~= nil then -- Only EWT support
             updateOMEWT()
-        else -- Legacy OM
-            if omPulse == nil then
-                omPulse = GetTime()
-            end
-            if GetTime() > omPulse then
-                omPulse = GetTime() + getUpdateRate()
-                updateOM()
-            end
-		end
+        -- else -- Legacy OM
+        --     if omPulse == nil then
+        --         omPulse = GetTime()
+        --     end
+        --     if GetTime() > omPulse then
+        --         omPulse = GetTime() + getUpdateRate()
+        --         updateOM()
+        --     end
+		-- end
 		br.om:Update()
 	end
 end
 
 function br.antiAfk()
-	if isChecked("Anti-Afk") and EasyWoWToolbox ~= nil then
+	if isChecked("Anti-Afk") and br.unlocked then --EasyWoWToolbox ~= nil then
 		if not IsHackEnabled("antiafk") and getOptionValue("Anti-Afk") == 1 then
 			SetHackEnabled("antiafk",true)
 		end
-	elseif isChecked("Anti-Afk") and EasyWoWToolbox ~= nil and getOptionValue("Anti-Afk") == 2 then
+	elseif isChecked("Anti-Afk") and br.unlocked --[[EasyWoWToolbox ~= nil]] and getOptionValue("Anti-Afk") == 2 then
 		if IsHackEnabled("antiafk") then
 			SetHackEnabled("antiafk",false)
 		end
 	end
 end
--- Key Pause from Beniamin
--- local rotationPause
--- local buttonName
--- local pauseSpellId
 
--- local ignoreKeys = {"W", "A", "S", "D", "Q", "E", "SPACE", "ENTER", "UP", "DOWN", "LEFT", "RIGHT", "LALT", "RALT", "LCTRL", "RCTRL", "LSHIFT", "RSHIFT", "TAB"}
--- local actionBarKeys = {"1","2","3","4","5","6","7","8","9","0","-","="}
-
--- local keyBoardFrame = CreateFrame("Frame")
--- keyBoardFrame:SetPropagateKeyboardInput(true)
--- local function testKeys(self, key)
--- 	local ignorePause = ignoreKeys
--- 	-- iterate over a list to ignore pause
--- 	if not isChecked("Disable Key Pause Queue") then
---         for i = 1, #actionBarKeys do
---             if string.find(key,actionBarKeys[i]) and not IsLeftShiftKeyDown() and not IsLeftAltKeyDown() and not IsLeftControlKeyDown() and not IsRightShiftKeyDown() and not IsRightAltKeyDown() and not IsRightControlKeyDown() and (UnitAffectingCombat("player") or isChecked("Ignore Combat")) and not isChecked("Queue Casting") then
---                 buttonName = GetBindingAction(actionBarKeys[i])
---                 local slot = buttonName:match("ACTIONBUTTON(%d+)") or buttonName:match("BT4Button(%d+)")
---                 if slot and HasAction(slot) then       
---                     local actionType, id = GetActionInfo(slot)
---                     if actionType == "spell" then
---                         pauseSpellId = id
---                         if not isChecked("Queue Casting") and GetSpellInfo(pauseSpellId) and pauseSpellId ~= 0 then
---                             ChatOverlay("Spell "..GetSpellInfo(pauseSpellId).." queued. Found on "..buttonName..".")
---                         end
---                     end
---                 end
---             end
---         end
---     elseif isChecked("Disable Key Pause Queue") then
---         pauseSpellId = nil
---     end
--- 	for i = 1, #ignorePause do
--- 		if string.find(key, ignorePause[i]) then
--- 			return
--- 		end
--- 	end
--- 	rotationPause = GetTime()
--- end
-
--- keyBoardFrame:SetScript("OnKeyDown", testKeys)
 local brlocVersion = GetAddOnMetadata("BadRotations","Version")
 local brcurrVersion
 local brUpdateTimer
 local collectGarbage = true
 function BadRotationsUpdate(self)
+	-- Check for Unlocker
+	if br.unlocked == false then
+		br.unlocked = loadUnlockerAPI()
+	end
 	if br.disablePulse == true then return end
 	local startTime = debugprofilestop()
 	-- Check for Unlocker
-	if not EWT then
+
+	if not br.unlocked then
 		br.ui:closeWindow("all")
 		ChatOverlay("Unable To Load")
 		if isChecked("Notify Not Unlocked") and br.timer:useTimer("notLoaded", getOptionValue("Notify Not Unlocked")) then
@@ -128,8 +92,8 @@ function BadRotationsUpdate(self)
 		end
 		return false
 	else 
-		if EWT and GetObjectCount() ~= nil then
-			if (brcurrVersion == nil or not brUpdateTimer or (GetTime() - brUpdateTimer) > 300) and EasyWoWToolbox ~= nil then
+		if br.unlocked and GetObjectCountBR() ~= nil then
+			if (brcurrVersion == nil or not brUpdateTimer or (GetTime() - brUpdateTimer) > 300) then --and EasyWoWToolbox ~= nil then
 				SendHTTPRequest('https://raw.githubusercontent.com/CuteOne/BadRotations/master/BadRotations.toc', nil, function(body) brcurrVersion =(string.match(body, "(%d+%p%d+%p%d+)")) end)
 				if brlocVersion and brcurrVersion then
 					brcleanCurr = gsub(tostring(brcurrVersion),"%p","")
@@ -142,65 +106,45 @@ function BadRotationsUpdate(self)
 							Print(msg)
 						end
 					end
-					brUpdateTimer = GetTime()
 				end
+				brUpdateTimer = GetTime()
 			end
 			if br.data.settings ~= nil and br.data.settings[br.selectedSpec].toggles ~= nil then
 				if br.data.settings[br.selectedSpec].toggles["Power"] ~= nil and br.data.settings[br.selectedSpec].toggles["Power"] ~= 1 then
-					if pauseSpellId ~= nil then
-						pauseSpellId = nil
-					end
 					if br.player ~= nil and br.player.queue ~= nil and #br.player.queue ~= 0 then 
 						wipe(br.player.queue)
 						if not isChecked("Mute Queue") then Print("BR Disabled! - Queue Cleared.") end
 					end
 					br.ui:closeWindow("all")
 					return false
-				elseif br.timer:useTimer("playerUpdate", getUpdateRate()) then
+				else--if br.timer:useTimer("playerUpdate", getUpdateRate()) then
 					br.fallDist = getFallDistance() or 0
 					if isChecked("Talent Anywhere") then
 						talentAnywhere()
 					end
-
+					if isCastingSpell(318763) then
+						return true
+					end
 					--Quaking helper
 					if getOptionCheck("Quaking Helper") then
 						if (UnitChannelInfo("player") or UnitCastingInfo("player")) and getDebuffRemain("player", 240448) < 0.5 and getDebuffRemain("player", 240448) > 0 then
 							RunMacroText("/stopcasting")
 						end
 					end
-					-- Pause if key press that is not ignored
-					if not GetCurrentKeyBoardFocus() and not isChecked("Queue Casting") and (UnitAffectingCombat("player") or isChecked("Ignore Combat")) and UnitChannelInfo("player") == nil then
-						if rotationPause and not keyPause and GetTime() - rotationPause < getOptionValue("Pause Interval") and (getSpellCD(61304) > 0 or UnitCastingInfo("player") ~= nil) then
-							keyPause = true
-							return
-						elseif keyPause and getSpellCD(61304) == 0 and not UnitCastingInfo("player") then
-							keyPause = false
-							rotationPause = GetTime()
-							return
-						elseif rotationPause and not keyPause and GetTime() - rotationPause < getOptionValue("Pause Interval") and getSpellCD(61304) == 0 then
-							local lastSpell
-							if pauseSpellId ~= nil and (pauseSpellId ~= lastSpell or lastSpell == nil) then
-								local target
-								if IsHarmfulSpell(GetSpellInfo(pauseSpellId)) then
-									target = "target"
-								elseif IsHelpfulSpell(GetSpellInfo(pauseSpellId)) then
-									if UnitExists("target") and not UnitCanAttack("target","player") then
-										target = "target"
-									else
-										target = "player"
-									end
-								end
-								CastSpellByID(pauseSpellId,target)
-								lastSpell = pauseSpellId
-								ChatOverlay("Spell "..GetSpellInfo(pauseSpellId).." cast.")
-								pauseSpellId = nil
-							end
-							return
-						elseif keyPause then
-							return
-						end
-					elseif pauseSpellId ~= nil and (not (UnitAffectingCombat("player") or isChecked("Ignore Combat")) or isChecked("Queue Casting")) then
-						pauseSpellId = nil
+					if getOptionCheck("Pig Catcher") then
+						-- Automatic catch the pig
+        				if select(8, GetInstanceInfo()) == 1754  then
+            				for i = 1, GetObjectCountBR() do
+                				local ID = ObjectID(GetObjectWithIndex(i))
+                				local object = GetObjectWithIndex(i)
+                				local x1, y1, z1 = ObjectPosition("player")
+                				local x2, y2, z2 = ObjectPosition(object)
+                				local distance = math.sqrt(((x2 - x1) ^ 2) + ((y2 - y1) ^ 2) + ((z2 - z1) ^ 2))
+                				if ID == 130099 and distance < 10 and br.timer:useTimer("Pig Delay", 0.5) then
+                    				InteractUnit(object)
+                				end
+            				end
+        				end
 					end
 					-- Blizz CastSpellByName bug bypass
 					if castID then
@@ -222,8 +166,10 @@ function BadRotationsUpdate(self)
 						br.player:update()
 						collectGarbage = true
 						Print("Loaded Profile: " .. br.player.rotation.name)
-						br.settingsFile = GetWoWDirectory() .. '\\Interface\\AddOns\\BadRotations\\Settings\\' .. 
-							br.selectedSpec .. br.selectedProfileName .. ".lua"
+						-- Creates Settings Directory if not exist
+						local settingsDir = GetWoWDirectory() .. '\\Interface\\AddOns\\BadRotations\\Settings\\'
+						CreateDirectory(settingsDir)
+						br.settingsFile = settingsDir .. br.selectedSpec .. br.selectedProfileName .. ".lua"
 						br.rotationChanged = false
 					end
 					-- Queue Casting
@@ -241,7 +187,7 @@ function BadRotationsUpdate(self)
 						end
 					end 
 					--Smart Queue
-					if EasyWoWToolbox ~= nil and isChecked("Smart Queue") then
+					if br.unlocked and --[[EasyWoWToolbox ~= nil and ]]isChecked("Smart Queue") then
 						br.smartQueue()
 					end
 					-- Update Player
@@ -310,9 +256,12 @@ function BadRotationsUpdate(self)
 					-- Accept dungeon queues
 					br:AcceptQueues()
 
+					--Tracker
+					br.objectTracker()
+
 					-- Anti-Afk
 					br.antiAfk()
-					
+
 					-- Fishing
 					br.fishing()
 
@@ -323,7 +272,7 @@ function BadRotationsUpdate(self)
 					br.ui:toggleDebugWindow()
 
 					-- Settings Garbage Collection
-					if collectGarbage then
+					if not br.loadFile and collectGarbage then
 						-- Ensure we have all the settings recorded
 						br.ui:recreateWindows()
 						-- Compare br.data.settings for the current spec/profile to the ui options

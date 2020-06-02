@@ -127,7 +127,7 @@ function canInterrupt(unit,percentint)
 			end
 		end
 		-- Check if on whitelist (if selected)
-		if isChecked("Interrupt Only Whitelist") and interruptWhitelist[interruptID] then
+		if isChecked("Interrupt Only Whitelist") and br.lists.interruptWhitelist[interruptID] then
 			 onWhitelist = true
 		end
 		-- Return when interrupt time is met
@@ -146,6 +146,9 @@ function canInterrupt(unit,percentint)
 		end
 		return false
 	end
+end
+function canStun(unit)
+	return isCrowdControlCandidates(unit)
 end
 -- if getCharges(115399) > 0 then
 function getCharges(spellID)
@@ -199,14 +202,22 @@ function getSpellCD(SpellID)
 		return 0
 	else
 		local Start, CD = GetSpellCooldown(SpellID)
-		local MyCD = 0
-		if Start > 0 and CD > 0 then
-			MyCD = Start + CD - GetTime()
-		end
+		local MyCD = Start + CD - GetTime()
 		MyCD = MyCD - getLatency()
 		if MyCD < 0 then MyCD = 0 end
 		return MyCD
 	end
+end
+function getGlobalCD(max)
+	local currentSpecName = select(2,GetSpecializationInfo(GetSpecialization()))
+	if max == true then
+		if currentSpecName=="Feral" or currentSpecName=="Brewmaster" or currentSpecName=="Windwalker" or UnitClass("player") == "Rogue" then
+			return 1
+		else
+			return math.max(math.max(1, 1.5 / (1 + UnitSpellHaste("player") / 100)), 0.75)
+		end
+	end
+	return getSpellCD(61304)
 end
 function getSpellType(spellName)
 	if spellName == nil then return "Invalid" end

@@ -173,6 +173,32 @@ if not metaTable1 then
 					end
 				end
 			end
+			if br.player.eID == 2343 then
+				local targetBuff = 0
+				local playerBuff = 0
+				if UnitDebuffID(o.unit,310499) then 
+					targetBuff = 1
+				end
+				if UnitDebuffID("player",310499) then
+					playerBuff = 1
+				end
+				if playerBuff ~= targetBuff then
+					return 250,250,250
+				end
+			end
+			if br.player.eID == 2331 then
+				local time_remain = br.DBM:getPulltimer(nil, 313213)
+				if time_remain < getOptionValue("Decaying Strike Timer") then
+					for i = 1, GetObjectCountBR() do
+						local thisUnit = GetObjectWithIndex(i)
+						if GetObjectID(thisUnit) == 156866 and UnitTarget(thisUnit) ~= nil then
+							if UnitTarget(thisUnit) == o.unit then
+								return 250,250,250
+							end
+						end
+					end
+				end
+			end
 			if UnitBuffID(o.unit,295271) then
 				return 250,250,250
 			end

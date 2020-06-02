@@ -58,6 +58,116 @@ function getFallTime()
 	return fallTime
 end
 -- if getLineOfSight("target"[,"target"]) then
+math.doLinesIntersect = function(a, b, c, d)
+	-- parameter conversion
+	local L1 = {X1 = a.x, Y1 = a.y, X2 = b.x, Y2 = b.y}
+	local L2 = {X1 = c.x, Y1 = c.y, X2 = d.x, Y2 = d.y}
+
+	-- Denominator for ua and ub are the same, so store this calculation
+	local d = (L2.Y2 - L2.Y1) * (L1.X2 - L1.X1) - (L2.X2 - L2.X1) * (L1.Y2 - L1.Y1)
+
+	-- Make sure there is not a division by zero - this also indicates that the lines are parallel.
+	-- If n_a and n_b were both equal to zero the lines would be on top of each
+	-- other (coincidental).  This check is not done because it is not
+	-- necessary for this implementation (the parallel check accounts for this).
+	if (d == 0) then
+		return false
+	end
+
+	-- n_a and n_b are calculated as seperate values for readability
+	local n_a = (L2.X2 - L2.X1) * (L1.Y1 - L2.Y1) - (L2.Y2 - L2.Y1) * (L1.X1 - L2.X1)
+	local n_b = (L1.X2 - L1.X1) * (L1.Y1 - L2.Y1) - (L1.Y2 - L1.Y1) * (L1.X1 - L2.X1)
+
+	-- Calculate the intermediate fractional point that the lines potentially intersect.
+	local ua = n_a / d
+	local ub = n_b / d
+
+	-- The fractional point will be between 0 and 1 inclusive if the lines
+	-- intersect.  If the fractional calculation is larger than 1 or smaller
+	-- than 0 the lines would need to be longer to intersect.
+	if (ua >= 0 and ua <= 1 and ub >= 0 and ub <= 1) then
+		local x = L1.X1 + (ua * (L1.X2 - L1.X1))
+		local y = L1.Y1 + (ua * (L1.Y2 - L1.Y1))
+		return true, {x = x, y = y}
+	end
+
+	return false
+end
+
+function carapaceMath(Unit1, Unit2)
+	if Unit2 == nil then
+		Unit2 = Unit1
+		if Unit2 == "player" then
+			Unit1 = "target"
+		else
+			Unit1 = "player"
+		end
+	end
+	if (br.player and br.player.eID and br.player.eID == 2337) then
+		local pX,pY,pZ = GetObjectPosition(Unit1)
+		local tX,tY,tZ = GetObjectPosition(Unit2)
+		local tentExists = false
+		local tentCheck
+		--[[ LibDraw.clearCanvas()
+		if tX ~= nil then
+			LibDraw.Line(pX,pY,pZ,tX,tY,tZ)
+		end ]]
+		
+		tentCache = {}
+		for i = 1, GetObjectCountBR() do
+			local object = GetObjectWithIndex(i)
+			local objectid = ObjectID(object)
+			if objectid == 157485 then
+				tentExists = true
+				tentFacing = GetObjectFacing(object)
+				tentX, tentY, tentZ = GetObjectPosition(object)
+				table.insert(tentCache,{
+					["tentFacing"] = GetObjectFacing(object),
+					["tentX"] = select(1,GetObjectPosition(object)), 
+					["tentY"] = select(2,GetObjectPosition(object)), 
+					["tentZ"] = select(3,GetObjectPosition(object)),
+					["tentX2"] = tentX + (80 * math.cos(tentFacing)),
+					["tentY2"] = tentY + (80 * math.sin(tentFacing))
+				})
+			end
+		end
+
+		tentfinal = {}
+		if tentX ~= nil then
+			for i = 1, #tentCache do
+				if tentCache[i]["tentX"] ~= nil then
+					local a = {x = tentCache[i]["tentX"], y = tentCache[i]["tentY"]}
+					local b = {x = tentCache[i]["tentX2"], y = tentCache[i]["tentY2"]}
+					local c = {x = tX, y = tY}
+					local d = {x = pX, y = pY}
+					if tX ~= nil then
+						if math.doLinesIntersect(a,b,c,d) then 
+							--[[ LibDraw.SetColor(255,0,0)
+							LibDraw.Line(tentCache[i]["tentX"],tentCache[i]["tentY"],tentCache[i]["tentZ"],tentCache[i]["tentX2"],tentCache[i]["tentY2"],tentCache[i]["tentZ"])
+							]]tentCheck = false
+							table.insert(tentfinal,
+							tentCheck
+						)
+						--[[ else 
+							LibDraw.SetColor(0,255,0)
+							LibDraw.Line(tentCache[i]["tentX"],tentCache[i]["tentY"],tentCache[i]["tentZ"],tentCache[i]["tentX2"],tentCache[i]["tentY2"],tentCache[i]["tentZ"])
+						]]
+						end
+					end
+				end
+			end
+			if tentfinal[1] == nil or tentfinal == nil then
+					return true
+			else
+
+					return false
+			end
+		else
+			return true
+		end
+	end
+end
+
 function getLineOfSight(Unit1, Unit2)
 	if Unit2 == nil then
 		Unit2 = Unit1
@@ -68,54 +178,71 @@ function getLineOfSight(Unit1, Unit2)
 		end
 	end
 	local skipLoSTable = br.lists.los
-	if skipLoSTable[GetObjectID(Unit1)] or skipLoSTable[GetObjectID(Unit2)] then
-		return true
-	end
+	if skipLoSTable[GetObjectID(Unit1)] or skipLoSTable[GetObjectID(Unit2)] then return true end
 	if GetObjectExists(Unit1) and GetUnitIsVisible(Unit1) and GetObjectExists(Unit2) and GetUnitIsVisible(Unit2) then
 		local X1, Y1, Z1 = GetObjectPosition(Unit1)
 		local X2, Y2, Z2 = GetObjectPosition(Unit2)
 		local pX, pY, pZ = GetObjectPosition("player")
 		if TraceLine(X1, Y1, Z1 + 2, X2, Y2, Z2 + 2, 0x10) == nil then
-			if br.player and br.player.eID and br.player.eID == 2141 then
-				if pX < -108 and X2 < -108 then
-					return true
-				elseif (pX > -108 and pX < -54) and (X2 > -108 and X2 < -54) then
-					return true
-				elseif pX > -54 and X2 > -54 then
+			--Print("Past Traceline")
+            if br.player and br.player.eID and br.player.eID == 2141 then
+                if pX < -108 and X2 < -108 then
+                    return true
+                elseif (pX > -108 and pX < -54) and (X2 > -108 and X2 < -54) then
+                    return true
+                elseif pX > -54 and X2 > -54 then
+                    return true
+                else
+                    return false
+                end
+			elseif br.player and br.player.eID and br.player.eID == 2337 then
+				--Print("Past Cara Check")
+				if carapaceMath(Unit1,Unit2) == true then
+					--Print("Cara True")
 					return true
 				else
+					--Print("cara False")
 					return false
 				end
+			elseif br.player and br.player.eID and br.player.eID == 2337 then
+				local xO, yO, zO
+				local xO2
+				local yO2
+				for i = 1, GetObjectCount() do
+					local object = GetObjectWithIndex(i)
+					local name = ObjectName(object)
+					local xO, yO, zO
+					if string.match(string.upper(name), string.upper("enta")) then
+						local facing = ObjectFacing(object)
+						xO, yO, zO = GetObjectPosition(object)
+						xO2 = xO + (100 * math.cos(facing))
+						O2 = yO + (100 * math.sin(facing))
+					end
+				end
+				if xO2 ~= nil then
+					local a = {x = xO, y = yO}
+					local b = {x = xO2, y = yO2}
+					local c = {x = X2, y = Y2}
+					local d = {x = pX, y = pY}
+
+					if math.doLinesIntersect(a,b,c,d) then 
+						return false
+					else 
+						return true
+					end
+				end
 			else
-				return true
-			end
+				--Print("Skippped all the code")
+                return true
+            end
 		else
-			return false
-		end
+			--Print("Really Skipped it all")
+            return false
+        end
 	else
 		return false
 	end
 end
--- function getLineOfSight(Unit1,Unit2)
--- 	if Unit2 == nil then
--- 		if Unit1 == "player" then
--- 			Unit1 = "target"
--- 		end
--- 		Unit2 = "player"
--- 	end
--- 	local skipLoSTable = br.lists.los
--- 	local obj1ID = GetObjectID(Unit1)
--- 	local obj2ID = GetObjectID(Unit2)
--- 	if skipLoSTable[obj1ID] ~= nil or skipLoSTable[obj2ID] ~= nil then return true end
--- 	if (GetUnitIsUnit(Unit1,"player") or (GetObjectExists(Unit1) and GetUnitIsVisible(Unit1)))
--- 		and (GetUnitIsUnit(Unit2,"player") or (GetObjectExists(Unit2) and GetUnitIsVisible(Unit2)))
--- 	then
--- 		local X1,Y1,Z1 = GetObjectPosition(Unit1)
--- 		local X2,Y2,Z2 = GetObjectPosition(Unit2)
--- 		return TraceLine(X1,Y1,Z1 + 2,X2,Y2,Z2 + 2, 0x10) == nil
--- 	end
--- 	return false
--- end
 -- if getGround("target"[,"target"]) then
 function getGround(Unit)
 	if GetObjectExists(Unit) and GetUnitIsVisible(Unit) then
@@ -379,50 +506,44 @@ function isTargeting(Unit, MatchUnit)
 end
 
 function enemyListCheck(Unit)
+	local targetBuff = 0
+	local playerBuff = 0
+	if UnitDebuffID(Unit,310499) then 
+		targetBuff = 1
+	end
+	if UnitDebuffID("player",310499) then
+		playerBuff = 1
+	end
+	if targetBuff ~= playerBuff then return false end
 	local distance = getDistance(Unit, "player")
 	local mcCheck =	(isChecked("Attack MC Targets") and (not GetUnitIsFriend(Unit, "player") or UnitIsCharmed(Unit))) or not GetUnitIsFriend(Unit, "player")
-	--local playerObj = GetObjectWithGUID(UnitGUID("player"))
-	return GetObjectExists(Unit) and not UnitIsDeadOrGhost(Unit) and UnitInPhase(Unit) and UnitCanAttack("player", Unit) and
+	return GetObjectExists(Unit) and not UnitIsDeadOrGhost(Unit) and UnitInPhase(Unit) and UnitCanAttack("player", Unit) and UnitHealth(Unit) > 0 and
 		distance < 50 and
 		not isCritter(Unit) and
-		mcCheck and
+		--mcCheck and
 		not GetUnitIsUnit(Unit, "pet") and
 		UnitCreator(Unit) ~= ObjectPointer("player") and
 		GetObjectID(Unit) ~= 11492 and
 		getLineOfSight("player", Unit)
-		and ((Unit ~= 131824 and Unit ~=  131823 and Unit ~= 131825) or ((UnitBuffID(Unit,260805) or GetUnitIsUnit(Unit,"target")) and (Unit == 131824 or Unit ==  131823 or Unit == 131825)))  
+		and ((Unit ~= 131824 and Unit ~=  131823 and Unit ~= 131825) or ((UnitBuffID(Unit,260805) or GetUnitIsUnit(Unit,"target")) and (Unit == 131824 or Unit ==  131823 or Unit == 131825)))
 end
 
 function isValidUnit(Unit)
+	local inInstance = IsInInstance() 
 	local hostileOnly = isChecked("Hostiles Only")
 	local playerTarget = GetUnitIsUnit(Unit, "target")
 	local reaction = GetUnitReaction(Unit, "player") or 10
 	local targeting = isTargeting(Unit)
 	local dummy = isDummy(Unit)
-	local threatBypassUnit = br.lists.threatBypass[GetObjectID(Unit)] ~= nil
 	local burnUnit = getOptionCheck("Forced Burn") and isBurnTarget(Unit) > 0
 	local isCC = getOptionCheck("Don't break CCs") and isLongTimeCCed(Unit) or false
 	local mcCheck = (isChecked("Attack MC Targets") and	(not GetUnitIsFriend(Unit, "player") or (UnitIsCharmed(Unit) and UnitCanAttack("player", Unit)))) or not GetUnitIsFriend(Unit, "player")
-	if playerTarget and br.units[UnitTarget("player")] == nil and not enemyListCheck("target") then
-		return false
-	end
-	if not pause(true) and Unit ~= nil and
-		(br.units[Unit] ~= nil or Unit == "target" or threatBypassUnit or burnUnit) and
-		mcCheck and not isCC and (dummy or burnUnit or (not UnitIsTapDenied(Unit) and isSafeToAttack(Unit) and		
-			((not hostileOnly and reaction < 5) or (hostileOnly and (reaction < 4 or playerTarget or targeting)))))
+	if playerTarget and br.units[UnitTarget("player")] == nil and not enemyListCheck("target") then return false end
+	if not pause(true) and Unit ~= nil and (br.units[Unit] ~= nil or Unit == "target" or burnUnit)
+		and mcCheck and not isCC and (dummy or burnUnit or (not UnitIsTapDenied(Unit) and isSafeToAttack(Unit)
+		and	((not hostileOnly and (reaction < 5 or playerTarget or targeting)) or (hostileOnly and (reaction < 4 or playerTarget or targeting)))))
 	 then
-		local instance = IsInInstance()
-		local distanceToTarget = getDistance("target",Unit)
-		local distanceToPlayer = getDistance("player",Unit)
-		local inCombat = UnitAffectingCombat("player") or (GetObjectExists("pet") and UnitAffectingCombat("pet"))
-		local unitThreat = hasThreat(Unit) or targeting or isInProvingGround() or burnUnit or threatBypassUnit
-		return unitThreat 
-			or ((not instance and (playerTarget or (distanceToTarget < 8 and (reaction < 4 or isDummy())))) 
-			or (instance and (#br.friend == 1 or (UnitAffectingCombat(Unit) and distanceToPlayer < 40)))) -- (not hasThreat and (
-			-- Not In Instance
-			-- (not instance and (playerTarget or distanceToTarget < 8)) or
-			-- In Instance 
-			-- (instance and playerTarget and ((distanceToPlayer < 20 or (UnitAffectingCombat(Unit) and distanceToPlayer < 40)) or #br.friend == 1))))
+		return (playerTarget and (not inInstance or (inInstance and #br.friend == 1))) or targeting or burnUnit or isInProvingGround() or hasThreat(Unit)
 	end
 	return false
 end
@@ -517,17 +638,23 @@ function pause(skipCastingCheck)
 	else
 		pausekey = SpecificToggle("Pause Mode")
 	end
-	-- Focused Azerite Beam / Cyclotronic Blast
-	local lastCast = br.lastCast.tracker[1]
-	if br.pauseCast - GetTime() <= 0 then
-		local hasted = (1-UnitSpellHaste("player")/100)
-		if lastCast == 295258 and getSpellCD(295258) == 0 then br.pauseCast = GetTime() + getCastTime(295258) + (getCastTime(295261) * hasted) end
-		if lastCast == 293491 and GetItemCooldown(167555) == 0 then br.pauseCast = GetTime() + getCastTime(293491) + (2.5 * hasted) end
-	end
-	if GetTime() < br.pauseCast then
-		return true
-	elseif GetTime() >= br.pauseCast then 
-		br.pauseCast = GetTime()
+	-- Focused Azerite Beam / Cyclotronic Blast / Azshara's Font of Power
+	if not skipCastingCheck then
+		local lastCast = br.lastCast.tracker[1]
+		if br.pauseCast - GetTime() <= 0 then
+			local hasted = (1-UnitSpellHaste("player")/100)
+			-- Focused Azerite Beam
+			if lastCast == 295258 and getSpellCD(295258) == 0 then br.pauseCast = GetTime() + getCastTime(295258) + (getCastTime(295261) * hasted) end
+			-- Cyclotronic Blast
+			if lastCast == 293491 and GetItemCooldown(167555) == 0 then br.pauseCast = GetTime() + getCastTime(293491) + (2.5 * hasted) + getGlobalCD(true) end
+			-- Azshara's Font of Power - Latent Arcana
+			if lastCast == 296962 and GetItemCooldown(169314) == 0 then br.pauseCast = GetTIme() + getCastTime(296962) + (2.5 * haster) end
+		end
+		if GetTime() < br.pauseCast then
+			return true
+		elseif GetTime() >= br.pauseCast then 
+			br.pauseCast = GetTime()
+		end
 	end
 	-- DPS Testing
 	if isChecked("DPS Testing") then
@@ -555,26 +682,32 @@ function pause(skipCastingCheck)
 	end
 	-- Pause Hold/Auto
 	if	(pausekey and GetCurrentKeyBoardFocus() == nil and isChecked("Pause Mode")) or profileStop or
-		((IsMounted() or IsFlying()) and --and (GetObjectExists("target") and GetObjectID("target") ~= 56877)
+		((IsMounted() or IsFlying() or UnitOnTaxi("player")) and --and (GetObjectExists("target") and GetObjectID("target") ~= 56877)
 		not (UnitBuffID("player", 190784) or UnitBuffID("player", 164222) or UnitBuffID("player", 165803) or
 		UnitBuffID("player", 157059) or
-		UnitBuffID("player", 157060))) or
+		UnitBuffID("player", 157060) or UnitBuffID("player", 302460))) or
 		SpellIsTargeting() or
 		-- or (not UnitCanAttack("player","target") and not UnitIsPlayer("target") and GetUnitExists("target"))
 		(UnitCastingInfo("player") and not skipCastingCheck) or
 		(UnitChannelInfo("player") and not skipCastingCheck) or
 		UnitIsDeadOrGhost("player") or
 		-- or (UnitIsDeadOrGhost("target") and not UnitIsPlayer("target"))
-		UnitBuffID("player", 257427) or -- Eating
-		UnitBuffID("player", 274914) or -- Drinking
+		UnitBuffID("player", 257427) or UnitBuffID("player", 225737) or  -- Eating
+		UnitBuffID("player", 274914) or UnitBuffID("player", 192001) or-- Drinking
 		UnitDebuffID("player", 252753) or -- Potion of Replenishment (BFA Mana channel) Apparently a debuff
-		UnitBuffID("player", 114018)
+		UnitBuffID("player", 114018) or isCastingSpell(318763)
 		-- or UnitBuffID("target",117961) --Impervious Shield - Qiang the Merciless
 		-- or UnitDebuffID("player",135147) --Dead Zone - Iron Qon: Dam'ren
 		-- or (((UnitHealth("target")/UnitHealthMax("target"))*100) > 10 and UnitBuffID("target",143593)) --Defensive Stance - General Nagrazim
 		-- or UnitBuffID("target",140296) --Conductive Shield - Thunder Lord / Lightning Guardian
 	then
-		if (UnitCastingInfo("player") and not skipCastingCheck) or (UnitChannelInfo("player") and not skipCastingCheck) then
+		if (UnitCastingInfo("player") and not skipCastingCheck) then
+			local _, _, _, _, endTime = UnitCastingInfo("player")
+			local finish = endTime/1000 - GetTime()
+			if finish > 0.1 then 
+				return true
+			end
+		elseif (UnitChannelInfo("player") and not skipCastingCheck) then
 			return true
 		else
 			ChatOverlay("Profile Paused")
@@ -789,9 +922,13 @@ function br.addonDebug(msg,system)
 	end
 	if isChecked("Addon Debug Messages") then 
 		if system == true and (getValue("Addon Debug Messages") == 1 or getValue("Addon Debug Messages") == 3) then
-			print(br.classColor .. "[BadRotations] System Debug: |cffFFFFFF" .. tostring(msg))
-		elseif system == false and (getValue("Addon Debug Messages") == 2 or getValue("Addon Debug Messages") == 3) then
-			print(br.classColor .. "[BadRotations] Profile Debug: |cffFFFFFF" .. tostring(msg))
+			if br.timer:useTimer("System Delay", getUpdateRate()) then
+				print(br.classColor .. "[BadRotations] System Debug: |cffFFFFFF" .. tostring(msg))
+			end
+		elseif system ~= true and (getValue("Addon Debug Messages") == 2 or getValue("Addon Debug Messages") == 3) then
+			if br.timer:useTimer("Profile Delay", getUpdateRate()) then
+				print(br.classColor .. "[BadRotations] Profile Debug: |cffFFFFFF" .. tostring(msg))
+			end
 		end
 	end
 end
@@ -812,3 +949,14 @@ function br.store(key, value)
 	return value == nil and default or value
   end
 
+function br.sanguineCheck(unit)
+	if br.sanguine then
+		local x, y, z = ObjectPosition(unit)
+		for _, v in pairs(br.sanguine) do
+			if sqrt(((x - v.posX) ^ 2) + ((y - v.posY) ^ 2) + ((z - v.posZ) ^ 2)) < 5 then
+				return true
+			end
+		end
+	end
+	return false
+end

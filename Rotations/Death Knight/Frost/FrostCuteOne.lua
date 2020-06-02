@@ -77,6 +77,8 @@ local function createOptions()
             br.ui:createCheckbox(section,"Trinkets")
             -- Breath of Sindragosa
             br.ui:createSpinner(section,"Breath of Sindragosa", 30, 10, 100, 5, "|cffFFFFFFSet to desired runic power level to use. Min: 10 / Max: 100 / Interval: 5")
+            -- Cold Heart
+            br.ui:createDropdownWithout(section, "Cold Heart", {"|cff00FF00Everything","|cffFFFF00Cooldowns","|cffFF0000Never"}, 1, "|cffFFFFFFWhen to use Cold Heart.")
             -- Empower Rune Weapon
             br.ui:createCheckbox(section,"Empower Rune Weapon")
             -- Frostwyrm's Fury
@@ -346,7 +348,7 @@ local function runRotation()
             profileDebug = "Cold Heart"
         -- Chains of Ice
             -- chains_of_ice,if=buff.cold_heart.stack>5&target.time_to_die<gcd
-            if cast.able.chainsOfIce() and (buff.coldHeart.stack() > 5 and ttd(units.dyn5) < gcdMax) then
+            if cast.able.chainsOfIce() and (buff.coldHeart.stack() > 5 and (ttd(units.dyn5) < gcdMax or isDummy())) then
                 if cast.chainsOfIce() then return true end
             end
             -- chains_of_ice,if=(buff.pillar_of_frost.remains<=gcd*(1+cooldown.frostwyrms_fury.ready)|buff.pillar_of_frost.remains<rune.time_to_3)&buff.pillar_of_frost.up&azerite.icy_citadel.rank<=2
@@ -420,8 +422,8 @@ local function runRotation()
         -- Pillar of Frost
                 -- pillar_of_frost,if=cooldown.empower_rune_weapon.remains
                 if getOptionValue("Pillar of Frost") == 1 or (getOptionValue("Pillar of Frost") == 2 and useCDs()) and getDistance(units.dyn5) < 5 then
-                    if cast.able.pillarOfFrost() and ((cd.empowerRuneWeapon.remain() > gcdMax and runicPower >= getOptionValue("Breath of Sindragosa") - 10)
-                        or not talent.breathOfSindragosa or cd.breathOfSindragosa.remain() > 40 or not isChecked("Breath of Sindragosa") or not useCDs())
+                    if cast.able.pillarOfFrost() and cd.empowerRuneWeapon.exists() --((cd.empowerRuneWeapon.remain() > gcdMax and runicPower >= getOptionValue("Breath of Sindragosa") - 10)
+                        -- or not talent.breathOfSindragosa or cd.breathOfSindragosa.remain() > 40 or not isChecked("Breath of Sindragosa") or not useCDs())
                     then
                         if cast.pillarOfFrost() then return true end
                     end
@@ -451,12 +453,14 @@ local function runRotation()
                 end
         -- Call Action List - Cold Heart
                 -- call_action_list,name=cold_heart,if=talent.cold_heart.enabled&((buff.cold_heart.stack>=10&debuff.razorice.stack=5)|target.time_to_die<=gcd)
-                if useCDs() and talent.coldHeart and ((buff.coldHeart.stack() >= 10 and debuff.razorice.stack(units.dyn5) == 5) or ttd(units.dyn5) <= gcdMax) then
+                if (getOptionValue("Cold Heart") == 1 or (getOptionValue("Cold Heart") == 2 and useCDs() and buff.pillarOfFrost.exists()))
+                    and talent.coldHeart and ((buff.coldHeart.stack() >= 10 and debuff.razorice.stack(units.dyn5) == 5) or ttd(units.dyn5) <= gcdMax or isDummy())
+                then
                     if actionList_ColdHeart() then return true end
                 end
         -- Frostwyrm's Fury
-                if getOptionValue("Frostwyrm's Fury") == 1 or (getOptionValue("Frostwyrm's Fury") == 2 and useCDs())
-                    and cast.able.frostwyrmsFury() and enemies.yards40r >= getOptionValue("Frostwyrm's Fury")
+                if (getOptionValue("Frostwyrm's Fury") == 1 or (getOptionValue("Frostwyrm's Fury") == 2 and useCDs()))
+                    and cast.able.frostwyrmsFury() and enemies.yards40r >= getOptionValue("Frostwyrm's Fury Units")
                 then
                     -- frostwyrms_fury,if=(buff.pillar_of_frost.remains<=gcd|(buff.pillar_of_frost.remains<8&buff.unholy_strength.remains<=gcd&buff.unholy_strength.up))&buff.pillar_of_frost.up&azerite.icy_citadel.rank<=2
                     if (buff.pillarOfFrost.remain() <= gcdMax or (buff.pillarOfFrost.remain() < 8
@@ -530,6 +534,11 @@ local function runRotation()
                 and breathOfSindragosaActive or (runesTTM(2) > gcdMax and runicPower < 50)
             then
                 if cast.memoryOfLucidDreams() then return true end
+            end
+        -- Reaping Flames
+            -- reaping_flames
+            if cast.able.reapingFlames() then
+                if cast.reapingFlames() then return end
             end
         end
     -- Action List - Breath of Sindragosa Pooling
@@ -611,9 +620,9 @@ local function runRotation()
         local function actionList_BoSTicking()
             profileDebug = "Breath Of Sindragosa - Ticking"
         -- Obliterate
-            -- obliterate,target_if=(debuff.razorice.stack<5|debuff.razorice.remains<10)&runic_power<=30&!talent.frostscythe.enabled
+            -- obliterate,target_if=(debuff.razorice.stack<5|debuff.razorice.remains<10)&runic_power<=32&!talent.frostscythe.enabled
             if cast.able.obliterate() and (debuff.razorice.stack(units.dyn5) < 5 or debuff.razorice.remain(units.dyn5) < 10)
-                and runicPower <= 20 and not talent.frostscythe
+                and runicPower <= 32 and not talent.frostscythe
             then
                 if cast.obliterate() then return true end
             end
@@ -674,8 +683,8 @@ local function runRotation()
                 if cast.obliterate() then return true end
             end
         -- Racial: Arcane Torrent
-            -- arcane_torrent,if=runic_power.deficit>20
-            if cast.able.racial() and (runicPowerDeficit > 20 and race == "BloodElf") then
+            -- arcane_torrent,if=runic_power.deficit>50
+            if cast.able.racial() and (runicPowerDeficit > 50 and race == "BloodElf") then
                 if cast.racial() then return true end
             end
         end

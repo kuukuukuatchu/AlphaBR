@@ -27,6 +27,7 @@ if not metaTable2 then
 		guidsh = 0,
 		range = 100,
 		debuffs = {},
+		timestamp = GetTime(),
 	}
 
 	function br.unitSetup:new(unit)
@@ -34,7 +35,7 @@ if not metaTable2 then
 		if br.unitSetup.cache[unit] then return false end
 		if UnitDebuffID("player",295249) and UnitIsPlayer(unit) then return false end
 		if br.unitBlacklist[GetObjectID(unit)] then return false end
-		if GetUnitIsUnit("player", unit) then return false end
+		if UnitIsUnit("player", unit) then return false end
 		local o = {}
 		setmetatable(o, br.unitSetup)
 		if unit and type(unit) == "string" then
@@ -108,8 +109,12 @@ if not metaTable2 then
 		function o:RawDistance()
 			local x1, y1, z1 = pX, pY, pZ
 			local x2, y2, z2 = o.posX, o.posY, o.posZ
-			return math.sqrt(((x2 - x1) ^ 2) + ((y2 - y1) ^ 2) + ((z2 - z1) ^ 2)) -
+			if x1 == nil  or x2 == nil or y1 == nil or y2 == nil or z1 == nil or z2 == nil then
+				return 99
+			else
+				return math.sqrt(((x2 - x1) ^ 2) + ((y2 - y1) ^ 2) + ((z2 - z1) ^ 2)) -
 				((pCR or 0) + (UnitCombatReach(o.unit) or 0)), z2 - z1
+			end
 		end
 		--Add unit to table
 		function o:AddUnit(table)
@@ -126,10 +131,12 @@ if not metaTable2 then
 					id = o.objectID,
 					range = o.range,
 					debuffs = o.debuffs,
+					timestamp = GetTime(),
 				}
 			end
 			rawset(table, o.unit, thisUnit)
 		end
+		--Debuffs
 		function o:UpdateDebuffs(debuffList,unit)
 			if not isChecked("Cache Debuffs") then
 				debuffList = {}
@@ -143,7 +150,7 @@ if not metaTable2 then
 			local function cacheDebuff(buffUnit,buffName,buffCaster)
 				-- Print("Caching Debuff!")
 				-- Cache it to the OM
-				if buffCaster ~= nil and (buffCaster == "player" or UnitIsFriend("player",buffCaster)) then
+				if buffCaster ~= nil and buffCaster == "player" then --(buffCaster == "player" or UnitIsFriend("player",buffCaster)) then
 					if debuffList[buffCaster] == nil then debuffList[buffCaster] = {} end
 					if debuffList[buffCaster][buffName] == nil then
 						-- Print("Adding player debuff")
@@ -232,12 +239,14 @@ if not metaTable2 then
 					if br.enemy[o.unit] ~= nil then
 						br.enemy[o.unit] = nil
 					end
+					if br.damaged ~= nil and br.damaged[o.unit] ~= nil then br.damaged[o.unit] = nil end
 				end
 			else
 				o.isValidUnit = false
 				if br.enemy[o.unit] ~= nil then
 					br.enemy[o.unit] = nil
 				end
+				if br.damaged ~= nil and br.damaged[o.unit] ~= nil then br.damaged[o.unit] = nil end
 			end
 			-- TTD
 			if getOptionCheck("Enhanced Time to Die") then
@@ -252,7 +261,7 @@ if not metaTable2 then
 			-- Check for loots
 			if autoLoot and br.lootable[o.unit] == nil and UnitIsDeadOrGhost(o.unit) then
 				local hasLoot, canLoot = CanLootUnit(o.guid)
-				if hasLoot and canLoot then
+				if hasLoot then --and (canLoot or isKnown(125050)) then
 					o:AddUnit(br.lootable)
 				end
 			end

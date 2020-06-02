@@ -12,9 +12,11 @@ br.dropOptions = {}
 br.dropOptions.Toggle ={"LeftCtrl","LeftShift","RightCtrl","RightShift","RightAlt","None","MMouse","Mouse4","Mouse5" }
 br.dropOptions.CD = {"Never","CDs","Always" }
 br.loadedIn = false
+br.loadFile = false
 br.rotations = {}
 -- developers debug, use /run br.data.settings[br.selectedSpec].toggles["isDebugging"] = true
 br.debug = {}
+br.unlocked = false
 
 br.pauseCast = GetTime()
 -- Cache all non-nil return values from GetSpellInfo in a table to improve performance
@@ -129,6 +131,10 @@ function frame:OnEvent(event, arg1, arg2, arg3, arg4, arg5)
 		-- Load Settings
 		br.data = deepcopy(brdata)
 		br.profile = deepcopy(brprofile)
+		if br.data ~= nil then
+			if br.data.blacklistVisionPotion == nil then br.data.blacklistVisionPotion = 0 end
+			if br.data.chests == nil then br.data.chests = {} end
+		end
 	end
     if event == "PLAYER_LOGOUT" then
         br.ui:saveWindowPosition()
@@ -151,6 +157,7 @@ function frame:OnEvent(event, arg1, arg2, arg3, arg4, arg5)
 		br.activeSpecGroup = GetActiveSpecGroup()
 		br.equipHasChanged = true
 		if not br.loadedIn then
+			if br.damaged == nil then br.damaged = {} end
 			bagsUpdated = true
 			br:Run()
 		end

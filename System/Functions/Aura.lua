@@ -99,19 +99,17 @@ local function Dispel(unit,stacks,buffDuration,buffRemain,buffSpellID,buff)
 			else
 				return false
 			end
-		elseif buffSpellID == 296737 and not isChecked("Range Check Arcane Bomb") then
-			return true
-		elseif buffSpellID == 303657 and isChecked("Arcane Burst") then
+		elseif buffSpellID == 303657 and isChecked("Arcane Burst") and buffDuration - buffRemain > (getValue("Dispel delay") - 0.3 + math.random() * 0.6) then
 			return true
 		elseif novaEngineTables.DispelID[buffSpellID] ~= nil then
-			if stacks >= novaEngineTables.DispelID[buffSpellID].stacks
+			if (stacks >= novaEngineTables.DispelID[buffSpellID].stacks or isChecked("Ignore Stack Count"))
 			then
 				if novaEngineTables.DispelID[buffSpellID].stacks ~= 0 and novaEngineTables.DispelID[buffSpellID].range == nil then
 					return true
 				else
 					if buffDuration - buffRemain > (getValue("Dispel delay") - 0.3 + math.random() * 0.6) then -- Dispel Delay then
 						if novaEngineTables.DispelID[buffSpellID].range ~= nil then
-							if #getAllies(unit,novaEngineTables.DispelID[buffSpellID].range) > 1 then
+							if not isChecked("Ignore Range Check") and #getAllies(unit,novaEngineTables.DispelID[buffSpellID].range) > 1 then
 								return false
 							end
 							return true
@@ -192,7 +190,7 @@ function canDispel(Unit, spellID)
 		if spellID == 475 then typesList = {"Curse"} end
 	end
 	if ClassNum == 9 then --Warlock
-		typesList = {}
+		if spellID == 19505 then typesList = {"Magic"} end
 	end
 	if ClassNum == 10 then --Monk
 		-- Detox (MW)
@@ -282,7 +280,7 @@ function canDispel(Unit, spellID)
 				local _, _, stacks, buffType, buffDuration, buffExpire, _, _, _, buffid = UnitBuff(Unit, i)
 				local buffRemain = buffExpire - GetTime()
 				local dispelUnitObj
-				if (buffType and ValidType(buffType)) then 
+				if (buffType and ValidType(buffType)) and not UnitIsPlayer(Unit) then 
 					if Dispel(Unit,stacks,buffDuration,buffRemain,buffid,true) ~= nil then
 						dispelUnitObj = Dispel(Unit,stacks,buffDuration,buffRemain,buffid,true)
 					end
@@ -400,16 +398,16 @@ function getDebuffRemainCount(spellID, remain)
 	end
 	return tonumber(counter)
 end
-function getDebuffMinMax(spell, range, debuffType, returnType)
+function getDebuffMinMax(spell, range, debuffType, returnType, source)
 	local thisMin = 99
 	local thisMax = 0
 	local lowestUnit = "target"
 	local maxUnit = "target"
 	for k, v in pairs(br.enemy) do
 		local thisUnit = br.enemy[k].unit
-		local distance = getDistance(thisUnit)
+		local distance = getDistance(thisUnit,source)
 		local thisDebuff = br.player.debuff[spell][debuffType](thisUnit)
-		if getFacing("player",thisUnit) and distance < range and thisDebuff >= 0 
+		if getFacing("player",thisUnit) and distance < range and thisDebuff >= 0
 			and ((returnType == "min" and thisDebuff < thisMin) or (returnType == "max" and thisDebuff > thisMax))
 		then
 			if returnType == "min" then
@@ -428,6 +426,22 @@ function getDebuffMinMax(spell, range, debuffType, returnType)
 	if returnType == "max" then
 		return maxUnit
 	end
+end
+function getDebuffMinMaxButForPetsThisTime(spell, range, debuffType, returnType)
+	local thisMin = 99
+	local lowestUnit = "target"
+	for k, v in pairs(br.enemy) do
+		local thisUnit = br.enemy[k].unit
+		local distance = getDistance(thisUnit,"pet")
+		local thisDebuff = br.player.debuff[spell][debuffType](thisUnit)
+		if getFacing("player",thisUnit) and distance <= range and thisDebuff >= 0 and thisDebuff < thisMin then
+			if returnType == "min" or returnType == nil then
+				lowestUnit = thisUnit
+				thisMin = thisDebuff
+			end
+		end
+	end
+	return lowestUnit
 end
 -- if getBuffDuration("target",12345) < 3 then
 function getBuffDuration(Unit, BuffID, Source)
@@ -468,8 +482,8 @@ function getBuffStacks(Unit, BuffID, Source)
 end
 function getBuffCount(spellID)
 	local counter = 0
-	for k, v in pairs(br.friend) do
-		local thisUnit = br.friend[k].unit
+	for i= 1, #br.friend do
+		local thisUnit = br.friend[i].unit
 		-- check if unit is valid
 		if GetObjectExists(thisUnit) then
 			-- increase counter for each occurences

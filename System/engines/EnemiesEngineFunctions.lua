@@ -1,17 +1,29 @@
 br.enemy	= {}
 br.lootable = {}
 br.units 	= {}
+br.objects  = {}
 br.storedTables = {}
 local refreshStored
 
-local function AddUnit(thisUnit,thisTable)
+local function AddUnit(thisUnit,thisTable,thisType)
 	local unit = {
 		unit = thisUnit,
 		name = UnitName(thisUnit),
 		guid = UnitGUID(thisUnit),
 		id = GetObjectID(thisUnit),
+		type = thisType
 	}
 	rawset(thisTable, thisUnit, unit)
+end
+
+local function AddObject(thisObject,thisTable,thisType)
+	local object = {
+		object = thisObject,
+		name = ObjectName(thisObject),
+		id = ObjectID(thisObject),
+		type = thisType
+	}
+	rawset(thisTable, thisObject, object)
 end
 
 -- Update Pet
@@ -39,24 +51,48 @@ end
 
 --Check Totem
 function isTotem(unit)
-	local creatureType = UnitCreatureType(unit)
-	if creatureType ~= nil then
-	  if creatureType == "Totem" or creatureType == "Tótem" or creatureType == "Totém" or creatureType == "Тотем" or creatureType == "토템" or creatureType == "图腾" or creatureType == "圖騰" then return true end
-	end
-	return false
+	local eliteTotems = {
+        -- totems we can dot
+        [125977] = "Reanimate Totem",
+        [127315] = "Reanimate Totem",
+        [146731] = "Zombie Dust Totem",
+        [297237] = "Endless Hunger Totem"
+    }
+    local creatureType = UnitCreatureType(unit)
+    local objectID = GetObjectID(unit)
+    if creatureType ~= nil and eliteTotems[objectID] == nil then
+        if creatureType == "Totem" or creatureType == "Tótem" or creatureType == "Totém" or creatureType == "Тотем" or creatureType == "토템" or creatureType == "图腾" or creatureType == "圖騰" then
+            return true
+        end
+    end
+    return false
 end
 
 --Update OM
 function updateOMEWT()
 	local om = br.om
 	local startTime = debugprofilestop()
-	local _, updated, added, removed = GetObjectCount(true)
+	local _, updated, added, removed = GetObjectCountBR(true,"BR")
 	if updated and #added > 0 then
 		for _, v in pairs(added) do
 			if ObjectIsUnit(v) then
 				local enemyUnit = br.unitSetup:new(v)
 				if enemyUnit then
 					tinsert(om, enemyUnit)
+				end
+			end
+			-- Horrific Vision Object Tracking
+			if br.lists ~= nil and br.lists.horrificVision ~= nil then
+				for objType, w in pairs(br.lists.horrificVision) do
+					for _, id in pairs(w) do
+						if br.objects[v] == nil then
+							local objectID = ObjectID(v) or 0
+							local name = ObjectName(v) or ""
+							if ObjectIsVisible(v) and ObjectExists(v) and objectID > 0 and (objectID == id or (objType == "chest" and (string.match(strupper(name),strupper("cache")) or string.match(strupper(name),strupper("chest"))))) then
+								AddObject(v,br.objects,objType)
+							end
+						end
+					end
 				end
 			end
 		end
@@ -85,7 +121,7 @@ function updateOM()
 		br.debug.cpu.enemiesEngine.objects.targets = 0
 	end
 	-- Cycle OM
-	local objectCount = EWT ~= nil and GetObjectCount() or 0
+	local objectCount = GetObjectCountBR() --EWT ~= nil and GetObjectCountBR() or 0
 	if objectCount > 0 then
 		if objectIndex == nil or objectIndex >= objectCount then objectIndex = 1 end
 		for i = objectIndex, objectCount do
@@ -126,14 +162,13 @@ function getEnemies(thisUnit,radius,checkNoCombat,facing)
 	if facing == nil then facing = false end
     local startTime = debugprofilestop()
 	local radius = tonumber(radius)
-	local targetDist = getDistance("target","player")
 	local enemyTable = checkNoCombat and br.units or br.enemy
 	local enemiesTable = {}
 	local thisEnemy, distance
     if refreshStored == true then
-    	for k,v in pairs(br.storedTables) do br.storedTables[k] = nil end
-    	refreshStored = false
-    end
+		for k,v in pairs(br.storedTables) do br.storedTables[k] = nil end
+		refreshStored = false
+	end
 	if br.storedTables[checkNoCombat] ~= nil then
 		if checkNoCombat == false then
 			if br.storedTables[checkNoCombat][thisUnit] ~= nil then
@@ -153,12 +188,18 @@ function getEnemies(thisUnit,radius,checkNoCombat,facing)
 			tinsert(enemiesTable,thisEnemy)
 		end
     end
-	if #enemiesTable == 0 and targetDist < radius and isValidUnit("target") and (not facing or getFacing("player","target")) then
+	-- for _, enemy in pairs(enemyTable) do
+    --     distance =  getDistance(thisUnit, enemy.unit)
+    --     if enemiesTable[enemy.unit] == nil and distance < radius then
+    --         rawset(enemiesTable, enemy.unit, enemy.unit)
+    --     end
+    -- end
+	if #enemiesTable == 0 and getDistance("target","player") < radius and isValidUnit("target") and (not facing or getFacing("player","target")) then
 		tinsert(enemiesTable,"target")
 	end
     ---
 	if isChecked("Debug Timers") then
-    	br.debug.cpu.enemiesEngine.getEnemies = debugprofilestop()-startTime or 0
+		br.debug.cpu.enemiesEngine.getEnemies = debugprofilestop()-startTime or 0
 	end
     ---
 	if #enemiesTable > 0 and thisUnit ~= nil then
@@ -191,8 +232,9 @@ end
 		if getOptionCheck("Forced Burn") then
 			local unitID = GetObjectID(unit)
 			local burnUnit = br.lists.burnUnits[unitID]
+			local unitTime = br.units[unit] ~= nil and br.units[unit].timestamp or GetTime() - 1
 			-- if unit have selected debuff
-			if burnUnit and (burnUnit.cast == nil or not isCasting(burnUnit.cast,unitID)) then
+			if burnUnit and (burnUnit.cast == nil or not isCasting(burnUnit.cast,unitID)) and (GetTime() - unitTime) > 0.75 then
 				if burnUnit.buff and UnitBuffID(unit,burnUnit.buff) then
 					coef = burnUnit.coef
 				end
@@ -362,13 +404,13 @@ local function findBestUnit(range,facing)
 				local unitID = GetObjectExists(thisUnit) and GetObjectID(thisUnit) or 0
 				if isSafeToAttack(thisUnit,true) and (((unitID == 135360 or unitID == 135358 or unitID == 135359) and UnitBuffID(thisUnit,260805)) or (unitID ~= 135360 and unitID ~= 135358 and unitID ~= 135359)) and (unitID ~= 152910 or (unitID == 152910 and UnitBuffID(thisUnit, 300551))) then
 					local isCC = getOptionCheck("Don't break CCs") and isLongTimeCCed(thisUnit) or false
-					local coeficient = getUnitCoeficient(thisUnit) or 0
+					local isSafe = (getOptionCheck("Safe Damage Check") and isSafeToAttack(thisUnit)) or not getOptionCheck("Safe Damage Check") or false
 					-- local thisUnit = v.unit
 					-- local distance = getDistance(thisUnit)
 					-- if distance < range then
 					if not isCC then			
 						local coeficient = getUnitCoeficient(thisUnit) or 0		
-						if getOptionCheck("Skull First") and GetRaidTargetIndex(unit) == 8 and not UnitIsDeadOrGhost(unit) then
+						if getOptionCheck("Skull First") and GetRaidTargetIndex(thisUnit) == 8 and not GetUnitIsDeadOrGhost(thisUnit) then
 							bestUnit = thisUnit
 							return bestUnit
 						end
@@ -439,79 +481,116 @@ function dynamicTarget(range,facing)
 			end
 		end
 	end
+	if isChecked("Darter Targeter") and br.player.eID == 2333 then
+		local enemyList = getEnemies("player",defaultRange,false,true)
+		local darterHP
+		local darterUnit
+		for i = 1, #enemyList do
+			local unitHP = getHP(enemyList[i])
+			if GetObjectID(enemyList[i]) == 157256 then
+				if darterHP == nil or unitHP < darterHP*0.9 then
+					darterHP = unitHP
+					darterUnit = enemyList[i]
+				end
+			end
+		end
+		if darterUnit ~= nil then
+			TargetUnit(darterUnit)
+			return
+		end
+	end
 	if (not isChecked("Dynamic Targetting") or bestUnit == nil) and getDistance("target") < range
-		and getFacing("player","target") and not UnitIsDeadOrGhost("target") and not GetUnitIsFriend("target","player")
+		and getFacing("player","target") and not GetUnitIsDeadOrGhost("target") and not GetUnitIsFriend("target","player")
 	then
 		bestUnit = "target"
 	end
 	if isChecked("Dynamic Targetting") then
 		local enemyList = getEnemies("player",range,false,facing)
-		if UnitAffectingCombat("player") then
-			if getOptionValue("Dynamic Targetting") == 2 or (UnitAffectingCombat("player") and getOptionValue("Dynamic Targetting") == 1) 
-				and (bestUnit == nil or (GetUnitIsUnit(bestUnit,"target") and tarDist >= range))
-				then
-					bestUnit = findBestUnit(range,facing)
-			elseif getOptionValue("Dynamic Targetting") == 3 then
-				if getOptionCheck("Skull First") then
-					for i = 1, #enemyList do
-						if GetRaidTargetIndex(enemyList[i]) == 8 and not UnitIsDeadOrGhost(unit) then
-							bestUnit = enemyList[i]
-						end
+		if getOptionValue("Dynamic Targetting") == 2 or (br.player.inCombat and getOptionValue("Dynamic Targetting") == 1) 
+			and (bestUnit == nil or (GetUnitIsUnit(bestUnit,"target") and tarDist >= range))
+			then
+				bestUnit = findBestUnit(range,facing)
+		elseif getOptionValue("Dynamic Targetting") == 3 and br.player.inCombat then
+			if getOptionCheck("Skull First") then
+				for i = 1, #enemyList do
+					if GetRaidTargetIndex(enemyList[i]) == 8 and not GetUnitIsDeadOrGhost(enemyList[i]) then
+						bestUnit = enemyList[i]
 					end
-				elseif isChecked("Wise Target") and br.timer:useTimer("wiseTargetDelay", 0.5) then
-					if getOptionValue("Wise Target Frequency") == 2 and not (UnitIsDeadOrGhost("target") and GetUnitIsFriend("target")) and tarDist <= range then
-						return
+				end
+				if bestUnit == nil then
+					if not GetUnitExists("target") or (GetUnitIsDeadOrGhost("target") and not GetUnitIsFriend("target","player")) or not isSafeToAttack("target",true) or
+						(facing and not getFacing("player","target")) or (getOptionCheck("Don't break CCs") and isLongTimeCCed("target")) or (getDistance("target") > range and isChecked("Include Range")) then
+						bestUnit = findBestUnit(defaultRange,facing)
 					end
-					local targetHP
-					local lowDist
-					local highDist
-					for i = 1, #enemyList do
-						local isCC = getOptionCheck("Don't break CCs") and isLongTimeCCed(enemyList[i]) or false
-						local unitHP = getHP(enemyList[i])
-						local absUnitHP = UnitHealthMax(enemyList[i])
-						local currDist = getDistance(enemyList[i])
-						if not isCC and isSafeToAttack(enemyList[i],true) and br.lists.shieldUnits[enemyList[i]] == nil then
-							if getOptionValue("Wise Target") == 1 then 	   -- Highest	
-								if (targetHP == nil or unitHP*1.10 > targetHP) then
-									targetHP = unitHP
-									bestUnit = enemyList[i]
-								end
-							elseif getOptionValue("Wise Target") == 3 then -- abs Highest
-								if (targetHP == nil or absUnitHP*1.10 > targetHP) then
-									targetHP = absUnitHP
-									bestUnit = enemyList[i]
-								end
-							elseif getOptionValue("Wise Target") == 4 then -- abs Lowest	
-								if (targetHP == nil or absUnitHP*.9 < targetHP) then
-									targetHP = absUnitHP  
-									bestUnit = enemyList[i]
-								end
-							elseif getOptionValue("Wise Target") == 5 then -- Nearest
-								if (lowDist == nil or currDist*0.9 < lowDist*.90) then
-									lowDist = currDist
-									bestUnit = enemyList[i]
-								end
-							elseif getOptionValue("Wise Target") == 6 then -- Furthest
-								if (highDist == nil or currDist*1.1 > highDist) then
-									highDist = currDist
-									bestUnit = enemyList[i]
-								end
-							else 										   -- Lowest
-								if (targetHP == nil or unitHP*.9 < targetHP*.90) then
-									targetHP = unitHP
-									bestUnit = enemyList[i]
-								end
+				end
+			elseif isChecked("Wise Target") and br.timer:useTimer("wiseTargetDelay", 0.5) then
+				if getOptionValue("Wise Target Frequency") == 2 and not (GetUnitIsDeadOrGhost("target") and GetUnitIsFriend("target")) and tarDist <= range then
+					return
+				end
+				local targetHP
+				local lowDist
+				local highDist
+				for i = 1, #enemyList do
+					local isCC = getOptionCheck("Don't break CCs") and isLongTimeCCed(enemyList[i]) or false
+					local unitHP = getHP(enemyList[i])
+					local absUnitHP = UnitHealthMax(enemyList[i])
+					local currDist = getDistance(enemyList[i])
+					if not isCC and isSafeToAttack(enemyList[i],true) and br.lists.shieldUnits[enemyList[i]] == nil then
+						if getOptionValue("Wise Target") == 1 then 	   -- Highest	
+							if (targetHP == nil or unitHP*1.10 > targetHP) then
+								targetHP = unitHP
+								bestUnit = enemyList[i]
+							end
+						elseif getOptionValue("Wise Target") == 3 then -- abs Highest
+							if (targetHP == nil or absUnitHP*1.10 > targetHP) then
+								targetHP = absUnitHP
+								bestUnit = enemyList[i]
+							end
+						elseif getOptionValue("Wise Target") == 4 then -- abs Lowest	
+							if (targetHP == nil or absUnitHP*.9 < targetHP) then
+								targetHP = absUnitHP  
+								bestUnit = enemyList[i]
+							end
+						elseif getOptionValue("Wise Target") == 5  then -- Nearest
+							if (lowDist == nil or currDist*0.9 < lowDist*.90) then
+								lowDist = currDist
+								bestUnit = enemyList[i]
+							end
+						elseif getOptionValue("Wise Target") == 6  then -- Furthest
+							if (highDist == nil or currDist*1.1 > highDist) then
+								highDist = currDist
+								bestUnit = enemyList[i]
+							end
+						else  										   -- Lowest
+							if (targetHP == nil or unitHP*.9 < targetHP*.90) then
+								targetHP = unitHP
+								bestUnit = enemyList[i]
 							end
 						end
 					end
-				elseif not GetUnitExists("target") or (UnitIsDeadOrGhost("target") and not GetUnitIsFriend("target","player"))	or not isSafeToAttack("target",true) or
-				  (facing and not getFacing("player","target")) or (getOptionCheck("Don't break CCs") and isLongTimeCCed("target")) or (getDistance("target") > range and isChecked("Include Range")) then
-					bestUnit = findBestUnit(defaultRange,facing)
 				end
+			elseif not GetUnitExists("target") or (GetUnitIsDeadOrGhost("target") and not GetUnitIsFriend("target","player")) or not isSafeToAttack("target",true) or
+				(facing and not getFacing("player","target")) or (getOptionCheck("Don't break CCs") and isLongTimeCCed("target")) or (getDistance("target") > range and isChecked("Include Range")) then
+				bestUnit = findBestUnit(defaultRange,facing)
 			end
-			if isChecked("Target Dynamic Target") and bestUnit ~= nil and (not GetUnitExists("target") or (UnitIsDeadOrGhost("target") and not GetUnitIsFriend("target","player")) 
-			or not isSafeToAttack("target",true) or ((unitID == 135360 or unitID == 135358 or unitID == 135359) and not UnitBuffID(thisUnit,260805))
-			or (isChecked("Wise Target") and not GetUnitIsUnit("target",bestUnit)) or (isChecked("Skull First") and not GetUnitIsUnit("target",bestUnit))or (facing and not getFacing("player","target")) or (getOptionCheck("Don't break CCs") and isLongTimeCCed("target")) or (getDistance("target") > range and isChecked("Include Range"))) then
+		end
+		if br.timer:useTimer("Unit Delay",0.5) then
+			br.addonDebug("Best Unit: "..tostring(bestUnit),true)
+		end
+		if isChecked("Target Dynamic Target") and bestUnit ~= nil and br.player.inCombat then
+			if not GetUnitExists("target") or (GetUnitIsDeadOrGhost("target") and not GetUnitIsFriend("target","player")) then
+				TargetUnit(bestUnit)
+			elseif not isSafeToAttack("target",true) then
+				TargetUnit(bestUnit)
+			elseif (isChecked("Wise Target") or isChecked("Skull First")) and not GetUnitIsUnit("target",bestUnit) then
+				TargetUnit(bestUnit)
+			elseif ((unitID == 135360 or unitID == 135358 or unitID == 135359) and not UnitBuffID(thisUnit,260805)) then 
+				TargetUnit(bestUnit)
+			elseif (facing and not getFacing("player","target")) then
+				TargetUnit(bestUnit)
+			elseif getOptionCheck("Don't break CCs") and isLongTimeCCed("target") then
+				TargetUnit(bestUnit)
+			elseif getDistance("target") > range and isChecked("Include Range") then
 				TargetUnit(bestUnit)
 			end
 		end
@@ -522,30 +601,28 @@ function dynamicTarget(range,facing)
 	return bestUnit
 end
 
--- Cone Logic for Enemies
-function getEnemiesInCone(angle,length,showLines,checkNoCombat)
-	if angle == nil then angle = 180 end
-	if length == nil then length = 0 end
-    local playerX, playerY, playerZ = GetObjectPosition("player")
-    local facing = ObjectFacing("player")
-    local units = 0
-	local enemiesTable = getEnemies("player",length,checkNoCombat)
+local function drawRect(nlX, nlY, nlZ,nrX, nrY, nrZ,flX, flY, flZ,frX, frY, frZ)
+	 -- Bottom
+	 LibDraw.Line(nlX, nlY, nlZ, nrX, nrY, nrZ)
+	 -- Far Left
+	 LibDraw.Line(flX, flY, flZ, nlX, nlY, nlZ)
+	 -- Far Right
+	 LibDraw.Line(frX, frY, frZ, nrX, nrY, nrZ)
+	 -- Top
+	 LibDraw.Line(frX, frY, frZ, flX, flY, flZ)
+ end
 
-    for i = 1, #enemiesTable do
-        local thisUnit = enemiesTable[i]
-        local unitX, unitY, unitZ = GetPositionBetweenObjects(thisUnit, "player", UnitCombatReach(thisUnit))--GetObjectPosition(thisUnit)
-        if playerX and unitX then
-            local angleToUnit = getAngles(playerX,playerY,playerZ,unitX,unitY,unitZ)
-            local angleDifference = facing > angleToUnit and facing - angleToUnit or angleToUnit - facing
-            local shortestAngle = angleDifference < math.pi and angleDifference or math.pi*2 - angleDifference
-            local finalAngle = shortestAngle/math.pi*180
-            if finalAngle < angle/2 then
-                units = units + 1
-            end
-        end
-    end
-	-- ChatOverlay(units)
-    return units
+local function drawCircle(x,y,z,r)
+	LibDraw.Circle(x,y,z,r)
+end
+
+function br.pointOnACircle(pX,pY,cX,cY,R)
+	local vX = pX - cX;
+	local vY = pY - cY;
+	local magV = math.sqrt(vX*vX + vY*vY);
+	local aX = cX + vX / magV * R;
+	local aY = cY + vY / magV * R;
+	return aX,aY,select(3,GetObjectPosition("player"))
 end
 
 local function getRect(width,length,showLines)
@@ -559,7 +636,141 @@ local function getRect(width,length,showLines)
 	-- Near Right
 	local nrX, nrY, nrZ = GetPositionFromPosition(px, py, pz, halfWidth, facing + math.rad(270), 0)
 	-- Far Left
-	--local flX, flY, flZ = GetPositionFromPosition(nlX, nlY, nlZ, length, facing, 0)
+	local flX, flY, flZ = GetPositionFromPosition(nlX, nlY, nlZ, length, facing, 0)
+	-- Far Right
+	local frX, frY, frZ = GetPositionFromPosition(nrX, nrY, nrZ, length, facing, 0)
+
+	LibDraw.clearCanvas()
+
+	if showLines and nlX and px then
+		drawRect(nlX, nlY, nlZ,nrX, nrY, nrZ,flX, flY, flZ,frX, frY, frZ)
+	end
+
+	return nlX, nlY, nrX, nrY, frX, frY, flX,flY
+end
+
+-- local function circleRect(cx, cy, radius, rx, ry, rw, rh) 
+
+--   -- temporary variables to set edges for testing
+--   	local testX = cx;
+-- 	local testY = cy;
+--   -- which edge is closest?
+-- 	if (cx < rx) then
+-- 		testX = rx-(rw/2) ;      -- test left edge
+-- 		print("Left Edge")
+--   	elseif (cx > rx) then
+-- 		testX = rx+(rw/2);   -- right edge
+-- 		print("Right Edge")
+--   	end
+--   	if (cy < ry) then
+-- 		testY = ry-(rh/2);      -- top edge
+-- 		print("Bottom Edge")
+--   	elseif (cy > ry) then
+-- 		testY = ry+(rh/2);   -- bottom edge
+-- 		print("Top Edge")
+-- 	end
+	  
+-- 	local nlX, nlY, nrX, nrY, frX, frY, flX,flY = getRect(rw,rh,true)
+-- 	--drawCircle(rx,ry,select(3,GetObjectPosition("player")),0.1)
+-- 	--drawCircle(testX,testY,select(3,GetObjectPosition("player")),0.1)
+
+--   -- get distance from closest edges
+--   	local distX = cx-testX;
+--   	local distY = cy-testY;
+--   	local distance = math.sqrt((distX*distX)+(distY*distY));
+
+--   -- if the distance is less than the radius, collision!
+--   	if (distance <= radius) then
+-- 		return true
+-- 	end
+--   	return false
+-- end
+
+-- local function circleRect(cx, cy, radius, rx, ry, rw, rh) 
+-- 	-- temporary variables to set edges for testing
+-- 		local testX = cx;
+-- 		local testY = cy;
+  
+-- 	-- which edge is closest?
+-- 	  if (cx < rx) then
+-- 		  testX = rx;      -- test left edge
+-- 		elseif (cx > rx+rw) then
+-- 		  testX = rx+rw;   -- right edge
+-- 		end
+-- 		if (cy < ry) then
+-- 		  testY = ry;      -- top edge
+-- 		elseif (cy > ry+rh) then
+-- 		  testY = ry+rh;   -- bottom edge
+-- 		end
+  
+-- 	-- get distance from closest edges
+-- 		local distX = cx-testX;
+-- 		local distY = cy-testY;
+-- 		local distance = math.sqrt((distX*distX)+(distY*distY));
+
+-- 		drawRect(rx, ry, select(3,GetObjectPosition("player")),rx+rw, ry, select(3,GetObjectPosition("player")),rx, ry+rh, select(3,GetObjectPosition("player")),rx+rw, ry+rh, select(3,GetObjectPosition("player")))
+
+-- 		drawCircle(testX,testY,select(3,GetObjectPosition("player")),0.2)
+  
+-- 	-- if the distance is less than the radius, collision!
+-- 		if (distance <= radius) then
+-- 		  return true
+-- 	  end
+-- 		return false
+--   end
+
+
+-- Cone Logic for Enemies
+function getEnemiesInCone(angle,length,showLines,checkNoCombat)
+	if angle == nil then angle = 180 end
+	if length == nil then length = 0 end
+    local playerX, playerY, playerZ = GetObjectPosition("player")
+    local facing = ObjectFacing("player")
+    local units = 0
+	local enemiesTable = getEnemies("player",length,checkNoCombat,true)
+	local inside = false
+    for i = 1, #enemiesTable do
+		local thisUnit = enemiesTable[i]
+		local radius = UnitCombatReach(thisUnit)
+        local unitX, unitY, unitZ = GetPositionBetweenObjects(thisUnit, "player", radius)
+		if playerX and unitX then
+			for i = radius, 0, -0.1 do
+				inside = false
+				if i > 0 then
+					unitX, unitY = GetPositionBetweenObjects(thisUnit, "player", i)
+				else
+					unitX, unitY = GetObjectPosition(thisUnit)
+				end
+				local angleToUnit = getAngles(playerX,playerY,playerZ,unitX,unitY,unitZ)
+				local angleDifference = facing > angleToUnit and facing - angleToUnit or angleToUnit - facing
+				local shortestAngle = angleDifference < math.pi and angleDifference or math.pi*2 - angleDifference
+				local finalAngle = shortestAngle/math.pi*180
+				if finalAngle < angle/2 then
+					inside = true
+					break
+				end
+			end
+
+            if inside then
+                units = units + 1
+            end
+        end
+	end
+
+	-- ChatOverlay(units)
+    return units
+end
+
+local function getRect(width,length,showLines)
+	local px, py, pz = GetObjectPosition("player")
+	local facing = ObjectFacing("player") or 0
+	local halfWidth = width/2
+	-- Near Left
+	local nlX, nlY, nlZ = GetPositionFromPosition(px, py, pz, halfWidth, facing + math.rad(90), 0)
+	-- Near Right
+	local nrX, nrY, nrZ = GetPositionFromPosition(px, py, pz, halfWidth, facing + math.rad(270), 0)
+	-- Far Left
+	local flX, flY, flZ = GetPositionFromPosition(nlX, nlY, nlZ, length, facing, 0)
 	-- Far Right
 	local frX, frY, frZ = GetPositionFromPosition(nrX, nrY, nrZ, length, facing, 0)
 
@@ -576,25 +787,64 @@ local function getRect(width,length,showLines)
 	-- 	LibDraw.Line(frX, frY, frZ, flX, flY, flZ)
 	-- end
 
-	return nlX, nlY, nrX, nrY, frX, frY
+	return nlX, nlY, nrX, nrY, frX, frY, flX, flY
 end
 
 function getEnemiesInRect(width,length,showLines,checkNoCombat)
+	-- local checkNoCombat = checkNoCombat or false
+	-- local enemyCounter = 0
+	-- local enemiesTable = getEnemies("player",length,checkNoCombat,true)
+	-- local enemiesInRect = enemiesInRect or {}
+	-- local px, py, pz = ObjectPosition("player")
+    -- local facing = ObjectFacing("player") or 0
+	-- local halfWidth = width/2
+	-- local dx, dy
+    -- -- Near Left
+    -- local nlX, nlY, nlZ = GetPositionFromPosition(px, py, pz, halfWidth, facing + math.rad(90), 0)
+
+    -- if #enemiesTable > 0 then
+    --     table.wipe(enemiesInRect)
+    --     for i = 1, #enemiesTable do
+    --         local thisUnit = enemiesTable[i]
+    --         local tX, tY, tZ = ObjectPosition(thisUnit)
+    --         if tX and tY then
+    --             dx = tX - math.max(nlX, math.min(tX, nlX + width))
+    --             dy = tY - math.max(nlY, math.min(tY, nlY + length))
+	-- 			if dx^2 + dy^2 < UnitCombatReach(thisUnit)^2 then
+	-- 				print("Unit is in Rect")
+    --                 enemyCounter = enemyCounter + 1
+    --                 table.insert(enemiesInRect,thisUnit)
+    --             end
+    --         end
+    --     end
+	-- end
+	-- return enemyCounter, enemiesInRect
+
 	local LibDraw = LibStub("LibDraw-1.0")
 	local checkNoCombat = checkNoCombat or false
 	local nlX, nlY, nrX, nrY, frX, frY = getRect(width,length,showLines)
 	local enemyCounter = 0
-	local enemiesTable = getEnemies("player",length,checkNoCombat)
+	local enemiesTable = getEnemies("player",length,checkNoCombat,true)
 	local enemiesInRect = enemiesInRect or {}
+	local inside = false
 	if #enemiesTable > 0 then
 		table.wipe(enemiesInRect)
 		for i = 1, #enemiesTable do
 			local thisUnit = enemiesTable[i]
---			if thisUnit ~= "target" then
-				local tX, tY = GetPositionBetweenObjects(thisUnit, "player", UnitCombatReach(thisUnit)) --GetObjectPosition(thisUnit)
---			end
+			local radius = UnitCombatReach(thisUnit)
+			local tX, tY = GetPositionBetweenObjects(thisUnit, "player", radius)
 			if tX and tY then
-				if isInside(tX,tY,nlX,nlY,nrX,nrY,frX,frY) then
+				for i = radius, 0, -0.1 do
+					inside = false
+					local pX, pY
+					if i > 0 then
+						pX, pY = GetPositionBetweenObjects(thisUnit, "player", i) 
+					else
+						pX, pY = GetObjectPosition(thisUnit)
+					end
+					if isInside(pX,pY,nlX,nlY,nrX,nrY,frX,frY) then inside = true break end
+				end
+				if inside then
 					if showLines then
 						LibDraw.Circle(tX, tY, playerZ, UnitBoundingRadius(thisUnit))
 					end
@@ -604,40 +854,69 @@ function getEnemiesInRect(width,length,showLines,checkNoCombat)
 			end
 		end
 	end
-	if #enemiesInRect ~= 0 then
-		return enemyCounter, enemiesInRect
-	else
-		return enemyCounter
-	end
+	return enemyCounter, enemiesInRect
 end
 
 -- local function intersects(circle, rect)
 local function intersects(tX,tY,tR,aX,aY,cX,cY)
 	-- if circle ~= nil then
-	local circleDistance_x = math.abs(tX + tR - aX - (aX - cX)/2)
-	local circleDistance_y = math.abs(tY + tR - aY - (aY - cY)/2)
+	local circleDistance_x = math.abs(tX - (aX + cX)/2)
+	local circleDistance_y = math.abs(tY - (aY + cY)/2)
 
-	if (circleDistance_x > ((aX - cX)/2 + tR)) then
+	local rect_l = math.abs(aX-cX)
+	local rect_h = math.abs(aY-cY)
+
+	if (circleDistance_x > ((rect_l)/2 + tR)) then
 		return false
 	end
-	if (circleDistance_y > ((aY - cY)/2 + tR)) then
+	if (circleDistance_y > ((rect_h)/2 + tR)) then
 		return false
 	end
 
-	if (circleDistance_x <= ((aX - cX)/2)) then
+	if (circleDistance_x <= ((rect_l)/2)) then
 		return true
 	end
 
-	if (circleDistance_y <= ((aY - cY)/2)) then
+	if (circleDistance_y <= ((rect_h)/2)) then
 		return true
 	end
 
-	cornerDistance_sq = (circleDistance_x - (aX - cX)/2)^2 + (circleDistance_y - (aY - cY)/2)^2
+	cornerDistance_sq = (circleDistance_x - (rect_l)/2)^2 + (circleDistance_y - (rect_h)/2)^2
 
 	return (cornerDistance_sq <= (tR^2));
 	-- else
 	--     return false
 	-- end
+end
+
+
+function getEnemiesInRect(width,length,showLines,checkNoCombat)
+	local LibDraw = LibStub("LibDraw-1.0")
+	local checkNoCombat = checkNoCombat or false
+	local nlX, nlY, nrX, nrY, frX, frY, flX,flY = getRect(width,length,isChecked("Show Drawings"))
+	local middleX = (flX+nrX)/2
+	local middleY = (flY+nrY)/2
+	local enemyCounter = 0
+	local enemiesTable = getEnemies("player",length,checkNoCombat)
+	local enemiesInRect = enemiesInRect or {}
+	if #enemiesTable > 0 then
+		table.wipe(enemiesInRect)
+		for i = 1, #enemiesTable do
+			local thisUnit = enemiesTable[i]
+			local tX, tY, tZ = GetObjectPosition(thisUnit) --GetPositionBetweenObjects(thisUnit, "player", UnitCombatReach(thisUnit))
+			if tX and tY then
+				--if circleRect(tX,tY,UnitBoundingRadius(thisUnit),nlX,nlY, width, length) then
+				if  isInside(tX,tY,nlX,nlY,nrX,nrY,frX,frY) then
+					if showLines then
+						drawCircle(tX,tY,tZ, UnitBoundingRadius(thisUnit))
+				 	end
+				 	enemyCounter = enemyCounter + 1
+				 	table.insert(enemiesInRect,thisUnit)
+				end
+			end
+		end
+	end
+	return enemyCounter, enemiesInRect
 end
 
 -- Percentage of enemies that are not in execute HP range

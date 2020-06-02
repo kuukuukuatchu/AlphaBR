@@ -61,7 +61,7 @@ local function createOptions()
     local function rotationOptions()
         local section
         -- General Options
-        section = br.ui:createSection(br.ui.window.profile, "General")
+        section = br.ui:createSection(br.ui.window.profile, "General - Version 1.0")
             -- APL
             br.ui:createDropdownWithout(section, "APL Mode", {"|cffFFFFFFSimC"}, 1, "|cffFFFFFFSet APL Mode to use.")
             -- Dummy DPS Test
@@ -359,7 +359,7 @@ actionList.Cooldowns = function()
                 if cast.metamorphosis("player") then debug("Casting Metamorphosis") return end
             end
             -- metamorphosis,if=talent.demonic.enabled&(!azerite.chaotic_transformation.enabled|(cooldown.eye_beam.remains>20&(!variable.blade_dance|cooldown.blade_dance.remains>gcd.max)))
-            if talent.demonic and (not traits.chaoticTransformation.active or (cd.eyeBeam.remain() > 20 and (not bladeDanceVar or cd.bladeDance.remain() > gcd))) then
+            if talent.demonic and (not traits.chaoticTransformation.active or ((cd.eyeBeam.remain() > 20 or mode.eyeBeam == 2) and (not bladeDanceVar or cd.bladeDance.remain() > gcd))) then
                 if cast.metamorphosis("player") then debug("Casting Metamorphosis") return end
             end
         end
@@ -405,8 +405,8 @@ actionList.Cooldowns = function()
                     debug("Using Cyclotronic Blast")
                     return
                 -- actions.cooldown+=/use_item,name=ashvanes_razor_coral,if=debuff.razor_coral_debuff.down|(debuff.conductive_ink_debuff.up|buff.metamorphosis.remains>20)&target.health.pct<31|target.time_to_die<20
-                elseif equiped.ashvanesRazorCoral(i) and (not debuff.razorCoral.exists("target") or (equiped.dribblingInkpod() and (debuff.dribblingInkpod.exists("target")
-                 or buff.metamorphosis.remain("player") > 20) and getHP("target") < 31) or ttd("target") < 20)
+                elseif equiped.ashvanesRazorCoral(i) and (not debuff.razorCoral.exists("target") or ((equiped.dribblingInkpod() and debuff.conductiveInk.exists("target") and getHP("target") < 31)
+                 or (buff.metamorphosis.remain("player") > 20 and debuff.razorCoral.stack() >= 15 and cd.eyeBeam.remain() > gcd)) or ttd("target") < 20)
                 then
                     use.slot(i)
                     debug("Using Ashvane's Razor Coral")
@@ -445,13 +445,13 @@ actionList.Cooldowns = function()
             if cast.bloodOfTheEnemy() then debug("Casting Blood of the Enemy") return end
         end
         -- Essence: Guardian of Azeroth
-        -- guardian_of_azeroth,if=buff.metamorphosis.up|target.time_to_die<=30
-        if useCDs() and (buff.metamorphosis.exists("player") or ttd("target") <= 30) then
+        -- (buff.metamorphosis.up&cooldown.metamorphosis.ready)|buff.metamorphosis.remains>25|target.time_to_die<=30
+        if useCDs() and ((buff.metamorphosis.exists("player") and cd.metamorphosis.remains() <= gcd) or buff.metamorphosis.remains() > 25 or ttd("target") <= 30) then
             if cast.guardianOfAzeroth() then debug("Casting Guardian of Azeroth") return end
         end
         -- Essence: Focused Azerite Beam
         -- focused_azerite_beam,if=spell_targets.blade_dance1>=2|raid_event.adds.in>60
-        if essence.focusedAzeriteBeam.active and cd.focusedAzeriteBeam.remain() <= gcd and getFacing("player","target") and (getEnemiesInRect(10,25,false,false) >= getOptionValue("Azerite Beam Units") or (useCDs() and getEnemiesInRect(10,40,false,false) >= 1)) then
+        if essence.focusedAzeriteBeam.active and cd.focusedAzeriteBeam.remain() <= gcd and getFacing("player","target") and (getEnemiesInRect(2,25,isChecked("Show Drawings"),false) >= getOptionValue("Azerite Beam Units") or (useCDs() and (getEnemiesInRect(2,25,isChecked("Show Drawings"),false) >= 1 or (getDistance("target") < 6 and isBoss("target"))))) then
             if cast.focusedAzeriteBeam() then
                 debug("Casting Focused Azerite Beam")
                 return 
@@ -483,6 +483,16 @@ actionList.Cooldowns = function()
         if useCDs() and buff.metamorphosis.exists() and power < 40 then
             if cast.memoryOfLucidDreams() then debug("Casting Memory of Lucid Dreams") return true end
         end
+        --reaping_flames,if=target.health.pct>80|target.health.pct<=20|target.time_to_pct_20>30
+        if essence.reapingFlames.active and cd.reapingFlames.remain() <= gcd then
+            for i = 1, #enemies.yards40 do
+                local thisUnit = enemies.yards40[i]
+                local thisHP = getHP(thisUnit)
+                if ((essence.reapingFlames.rank >= 2 and thisHP > 80) or thisHP <= 20 or getTTD(thisUnit,20) > 30) and getFacing("player","target") then
+                    if cast.reapingFlames(thisUnit) then debug("Casting Reaping Flames") return true end
+                end
+            end
+        end
     end
 end -- End Action List - Cooldowns
 
@@ -510,7 +520,7 @@ actionList.Demonic = function()
     -- Death Sweep
     -- death_sweep,if=variable.blade_dance
     if getDistance("target") < 6 and buff.metamorphosis.exists("player") and bladeDanceVar then
-        if cast.deathSweep("player","aoe",1,8) then debug("Casting Death Sweep") return end
+        if cast.deathSweep("target","aoe",1,8) then debug("Casting Death Sweep") return end
     end
     -- Eye Beam
     -- eye_beam,if=raid_event.adds.up|raid_event.adds.in>25
@@ -526,14 +536,14 @@ actionList.Demonic = function()
     if talent.felBarrage and mode.felBarrage == 1 and (cd.eyeBeam.remain() > gcd or buff.metamorphosis.exists("player")) and ((mode.rotation == 1 and #enemies.yards8 >= getOptionValue("Units To AoE"))
             or (mode.rotation == 2 and #enemies.yards8 > 0))
     then
-        if cast.felBarrage("player","aoe",1,8) then debug("Casting Fel Barrage") return end
+        if cast.felBarrage("target","aoe",1,8) then debug("Casting Fel Barrage") return end
     end
     -- Blade Dance
     -- blade_dance,if=variable.blade_dance&!cooldown.metamorphosis.ready&(cooldown.eye_beam.remains>(5-azerite.revolving_blades.rank*3)|(raid_event.adds.in>cooldown&raid_event.adds.in<25))
-    if not buff.metamorphosis.exists("player") and #enemies.yards8 > 0 and bladeDanceVar and (cd.metamorphosis.remain() > gcd or not useCDs() or not isChecked("Metamorphosis"))
+    if bladeDanceVar and not buff.metamorphosis.exists("player") and #enemies.yards8 > 0 
         and ((cd.eyeBeam.remain() > (5 - traits.revolvingBlades.rank*3)) or mode.eyeBeam == 2)
     then
-        if cast.bladeDance("player","aoe",1,20) then debug("Casting Blade Dance") return end
+        if cast.bladeDance("target","aoe",1,20) then debug("Casting Blade Dance") return end
     end
     -- Immolation Aura
     -- immolation_aura
@@ -614,12 +624,12 @@ actionList.Normal = function()
     if talent.felBarrage and mode.felBarrage == 1 and not waitForMomentum and 
     ((mode.rotation == 1 and #enemies.yards8 >= getOptionValue("Units To AoE")) or (mode.rotation == 2 and #enemies.yards8 > 0)) 
     then
-        if cast.felBarrage("player","aoe",1,8) then debug("Casting Fel Barrage") return end
+        if cast.felBarrage("target","aoe",1,8) then debug("Casting Fel Barrage") return end
     end
     -- Death Sweep
     -- death_sweep,if=variable.blade_dance
     if #enemies.yards8 > 0 and buff.metamorphosis.exists() and bladeDanceVar then
-        if cast.deathSweep("player","aoe",1,8) then debug("Casting Death Sweep") return end
+        if cast.deathSweep("target","aoe",1,8) then debug("Casting Death Sweep") return end
     end
     -- Immolation Aura
     -- immolation_aura
@@ -637,7 +647,7 @@ actionList.Normal = function()
     -- Blade Dance
     -- blade_dance,if=variable.blade_dance
     if #enemies.yards8 > 0 and not buff.metamorphosis.exists() and bladeDanceVar then
-        if cast.bladeDance("player","aoe",1,8) then debug("Casting Blade Dance") return end
+        if cast.bladeDance("target","aoe",1,8) then debug("Casting Blade Dance") return end
     end
     -- Felblade
     -- felblade,if=fury.deficit>=40
@@ -804,8 +814,9 @@ local function runRotation()
     enemies.get(8,"target") -- makes enemies.yards8t
     enemies.get(10)
     enemies.get(20)
+    enemies.get(40)
     enemies.get(50)
-    enemies.yards8r = getEnemiesInRect(10,20,true,false)
+    enemies.yards8r = getEnemiesInRect(2,20,isChecked("Show Drawings"),false)
 
     if leftCombat == nil then leftCombat = GetTime() end
     if profileStop == nil then profileStop = false end
@@ -858,7 +869,6 @@ local function runRotation()
             if cast.felRush() then return end
         end
     end
-
     ---------------------
     --- Begin Profile ---
     ---------------------
@@ -867,7 +877,7 @@ local function runRotation()
         profileStop = false
     elseif (inCombat and profileStop) or (IsMounted() or IsFlying()) or pause() or mode.rotation==4 or cast.active.eyeBeam() then
         return true
-    else
+    elseif br.timer:useTimer("playerUpdate", getUpdateRate()) then
         if not inCombat and br.data.settings[br.selectedSpec]["Combat Time"] ~= 0 then br.data.settings[br.selectedSpec]["Combat Time"] = 0 end
         -----------------------
         --- Extras Rotation ---

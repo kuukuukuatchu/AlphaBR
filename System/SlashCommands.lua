@@ -42,7 +42,7 @@ local function toggle(name, index, check)
 		toggleFound = false
 	end
 	for k, v in pairs(br.data.settings[br.selectedSpec].toggles) do
-		local toggle = name --(name:gsub("^%l", string.upper))
+		local toggle = string.upper(name) --name --(name:gsub("^%l", string.upper))
 		local name = string.lower(name)
 		local k = string.lower(k)
 		if name == k then
@@ -369,3 +369,36 @@ function handler(message, editbox)
 	end
 end
 SlashCmdList["BR"] = handler
+
+-- macro used to gather caster/spell/buff on our actual target
+SLASH_dumpInfo1 = "/dumpinfo"
+function SlashCmdList.dumpInfo(msg, editbox)
+	-- find unit in our engines
+	for k, v in pairs(br.enemy) do
+		if br.enemy[k].guid == UnitGUID("target") then
+			targetInfo = { }
+			targetInfo.name = UnitName("target")
+			local thisUnit = br.enemy[k].unit
+			targetInfo.unitID = thisUnit.id
+			local buff1 = UnitBuff("target",1)
+			local buff2 = UnitBuff("target",2)
+			local deBuff1 = UnitBuff("target",1)
+			local deBuff2 = UnitBuff("target",2)
+			if buff1 then
+				targetInfo.buff1 = buff1
+			end
+			if buff2 then
+				targetInfo.buff2 = buff2
+			end
+			if deBuff1 then
+				targetInfo.deBuff1 = deBuff1
+			end
+			if deBuff2 then
+				targetInfo.deBuff2 = deBuff2
+			end
+			RunMacroText("/dump targetInfo")
+			targetInfo = { }
+			break
+		end
+	end
+end

@@ -42,7 +42,8 @@ novaEngineTables.DispelID = {
 	[272571] = { stacks = 0 }, --https://www.wowhead.com/spell=272571/choking-waters
 	[275835] = { stacks = 0 }, --https://www.wowhead.com/spell=275835/stinging-venom-coating
 	-- Waycrest Manor
-	[261440] = { stacks = 0, range = 10 }, --https://www.wowhead.com/spell=261439/virulent-pathogen
+	[261440] = { stacks = 0, range = 8 }, --https://www.wowhead.com/spell=261439/virulent-pathogen
+	[261439] = { stacks = 0, range = 8 }, --https://www.wowhead.com/spell=261439/virulent-pathogen
 	[264378] = { stacks = 0 }, --https://www.wowhead.com/spell=264378/fragment-soul
 	[263891] = { stacks = 0 }, --https://www.wowhead.com/spell=263891/grasping-thorns
 	[265352] = { stacks = 0 }, --https://www.wowhead.com/spell=265352/toad-blight
@@ -54,7 +55,7 @@ novaEngineTables.DispelID = {
 	[272657] = { stacks = 0 }, --https://www.wowhead.com/spell=272657/noxious-breath
 	[267027] = { stacks = 0 }, --https://www.wowhead.com/spell=267027/cytotoxin
 	[272699] = { stacks = 0 }, --https://www.wowhead.com/spell=272699/venomous-spit
-  
+
 	-- Tol Dagor
 	[258128] = { stacks = 0 }, --https://www.wowhead.com/spell=258128/debilitating-shout
 	[265889] = { stacks = 0 }, --https://www.wowhead.com/spell=265889/torch-strike
@@ -68,7 +69,7 @@ novaEngineTables.DispelID = {
 	[259853] = { stacks = 0 }, --https://www.wowhead.com/spell=259853/chemical-burn
 	[269298] = { stacks = 0 }, --https://www.wowhead.com/spell=269298/widowmaker-toxin
 	-- Atal'Dazar
-	[252781] = { stacks = 0, range = 12 }, -- https://www.wowhead.com/spell=252781/unstable-hex
+	[252781] = { stacks = 0, range = 9 }, -- https://www.wowhead.com/spell=252781/unstable-hex
 	[250096] = { stacks = 0 }, -- https://www.wowhead.com/spell=250096/wracking-pain
 	[253562] = { stacks = 0 }, -- https://www.wowhead.com/spell=253562/wildfire
 	[255582] = { stacks = 0 }, -- https://www.wowhead.com/spell=255582/molten-gold
@@ -99,7 +100,7 @@ novaEngineTables.DispelID = {
 	[272609] = { stacks = 0 }, -- https://www.wowhead.com/spell=272609/maddening-gaze
 	[269301] = { stacks = 3 }, -- https://www.wowhead.com/spell=269301/putrid-blood
 	-- Eternal Palace
-	[296737] = { stacks = 0, range = 15}, -- https://www.wowhead.com/spell=296737/arcane-bomb
+	[296737] = { stacks = 0, range = 10}, -- https://www.wowhead.com/spell=296737/arcane-bomb
 	[295327] = { stacks = 0}, --https://www.wowhead.com/spell=295327/shattered-psyche
 	-- Mechagon
 	[300659] = {stacks = 0}, --https://www.wowhead.com/spell=300659/consuming-slime
@@ -108,6 +109,11 @@ novaEngineTables.DispelID = {
 	[294929] = {stacks = 0}, --https://www.wowhead.com/spell=294929/blazing-chomp
 	[294195] = {stacks = 0}, --https://www.wowhead.com/spell=294195/arcing-zap
 	[284219] = {stacks = 0}, --https://www.wowhead.com/spell=284219/shrink
+	-- Trash (Ny'alotha)
+	[310224] = {stacks = 10}, --https://www.wowhead.com/spell=307421/annihilation
+	-- Maut
+	[314993] = {stacks = 0, range = 10}, --https://www.wowhead.com/spell=314992/drain-essence
+
 
 
 
@@ -192,6 +198,8 @@ novaEngineTables.BadDebuffList= {
 	-- The Eternal Palace
 	[292127] = "Darkest Depths", -- Blackwater Behemoth
 	[297586] = "Suffering", -- Queen's Court
+	-- Ny'alotha
+   -- [316065] = "Corrupted Existence", -- Ra-den
 }
 -- list of special units we want to heal, these npc will go directly into healing engine(Special Heal must be checked)
 novaEngineTables.SpecialHealUnitList = {
@@ -254,7 +262,7 @@ novaEngineTables.SpecificHPDebuffs = {
 	[180116] = {value = 30 }, --http://www.wowhead.com/spell=180166/touch-of-harm
 	-- Chronomatic Anomaly (M)
 	[206609] = {value = 30 }, --http://www.wowhead.com/spell=206609/time-release
-	-- Gul'dan 
+	-- Gul'dan
 	[221891] = {value = 30 }, --http://www.wowhead.com/spell=221891/soul-siphon
 	-- Sisters of the Moon (ToS)
 	[233263] = {value = 30 }, --http://www.wowhead.com/spell=233263/embrace-of-the-eclipse
@@ -265,6 +273,13 @@ novaEngineTables.SpecificHPDebuffs = {
 	[286779] = {value = 30}, --https://www.wowhead.com/spell=286779/focused-demise
 
 	[260741] = {value = 30}, --https://www.wowhead.com/spell=260741/jagged-nettles
+	-- King's Rest
+	[266231] = {value = 30}, --https://www.wowhead.com/spell=266231/severing-axe
+	[265773] = {value = 30}, --https://www.wowhead.com/spell=265773/spit-gold
+	-- Ra-Den (Ny'alotha)
+	[306184] = {value = 30}, --https://www.wowhead.com/spell=306184/unleashed-void
+	[316065] = {value = -70}, --https://www.wowhead.com/spell=316065/corrupted-existence
+
 
 }
 -- this table will assign role to any unit wearing the unit name

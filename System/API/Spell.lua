@@ -17,6 +17,13 @@ br.api.spells = function(spells,k,v,subtable)
         cd.remains = function()
             return getSpellCD(v)
         end
+        cd.duration = function()
+            local _, CD = GetSpellCooldown(v)
+            return CD
+        end
+        cd.ready = function()
+            return getSpellCD(v) == 0
+        end
     end
     if subtable == "charges" then
         if spells[k] == nil then spells[k] = {} end
@@ -46,13 +53,13 @@ br.api.spells = function(spells,k,v,subtable)
     end
     if subtable == "cast" then
         local cast = spells
-        cast[k] = function(thisUnit,debug,minUnits,effectRng,predict)
-            return createCastFunction(thisUnit,debug,minUnits,effectRng,v,k,predict)
+        cast[k] = function(thisUnit,debug,minUnits,effectRng,predict,predictPad)
+            return createCastFunction(thisUnit,debug,minUnits,effectRng,v,k,predict,predictPad)
         end
 
         if cast.able == nil then cast.able = {} end
-        cast.able[k] = function(thisUnit,debug,minUnits,effectRng,predict)
-            return createCastFunction(thisUnit,"debug",minUnits,effectRng,v,k,predict)
+        cast.able[k] = function(thisUnit,debug,minUnits,effectRng,predict,predictPad)
+            return createCastFunction(thisUnit,"debug",minUnits,effectRng,v,k,predict,predictPad)
             -- return self.cast[v](nil,"debug")
         end
 
@@ -79,15 +86,20 @@ br.api.spells = function(spells,k,v,subtable)
             return isCastingSpell(spellID,unit)
         end
 
-        -- if cast.dispellabe == nil then cast.dispellable = {} end
-        -- cast.dispellable[k] = function(thisUnit)
-        --     if thisUnit == nil then thisUnit = "target" end
-        --     return canDispel(thisUnit,v)
-        -- end
+        if cast.dispel == nil then cast.dispel = {} end
+        cast.dispel[k] = function(unit)
+            if unit == nil then unit = "target" end
+            return canDispel(unit,v) or false
+        end
 
         if cast.inFlight == nil then cast.inFlight = {} end
         cast.inFlight[k] = function(unit)
             return br.InFlight.Check(v, unit)
+        end
+
+        if cast.inFlightRemain == nil then cast.inFlightRemain = {} end
+        cast.inFlightRemain[k] = function(unit)
+            return br.InFlight.Remain(v, unit)
         end
 
         if cast.last == nil then cast.last = {} end
@@ -99,14 +111,14 @@ br.api.spells = function(spells,k,v,subtable)
 
         if cast.last.time == nil then cast.last.time = {} end
         cast.last.time[k] = function()
-            local castTime = br.lastCast.castTime[v] or 0
-            return castTime
+            if br.lastCast.castTime[v] == nil then br.lastCast.castTime[v] = GetTime() end
+            return br.lastCast.castTime[v]
         end
 
         if cast.timeSinceLast == nil then cast.timeSinceLast = {} end
         cast.timeSinceLast[k] = function()
-            local castTime = br.lastCast.castTime[v] or 0
-            return GetTime() - castTime
+            if br.lastCast.castTime[v] == nil then br.lastCast.castTime[v] = GetTime() end
+            return GetTime() - br.lastCast.castTime[v]
         end
 
         if cast.pool == nil then cast.pool = {} end
@@ -138,6 +150,12 @@ br.api.spells = function(spells,k,v,subtable)
         if cast.time == nil then cast.time = {} end
         cast.time[k] = function()
             return getCastTime(v)
+        end
+
+        if cast.timeRemain == nil then cast.timeRemain = {} end
+        cast.timeRemain[k] = function(Unit)
+            if Unit == nil then Unit = "player" end
+            return getCastTimeRemain(Unit)
         end
     end
 end

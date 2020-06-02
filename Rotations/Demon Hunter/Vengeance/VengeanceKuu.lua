@@ -55,7 +55,7 @@ local function createOptions()
     local function rotationOptions()
         local section
         -- General Options
-        section = br.ui:createSection(br.ui.window.profile, "General")
+        section = br.ui:createSection(br.ui.window.profile, "General - Version 1.0")
         -- APL
         br.ui:createDropdownWithout(section, "APL Mode", {"|cffFFFFFFSimC"}, 1, "|cffFFFFFFSet APL Mode to use.")
         -- Dummy DPS Test
@@ -135,6 +135,8 @@ local function createOptions()
         br.ui:createSpinner(section, "Anima of Death", 75, 0, 100, 5, "|cffFFBB00Health Percentage to use at.")
         -- Empower Null Barrier
         br.ui:createSpinner(section, "Empowered Null Barrier", 50, 0, 100, 5, "|cffFFBB00Health Percentage to use at.")
+        -- Strength of the Warden
+        br.ui:createCheckbox(section, "Strength of the Warden")
         br.ui:checkSectionState(section)
         -- Interrupt Options
         section = br.ui:createSection(br.ui.window.profile, "Interrupts")
@@ -203,6 +205,7 @@ local function runRotation()
     local hastar = GetObjectExists("target")
     local debuff = br.player.debuff
     local enemies = br.player.enemies
+    local equiped = br.player.equiped
     local essence = br.player.essence
     local flying, moving = IsFlying(), GetUnitSpeed("player") > 0
     local flaskBuff = getBuffRemain("player", br.player.flask.wod.buff.agilityBig)
@@ -219,6 +222,10 @@ local function runRotation()
     local talent = br.player.talent
     local ttd = getTTD
     local units = br.player.units
+    local hasAggro = UnitThreatSituation("player")
+    if hasAggro == nil then
+        hasAggro = 0
+    end
     iStrikeDelay = iStrikeDelay or 0
 
     units.get(5)
@@ -279,7 +286,8 @@ local function runRotation()
 
     local function ShouldMitigate()
         if UnitThreatSituation("player", "target") == 3 and UnitCastingInfo("target") then
-            if activeMitigationList[select(9, UnitCastingInfo("target"))] ~= nil then
+            -- if activeMitigationList[select(9, UnitCastingInfo("target"))] ~= nil then
+            if br.lists.defensives[select(9, UnitCastingInfo("target"))] ~= nil then
                 return true
             end
         -- for i = 1, #activeMitigationList do
@@ -325,19 +333,14 @@ local function runRotation()
             end
             if not GetUnitIsUnit("player", tank) and php >= 75 and not UnitBuffID("player", 296962) and br.timer:useTimer("Font Delay", 4) and not isMoving("player") then
                 br.addonDebug("Using Font Of Azshara")
-                useItem(169314)
+                useItem(slot)
                 return true
             end
         elseif hasEquiped(169311, slot) then
-            if
-                ((debuff.razorCoral.stack("target") >= 10 and debuff.razorCoral.remain("target") < 5) or (ttd("target") < 20 and debuff.razorCoral.stack("target") >= 5)) and
-                    br.timer:useTimer("Razor Coral Delay", 3)
-             then
-                br.addonDebug("Using second activation of Ashvane's Razor Coral")
+            if not debuff.razorCoral.exists("target") or (equiped.dribblingInkpod() and (debuff.conductiveInk.exists("target") and (getHP("target") < 31)) or ttd("target") < 20) then
+                br.addonDebug("Using Ashvane's Razor Coral")
                 useItem(slot)
-            elseif not debuff.razorCoral.exists("target") and br.timer:useTimer("Razor Coral Delay", 3) then
-                br.addonDebug("Using first activation of Ashvane's Razor Coral")
-                useItem(slot)
+                return true
             end
         end
     end
@@ -392,7 +395,7 @@ local function runRotation()
             end
         end -- End Dummy Test
         -- Torment
-        if isChecked("Torment") then
+        if isChecked("Torment") and combatTime > 5 then
             for i = 1, #enemies.yards30 do
                 local thisUnit = enemies.yards30[i]
                 local target = UnitTarget(thisUnit)
@@ -409,10 +412,9 @@ local function runRotation()
     local function actionList_Defensive()
         if useDefensive() then
             -- Demon Spikes
-            if
-                isChecked("Demon Spikes") and br.timer:useTimer("Spikes delay", 2) and inCombat and
+            if isChecked("Demon Spikes") and br.timer:useTimer("Spikes delay", 2) and inCombat and
                     ((charges.demonSpikes.count() > getOptionValue("Hold Demon Spikes") and php <= getOptionValue("Demon Spikes")) or charges.demonSpikes.count() == 2) and
-                    #enemies.yards8 > 0
+                    #enemies.yards8 > 0 and hasAggro >= 2
              then
                 if not buff.demonSpikes.exists() and not debuff.fieryBrand.exists("target") and not buff.metamorphosis.exists() then
                     if cast.demonSpikes() then
@@ -422,7 +424,7 @@ local function runRotation()
                 end
             end
             -- Null Barrier
-            if isChecked("Empowered Null Barrier") and inCombat and essence.empoweredNullBarrier.active and cd.empoweredNullBarrier.remain() <= gcd and php <= getOptionValue("Empowered Null Barrier") then
+            if isChecked("Empowered Null Barrier") and inCombat and essence.empoweredNullBarrier.active and cd.empoweredNullBarrier.remain() <= gcd and php <= getOptionValue("Empowered Null Barrier") and hasAggro >= 2 then
                 if not buff.demonSpikes.exists() and not debuff.fieryBrand.exists("target") and not buff.metamorphosis.exists() then
                     if cast.empoweredNullBarrier() then
                         br.addonDebug("Casting Empowered Null Barrier")
@@ -431,7 +433,7 @@ local function runRotation()
                 end
             end
             -- Fiery Brand
-            if isChecked("Fiery Brand") and inCombat and php <= getOptionValue("Fiery Brand") and #enemies.yards30 > 0 then
+            if isChecked("Fiery Brand") and inCombat and php <= getOptionValue("Fiery Brand") and #enemies.yards30 > 0 and hasAggro >= 2 then
                 if not buff.demonSpikes.exists() and not buff.metamorphosis.exists() then
                     if cast.fieryBrand() then
                         br.addonDebug("Casting Fiery Brand")
@@ -442,7 +444,7 @@ local function runRotation()
             -- Metamorphosis
             if
                 isChecked("Metamorphosis") and inCombat and not buff.demonSpikes.exists() and not debuff.fieryBrand.exists("target") and not buff.metamorphosis.exists() and
-                    php <= getOptionValue("Metamorphosis")
+                    php <= getOptionValue("Metamorphosis") and hasAggro >= 2
              then
                 if cast.metamorphosis() then
                     br.addonDebug("Casting Metamorphosis")
@@ -464,7 +466,7 @@ local function runRotation()
                 end
             end
             -- Soul Barrier
-            if isChecked("Soul Barrier") and inCombat and php < getOptionValue("Soul Barrier") then
+            if isChecked("Soul Barrier") and inCombat and php < getOptionValue("Soul Barrier") and hasAggro >= 2 then
                 if cast.soulBarrier() then
                     br.addonDebug("Casting Soul Barrier")
                     return
@@ -709,7 +711,7 @@ local function runRotation()
     end -- End Action List - Fiery Brand
 
     local function actionList_ActiveMitigation()
-        if ShouldMitigate() and #enemies.yards8 > 0 then
+        if ShouldMitigate() and #enemies.yards8 > 0 and hasAggro >= 2 then
             if isChecked("Trinket 1") and canTrinket(13) and not hasEquiped(169311, 13) and not hasEquiped(167555, 13) then
                 trinketLogic(13)
                 return
@@ -825,6 +827,13 @@ local function runRotation()
             -- actions+=/call_action_list,name=brand,if=talent.charred_flesh.enabled
             if talent.charredFlesh then
                 if actionList_FieryBrand() then
+                    return
+                end
+            end
+            -- Vigilant Protector
+            if isChecked("Strength of the Warden") and essence.vigilantProtector.active and cd.vigilantProtector.remain() <= gcdMax and #enemies.yards8 >= 3 then
+                if cast.vigilantProtector() then
+                    br.addonDebug("Casting Vigilant Protector")
                     return
                 end
             end

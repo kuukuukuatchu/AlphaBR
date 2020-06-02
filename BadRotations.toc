@@ -1,8 +1,8 @@
-## Interface: 80100
+## Interface: 80300
 ## Title: |cffa330c9BadRotations
 ## Notes: |cffa330c9By CuteOne.
 ## Author: CuteOne
-## Version: 1.32.1
+## Version: 1.33.2
 ## SavedVariablesPerCharacter: brdata, brprofile
 
 BadRotations.lua
@@ -37,9 +37,14 @@ System\Functions\SmartQueue.lua
 
 ## Lists
 
+System\Lists\AoEDamage.lua
 System\Lists\BurnUnits.lua
 System\Lists\CCUnits.lua
+System\Lists\Defensives.lua
+System\Lists\Dispels.lua
 System\Lists\Dummy.lua
+System\Lists\HorrificVision.lua
+System\Lists\InterruptWhitelist.lua
 System\Lists\Items.lua
 System\Lists\LineOfSight.lua
 System\Lists\LongCC.lua
@@ -49,9 +54,9 @@ System\Lists\Pets.lua
 System\Lists\ShieldUnits.lua
 System\Lists\Specs.lua
 System\Lists\Spells.lua
+System\Lists\Range.lua
 System\Lists\ThreatBypass.lua
 System\Lists\Tier.lua
-System\Lists\AoEDamage.lua
 
 ## Readers
 
@@ -78,22 +83,21 @@ Libs\LibSpellRange-1.0\LibSpellRange-1.0.lua
 Libs\LibRangeCheck-2.0\LibRangeCheck-2.0.lua
 Libs\LibArtifactData-1.0\LibArtifactData-1.0.lua
 #@end-no-lib-strip@
-System\drawer\drawer.lua
 
 ## Engines
 
 System\Engines\ArtifactTable.lua
 System\Engines\EnemiesEngine.lua
-System\Engines\EnemiesEngineCollections.lua
-System\Engines\EnemiesEngineFrame.lua
 System\Engines\EnemiesEngineFunctions.lua
 System\Engines\HealingEngine.lua
 System\Engines\HealingEngineCollections.lua
 System\Engines\HealingEngineFrame.lua
 System\Engines\HealingEngineFunctions.lua
-System\Engines\InterruptsFrame.lua
-System\Engines\Interrupts.lua
+#System\Engines\InterruptsFrame.lua -- Unused
+System\Engines\Interrupts.lua 
 System\Engines\ttdTable.lua
+System\Engines\QuestTracker.lua
+System\Engines\Tracker.lua
 
 ## BadRotations UI
 
@@ -124,6 +128,7 @@ System\API\Buff.lua
 System\API\Debuff.lua
 System\API\Essence.lua
 System\API\Item.lua
+System\API\Pet.lua
 System\API\Power.lua
 System\API\Spell.lua
 System\API\UI.lua

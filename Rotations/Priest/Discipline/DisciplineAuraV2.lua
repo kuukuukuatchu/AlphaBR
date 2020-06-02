@@ -48,7 +48,7 @@ local function createOptions()
         -------------------------
         -------- UTILITY --------
         -------------------------
-        section = br.ui:createSection(br.ui.window.profile, "Utility")
+        section = br.ui:createSection(br.ui.window.profile, "Utility - Version 1.03")
         -- Pull Spell
         br.ui:createCheckbox(section, "Pull Spell", "Check this to use SW:P to pull when solo.")
         -- Auto Buff Fortitude
@@ -101,7 +101,8 @@ local function createOptions()
         -------------------------
         section = br.ui:createSection(br.ui.window.profile, "Essence")
         --Concentrated Flame
-        br.ui:createSpinner(section, "Concentrated Flame", 75, 0, 100, 5, colorWhite .. "Will cast Concentrated Flame if party member is below value. Default: 75")
+        br.ui:createDropdown(section, "Concentrated Flame", { "DPS", "Heal", "Hybrid"}, 1)
+        br.ui:createSpinnerWithout(section, "Concentrated Flame Heal", 70, 10, 90, 5)
         --Memory of Lucid Dreams
         br.ui:createCheckbox(section, "Lucid Dreams")
         -- Ever-Rising Tide
@@ -131,6 +132,7 @@ local function createOptions()
             "|cffFFFFFFApply Atonement to Tank using Power Word: Shield and Power Word: Radiance. Health Percent to Cast At. Default: 95"
         )
         br.ui:createSpinnerWithout(section, "Max Atonements", 3, 1, 40, 1, "|cffFFFFFFMax Atonements to Keep Up At Once. Default: 3")
+        br.ui:createSpinner(section, "Depths of the Shadows", 5, 0, 40, 1, "Number of stacks to use Shadow Mend instead of Shield")
         br.ui:createDropdown(section, "Atonement Key", br.dropOptions.Toggle, 6, "|cffFFFFFFSet key to press to spam atonements on everyone.")
         --Alternate Heal & Damage
         br.ui:createSpinner(section, "Alternate Heal & Damage", 1, 1, 5, 1, "|cffFFFFFFAlternate Heal & Damage. How many Atonement applied before back to doing damage. Default: 1")
@@ -722,7 +724,7 @@ local function runRotation()
                         end
                     end
                     --Touch of the Void
-                    if isChecked("Touch of the Void") and getDistance(units.dyn5) < 5 then
+                    if isChecked("Touch of the Void") and getDistance("target") < 5 then
                         if hasEquiped(128318) then
                             if GetItemCooldown(128318) == 0 then
                                 useItem(128318)
@@ -935,7 +937,7 @@ local function runRotation()
         local function actionList_OOCHealing()
             if isChecked("OOC Healing") and (not inCombat or #enemies.yards40 < 1) then -- ooc or in combat but nothing to attack
                  --Resurrection
-                 if isChecked("Resurrection") and not inCombat and not isMoving("player") then
+                 if isChecked("Resurrection") and not inCombat and not isMoving("player") and br.timer:useTimer("Resurrect", 4) then
                     if getOptionValue("Resurrection - Target") == 1 and UnitIsPlayer("target") and UnitIsDeadOrGhost("target") and GetUnitIsFriend("target", "player") then
                         if cast.resurrection("target", "dead") then
                             br.addonDebug("Casting Resurrection (Target)")
@@ -949,13 +951,16 @@ local function runRotation()
                         end
                     end
                     if getOptionValue("Resurrection - Target") == 3 then
-                        for i = 1, #br.friend do
+                        local deadPlayers = {}
+                        for i =1, #br.friend do
                             if UnitIsPlayer(br.friend[i].unit) and UnitIsDeadOrGhost(br.friend[i].unit) then
-                                if cast.massResurrection() then
-                                    br.addonDebug("Casting Resurrection (Auto)")
-                                    return true
-                                end
+                                tinsert(deadPlayers,br.friend[i].unit)
                             end
+                        end
+                        if #deadPlayers > 1 then
+                            if cast.massResurrection() then br.addonDebug("Casting Mass Resurrection") return true end
+                        elseif #deadPlayers == 1 then
+                            if cast.resurrection(deadPlayers[1],"dead") then br.addonDebug("Casting Ressurection (Auto)") return true end
                         end
                     end
                 end
@@ -998,10 +1003,10 @@ local function runRotation()
                 end
                 -- Concentrated Flame
                 if isChecked("Concentrated Flame") and essence.concentratedFlame.active and cd.concentratedFlame.remain() <= gcd then
-                    if lowest.hp <= getValue("Concentrated Flame") then
+                    if (getOptionValue("Concentrated Flame") == 2 or getOptionValue("Concentrated Flame") == 3) and lowest.hp <= getValue("Concentrated Flame Heal") then
                         if cast.concentratedFlame(lowest.unit) then
-                            br.addonDebug("Casting Concentrated Flame")
-                            return
+                            br.addonDebug("Casting Concentrated Flame (Heal)")
+                            return true
                         end
                     end
                 end
@@ -1206,7 +1211,7 @@ local function runRotation()
             end
             -- Evangelism
             if (SpecificToggle("Evangelism Key") and not GetCurrentKeyBoardFocus()) and isChecked("Evangelism Key") then
-                if cast.evangelism then
+                if cast.evangelism() then
                     br.addonDebug("Casting Evangelism")
                     return true
                 end
@@ -1225,7 +1230,7 @@ local function runRotation()
             end
             -- Temple of Seth
             if inCombat and isChecked("Temple of Seth") and br.player.eID and br.player.eID == 2127 then
-                for i = 1, GetObjectCount() do
+                for i = 1, GetObjectCountBR() do
                     local thisUnit = GetObjectWithIndex(i)
                     if GetObjectID(thisUnit) == 133392 then
                         sethObject = thisUnit
@@ -1297,8 +1302,7 @@ local function runRotation()
                 end
                 if isChecked("Obey Atonement Limits") then
                     for i = 1, #br.friend do
-                        if
-                            maxAtonementCount < getValue("Max Atonements") and not buff.atonement.exists(br.friend[i].unit) and
+                        if maxAtonementCount < getValue("Max Atonements") and not buff.atonement.exists(br.friend[i].unit) and
                                 getBuffRemain(br.friend[i].unit, spell.buffs.powerWordShield, "player") < 1
                          then
                             if cast.powerWordShield(br.friend[i].unit) then
@@ -1403,7 +1407,12 @@ local function runRotation()
                         (tanks[i].hp <= getValue("Tank Atonement HP") or getValue("Tank Atonement HP") == 100) and not buff.powerWordShield.exists(tanks[i].unit) and
                             getBuffRemain(tanks[i].unit, spell.buffs.atonement, "player") < 1
                      then
-                        if cast.powerWordShield(tanks[i].unit) then
+                        if isChecked("Depths of the Shadows") and buff.depthOfTheShadows.stack() >= getValue("Depths of the Shadows") then
+                            if cast.shadowMend(tanks[i].unit) then
+                                br.addonDebug("Casting Shadow Mend")
+                                healCount = healCount + 1
+                            end
+                        elseif cast.powerWordShield(tanks[i].unit) then
                             br.addonDebug("Casting Power Word Shield")
                             healCount = healCount + 1
                             return true
@@ -1417,7 +1426,12 @@ local function runRotation()
                             getBuffRemain(br.friend[i].unit, spell.buffs.atonement, "player") < 1 and
                             maxAtonementCount < getValue("Max Atonements")
                      then
-                        if cast.powerWordShield(br.friend[i].unit) then
+                        if isChecked("Depths of the Shadows") and buff.depthOfTheShadows.stack() >= getValue("Depths of the Shadows") then
+                            if cast.shadowMend(br.friend[i].unit) then
+                                br.addonDebug("Casting Shadow Mend")
+                                healCount = healCount + 1
+                            end
+                        elseif cast.powerWordShield(br.friend[i].unit) then
                             br.addonDebug("Casting Power Word Shield")
                             healCount = healCount + 1
                             return true
@@ -1491,10 +1505,10 @@ local function runRotation()
                 end
             end
             -- Schism (2+ Atonement)
-            if talent.schism and isChecked("Schism") and atonementCount >= 2 and cd.penance.remain() <= gcdMax and norganBuff and ttd(units.dyn40) > 9 then
-                if cast.schism(units.dyn40) then
+            if talent.schism and isChecked("Schism") and atonementCount >= 2 and cd.penance.remain() <= gcdMax and norganBuff and ttd("target") > 9 and not isExplosive("target") then
+                if cast.schism("target") then
                     br.addonDebug("Casting Schism")
-                    schismBuff = (units.dyn40)
+                    schismBuff = getUnitID("target")
                 end
             end
             -- Power Word: Solace
@@ -1560,10 +1574,17 @@ local function runRotation()
             end
             -- Concentrated Flame
             if isChecked("Concentrated Flame") and essence.concentratedFlame.active and cd.concentratedFlame.remain() <= gcd then
-                if lowest.hp <= getValue("Concentrated Flame") then
+                if (getOptionValue("Concentrated Flame") == 2 or getOptionValue("Concentrated Flame") == 3) and lowest.hp <= getValue("Concentrated Flame Heal") then
                     if cast.concentratedFlame(lowest.unit) then
-                        br.addonDebug("Casting Concentrated Flame")
+                        br.addonDebug("Casting Concentrated Flame (Heal)")
                         return true
+                    end
+                else
+                    if getOptionValue("Concentrated Flame") == 1 or (getOptionValue("Concentrated Flame") == 3 and not debuff.schism.exists(schismBuff) and lowest.hp > getValue("Concentrated Flame Heal")) then
+                        if cast.concentratedFlame("target") then
+                            br.addonDebug("Casting Concentrated Flame (Dmg)")
+                            return true
+                        end
                     end
                 end
             end
@@ -1579,7 +1600,7 @@ local function runRotation()
                 end
             end
             -- Azshara's Font of Power
-            if isChecked("Azshara's Font") and hasEquiped(169314) and lowest.hp > getOptionValue("Azshara's Font") and not UnitBuffID("player", 296962) and br.timer:useTimer("Font Delay", 4) and canUseItem(169314) and not isMoving("player") then
+            if isChecked("Azshara's Font") and hasEquiped(169314) and lowest.hp > getOptionValue("Azshara's Font") and not UnitBuffID("player", 296962) and br.timer:useTimer("Font Delay", 4) and canUseItem(169314) and not isMoving("player") and ttd("target") > 30 then
                 useItem(169314)
                 br.addonDebug("Using Font of Azshara")
                 return true
@@ -1599,19 +1620,17 @@ local function runRotation()
                 end
             end
             -- Smite
-            if isChecked("Smite") and norganBuff and dpsCheck then
-                if mana > 20 or freeCast then
-                    if debuff.schism.exists(schismBuff) then
-                        if cast.smite(schismBuff) then
-                            br.addonDebug("Casting Smite")
-                            healCount = 0
-                            return true
-                        end
-                    elseif cast.smite() then
+            if isChecked("Smite") and norganBuff and (freeCast or dpsCheck) then
+                if debuff.schism.exists(schismBuff) then
+                    if cast.smite(schismBuff) then
                         br.addonDebug("Casting Smite")
                         healCount = 0
                         return true
                     end
+                elseif cast.smite() then
+                    br.addonDebug("Casting Smite")
+                    healCount = 0
+                    return true
                 end
             end
             -- Fade
@@ -1638,7 +1657,7 @@ local function runRotation()
             pause() or UnitDebuffID("player", 240447) or (getBuffRemain("player", 192001) > 0 and mana < 100) or getBuffRemain("player", 192002) > 10 or
                 (getBuffRemain("player", 192002) > 0 and mana < 100) or
                 getBuffRemain("player", 188023) > 0 or
-                getBuffRemain("player", 175833) > 0
+                getBuffRemain("player", 175833) > 0 
          then
             return true
         else

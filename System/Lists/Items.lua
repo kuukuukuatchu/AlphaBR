@@ -9,9 +9,8 @@ function getHeirloomNeck()
         eternalWovenIvyNecklace     = 122666,
         manariTrainingAmulet        = 153130,
     }
-    for i = 1, #necks do
-        local thisNeck = necks[i]
-        if hasEquiped(thisNeck,2) then return thisNeck end
+    for _,v in pairs(necks) do
+        if hasEquiped(v,2) then return v end
     end
     return 0
 end
@@ -42,7 +41,7 @@ br.lists.items = {
     weightOfTheEarth                = 137077,
     -- All Shared
     -- Augment Runes
-    battleScarredAugmentRune        = 160053,
+    battleScarredAugmentRune        = 160053, -- BfA augment rune item
     defiledAugmentRune              = 140587,
     lightforgedAugmentRune          = 153023, -- 7.3 augment rune item
     -- Flasks
@@ -60,6 +59,7 @@ br.lists.items = {
     -- Greater Flasks
     greaterFlaskOfTheCurrents       = 168651,
     greaterFlaskOfTheUndertow       = 168654,
+    greaterFlaskOfEndlessFathoms    = 168652,
     -- Healthstones
     healthstone                     = 5512,
     -- Heirlooms
@@ -87,12 +87,16 @@ br.lists.items = {
     superiorSteelskinPotion         = 168501, -- Armor Potion
     superiorBattlePotionOfAgility   = 168489,
     superiorBattlePotionOfIntellect = 168498,
-    superiorNattlePotionOfStrength  = 168500,
+    superiorBattlePotionOfStrength  = 168500,
     superiorBattlePotionOfStamina   = 168499,
     -- Rings
     ringOfCollapsingFutures         = 142173,
+    -- Wrists
+    hyperthreadWristWraps           = 168989,
+    wrapsOfElectrostaticPotential   = 169069,
     --Trinkets
     ashvanesRazorCoral              = 169311,
+    aquipotentNautilus              = 169305,
     azsharasFontOfPower             = 169314,
     bygoneBeeAlmanac                = 163936,
     convergenceOfFates              = 140806,
@@ -105,11 +109,22 @@ br.lists.items = {
     grongsPrimalRage                = 165574,
     hornOfValor                     = 133642,
     jesHowler                       = 159627,
+    lustrousGoldenPlumage           = 159617,
     pocketSizedComputationDevice    = 167555,
     rampingAmplitudeGigavoltEngine  = 165580,
+    remoteGuidanceDevice            = 169769,
+    rotcrustedVoodooDoll            = 159624,
+    shiverVenomRelic                = 168905,
     specterOfBetrayal               = 151190,
+    tidestormCodex                  = 165576,
     umbralMoonglaives               = 147012,
     vialOfCeaselessToxins           = 147011,
+    vialOfStorms                    = 158224,
     vigorTrinket                    = 165572,
     visionOfDemise                  = 169307,
+    hummingBlackDragonscale         = 174044,
+    --weapons that are clickable
+    neuralSynapseEnhancer           = 168973,
+    -- Legendary 8.3 cloak
+    shroudOfResolve                 = 169223,
 }

@@ -1,3 +1,4 @@
+--Version 1.0.0
 local rotationName = "Panglo2"
 
 ---------------
@@ -65,7 +66,7 @@ local function createOptions()
         -----------------------
         --- GENERAL OPTIONS ---
         -----------------------
-        section = br.ui:createSection(br.ui.window.profile, "General")
+        section = br.ui:createSection(br.ui.window.profile, "General - Version 1.000")
         -- br.ui:createDropdown(section,"leap test",{"behind","forward","random"}, 1)
         br.ui:createCheckbox(section, "Open World Defensives", "Use this checkbox to ensure defensives are used while in Open World")
         -- Berserker Rage
@@ -147,6 +148,13 @@ local function createOptions()
         -- Interrupt Percentage
         br.ui:createSpinner(section, "Interrupt At", 0, 0, 95, 5, "|cffFFBB00Cast Percentage to use at.")
         br.ui:checkSectionState(section)
+        section = br.ui:createSection(br.ui.window.profile, "Corruption Management")
+        br.ui:createCheckbox(section,"Corruption Radar On")
+        br.ui:createCheckbox(section,"Use Storm Bolt on TFTB")
+        br.ui:createCheckbox(section, "Use Int Shout on TFTB")
+        br.ui:createDropdownWithout(section, "Use Cloak", { "snare", "Eye", "THING", "Never" }, 4, "", "")
+        br.ui:createSpinnerWithout(section, "Eye Of Corruption Stacks - Cloak", 1, 0, 20, 1)
+        br.ui:checkSectionState(section)
     end
     optionTable = {
         {
@@ -155,6 +163,28 @@ local function createOptions()
         }
     }
     return optionTable
+end
+
+local function ipCapCheck()
+    if br.player.buff.ignorePain.exists() then
+        local ipValue = tonumber((select(1, GetSpellDescription(190456):match("%d+%S+%d"):gsub("%D", ""))), 10)
+        local ipMax = math.floor(ipValue * 1.3)
+        local ipCurrent = tonumber((select(16, UnitBuffID("player", 190456))), 10)
+        if ipCurrent == nil then
+            ipCurrent = 0
+            return
+        end
+        if ipCurrent <= (ipMax * 0.2) then
+            ---print("IP below cap")
+            return true
+        else
+            --print("dont cast IP")
+            return false
+        end
+    else
+        --print("IP not on")
+        return true
+    end
 end
 
 ----------------
@@ -218,6 +248,9 @@ local function runRotation()
         local hasAggro = UnitThreatSituation("player")
         if hasAggro == nil then
             hasAggro = 0
+        end
+        if timersTable then
+            wipe(timersTable)
         end
 
         units.get(5)
@@ -340,35 +373,8 @@ local function runRotation()
                 return false
             end
         end
-        local function ipCapCheck()
-            if buff.ignorePain.exists() then
-                local ipValue = tonumber((select(1, GetSpellDescription(190456):match("%d+%S+%d"):gsub("%D", ""))), 10)
-                local ipMax = math.floor(ipValue * 1.3)
-                local ipCurrent = tonumber((select(16, UnitBuffID("player", 190456))), 10)
-                if ipCurrent == nil then
-                    ipCurrent = 0
-                    return
-                end
-                if ipCurrent <= (ipMax * 0.2) then
-                    ---print("IP below cap")
-                    return true
-                else
-                    --print("dont cast IP")
-                    return false
-                end
-            else
-                --print("IP not on")
-                return true
-            end
-        end
 
         local function rageCap()
-            if cast.able.ignorePain() and rage >= getValue("High Rage Dump") and mainTank() and ipCapCheck() then
-                --print("dumping IP")
-                if cast.ignorePain() then
-                    return
-                end
-            end
             if not isExplosive("target") and cast.able.revenge() and rage >= getValue("High Rage Dump") and (not ipCapCheck() or not mainTank()) then
                 --print("dumping R")
                 if cast.revenge() then
@@ -387,31 +393,6 @@ local function runRotation()
                     end
                 end
             end
-            if isChecked("Berserker Rage") and hasNoControl(spell.berserkerRage) then
-                if cast.berserkerRage() then
-                    return
-                end
-            end
-            if br.player.mode.taunt == 1 and inInstance then
-                for i = 1, #enemies.yards30 do
-                    local thisUnit = enemies.yards30[i]
-                    if UnitThreatSituation("player", thisUnit) ~= nil and UnitThreatSituation("player", thisUnit) <= 2 and UnitAffectingCombat(thisUnit) then
-                        if cast.taunt(thisUnit) then
-                            return
-                        end
-                    end
-                end
-            end -- End Taunt
-            if br.player.mode.taunt == 2 then
-                for i = 1, #enemies.yards30 do
-                    local thisUnit = enemies.yards30[i]
-                    if UnitThreatSituation("player", thisUnit) ~= nil and UnitThreatSituation("player", thisUnit) <= 2 and UnitAffectingCombat(thisUnit) then
-                        if cast.taunt(thisUnit) then
-                            return
-                        end
-                    end
-                end
-            end -- End Taunt
 
             if isChecked("Battle Shout") and cast.able.battleShout() then
                 for i = 1, #br.friend do
@@ -438,6 +419,96 @@ local function runRotation()
             end
         end
 
+        local function offGCD()
+            if inCombat then 
+                if cast.able.ignorePain() and rage >= getValue("High Rage Dump") and mainTank() and ipCapCheck() then
+                    --print("dumping IP")
+                    CastSpellByName(GetSpellInfo(190456))
+                end
+
+                if useDefensive() then
+                    if mode.reflect == 1 and isChecked("Smart Spell Reflect") then
+                        for i = 1, #enemies.yards30 do
+                            local thisUnit = enemies.yards30[i]
+                            local _, _, _, startCast, endCast, _, _, _, spellcastID = UnitCastingInfo(thisUnit)
+
+                            if UnitTarget("player") and reflectID[spellcastID] and (((GetTime() * 1000) - startCast) / (endCast - startCast) * 100) > getOptionValue("Smart Spell Reflect Percent") then
+                                if cast.spellReflection() then
+                                    return
+                                end
+                            end
+                        end
+                    end
+
+                    if mode.shield == 1 and cast.able.shieldBlock() and mainTank() and (not buff.shieldBlock.exists() or (buff.shieldBlock.remain() <= (gcd * 1.5))) and not buff.lastStand.exists() and rage >= 30 then
+                        if cast.shieldBlock() then
+                            return
+                        end
+                    end
+
+                    if talent.bolster and isChecked("Last Stand Filler") and not buff.shieldBlock.exists() and cd.shieldBlock.remain() > gcd and mainTank() then
+                        if cast.lastStand() then
+                            return
+                        end
+                    end
+
+                    if cast.able.ignorePain() and mainTank() and ipCapCheck() then
+                        if buff.vengeanceIgnorePain.exists() and rage >= 42 then
+                            CastSpellByName(GetSpellInfo(190456))
+                        end
+                        if rage >= 55 and not buff.vengeanceRevenge.exists() then
+                            CastSpellByName(GetSpellInfo(190456))
+                        end
+                    end
+
+                    if isChecked("Shield Wall") and php <= getOptionValue("Shield Wall") and cd.lastStand.remain() > 0 and not buff.lastStand.exists() then
+                        if cast.shieldWall() then
+                            return
+                        end
+                    end
+                end
+
+                if isChecked("Berserker Rage") and hasNoControl(spell.berserkerRage) then
+                    if cast.berserkerRage() then
+                        return
+                    end
+                end
+
+                for i = 1, #enemies.yards20 do
+                    local thisUnit = enemies.yards20[i]
+                    local unitDist = getDistance(thisUnit)
+                    if not isExplosive(thisUnit) and canInterrupt(thisUnit, getOptionValue("Interrupt At")) then
+                        if isChecked("Pummel") and unitDist < 6 then
+                            if cast.pummel(thisUnit) then
+                                return
+                            end
+                        end
+                    end
+                end
+
+                if br.player.mode.taunt == 1 and inInstance then
+                    for i = 1, #enemies.yards30 do
+                        local thisUnit = enemies.yards30[i]
+                        if UnitThreatSituation("player", thisUnit) ~= nil and UnitThreatSituation("player", thisUnit) <= 2 and UnitAffectingCombat(thisUnit) then
+                            if cast.taunt(thisUnit) then
+                                return
+                            end
+                        end
+                    end
+                end -- End Taunt
+                if br.player.mode.taunt == 2 then
+                    for i = 1, #enemies.yards30 do
+                        local thisUnit = enemies.yards30[i]
+                        if UnitThreatSituation("player", thisUnit) ~= nil and UnitThreatSituation("player", thisUnit) <= 2 and UnitAffectingCombat(thisUnit) then
+                            if cast.taunt(thisUnit) then
+                                return
+                            end
+                        end
+                    end
+                end -- End Taunt
+            end
+        end
+        
         local function actionList_Interrupts()
             if useInterrupts() then
                 if isChecked("Storm Bolt Logic") then
@@ -494,15 +565,10 @@ local function runRotation()
                     end
                 end
                 for i = 1, #enemies.yards20 do
-                    thisUnit = enemies.yards20[i]
-                    unitDist = getDistance(thisUnit)
-                    targetMe = GetUnitIsUnit("player", thisUnit) or false
+                    local thisUnit = enemies.yards20[i]
+                    local unitDist = getDistance(thisUnit)
+                    local targetMe = UnitIsUnit("player", thisUnit) or false
                     if not isExplosive(thisUnit) and canInterrupt(thisUnit, getOptionValue("Interrupt At")) then
-                        if isChecked("Pummel") and unitDist < 6 then
-                            if cast.pummel(thisUnit) then
-                                return
-                            end
-                        end
                         if isChecked("Intimidating Shout - Int") and unitDist <= 8 then
                             if cast.intimidatingShout() then
                                 return
@@ -517,40 +583,7 @@ local function runRotation()
                 end
             end
         end
-        -- if isChecked("leap test") then
-        --     if cast.able.heroicLeap() and hastar then
-        --         local thisUnit = "target"
-        --         local sX, sY, sZ = GetObjectPosition(thisUnit)
-        --         local hitBoxCompensation = UnitCombatReach(thisUnit) / GetDistanceBetweenObjects("player",thisUnit)
-        --         local yards = math.random(12,22)
-        --         if getOptionValue("leap test") == 1 then
-        --             deg = math.random(0,10)
-        --         end
-        --         if getOptionValue("leap test") == 2 then
-        --             deg = math.random(170,190)
-        --         end
-        --         if getOptionValue("leap test") == 3 then
-        --             deg = math.random(0,359)
-        --         end
-        --         --for deg = 0, 180, 45 do
-        --             local dX, dY, dZ = GetPositionFromPosition(sX, sY, sZ, yards, deg, 0)
-        --             if TraceLine(sX, sY, sZ + 2.25, dX, dY, dZ + 2.25, 0x100111) == nil and cd.heroicLeap.remain() == 0 and charges.charge.count() > 0 then
-        --                 if not IsAoEPending() then
-        --                     CastSpellByName(GetSpellInfo(spell.heroicLeap))
-        --                     -- cast.heroicLeap("player")
-        --                 end
-        --                 if IsAoEPending() then
-        --                     ClickPosition(dX,dY,dZ)
-        --                 end
-        --             end
-        --         --end
-        --     end
-        --     if charges.intercept.count() >= 1 and getDistance("player", "target") >= 8 and getDistance("player", "target") <= 25 then
-        --         FaceDirection("target")
-        --         -- FaceDirection("player")
-        --         CastSpellByName(GetSpellInfo(spell.intercept))
-        --     end
-        -- end
+    
         local function actionList_Moving()
             if br.player.mode.mover == 1 then
                 if cast.able.intercept("target") and getDistance("player", "target") >= 8 and getDistance("player", "target") <= 25 then
@@ -605,44 +638,9 @@ local function runRotation()
         local function actionList_Defensives()
             if useDefensive() then
                 --Spell Reflect logic
-                if mode.reflect == 1 and isChecked("Smart Spell Reflect") then
-                    for i = 1, #enemies.yards30 do
-                        local thisUnit = enemies.yards30[i]
-                        local _, _, _, startCast, endCast, _, _, _, spellcastID = UnitCastingInfo(thisUnit)
-
-                        if UnitTarget("player") and reflectID[spellcastID] and (((GetTime() * 1000) - startCast) / (endCast - startCast) * 100) > getOptionValue("Smart Spell Reflect Percent") then
-                            if cast.spellReflection() then
-                                return
-                            end
-                        end
-                    end
-                end
-                if mode.shield == 1 and cast.able.shieldBlock() and mainTank() and (not buff.shieldBlock.exists() or (buff.shieldBlock.remain() <= (gcd * 1.5))) and not buff.lastStand.exists() and rage >= 30 then
-                    if cast.shieldBlock() then
-                        return
-                    end
-                end
-                if talent.bolster and isChecked("Last Stand Filler") and not buff.shieldBlock.exists() and cd.shieldBlock.remain() > gcd and mainTank() then
-                    if cast.lastStand() then
-                        return
-                    end
-                end
                 if php <= 65 and cast.able.victoryRush() then
                     if cast.victoryRush() then
                         return
-                    end
-                end
-                --ignore the painful ways
-                if cast.able.ignorePain() and mainTank() and ipCapCheck() then
-                    if buff.vengeanceIgnorePain.exists() and rage >= 42 then
-                        if cast.ignorePain() then
-                            return
-                        end
-                    end
-                    if rage >= 55 and not buff.vengeanceRevenge.exists() then
-                        if cast.ignorePain() then
-                            return
-                        end
                     end
                 end
                 if isChecked("Engineering Belt") and php <= getOptionValue("Engineering Belt") and canUseItem(6) then
@@ -669,11 +667,6 @@ local function runRotation()
                 end
                 if isChecked("Rallying Cry") and php <= getOptionValue("Rallying Cry") then
                     if cast.rallyingCry() then
-                        return
-                    end
-                end
-                if isChecked("Shield Wall") and php <= getOptionValue("Shield Wall") and cd.lastStand.remain() > 0 and not buff.lastStand.exists() then
-                    if cast.shieldWall() then
                         return
                     end
                 end
@@ -739,16 +732,16 @@ local function runRotation()
                 end
             end
 
+            -- Shield Slam
+            if cast.shieldSlam() then
+                return
+            end
+
             -- High Prio Revenge
             if not isExplosive("target") and #enemies.yards8 >= getValue("Aoe Priority") and (buff.revenge.exists() or rage >= getValue("High Rage Dump")) then
                 if cast.revenge() then
                     return
                 end
-            end
-
-            -- Shield Slam
-            if cast.shieldSlam() then
-                return
             end
 
             -- Low Prio Thunder Clap
@@ -788,9 +781,42 @@ local function runRotation()
             end
         end
 
+        local function corruptionstuff()
+            if br.player.equiped.shroudOfResolve and canUseItem(br.player.items.shroudOfResolve) then
+                if getValue("Use Cloak") == 1 and debuff.graspingTendrils.exists("player") or getValue("Use Cloak") == 2 and getDebuffStacks("player", 315161) >= getOptionValue("Eye Of Corruption Stacks - Cloak") or getValue("Use Cloak") == 3 and debuff.grandDelusions.exists("player") then
+                    if br.player.use.shroudOfResolve() then
+                        return
+                    end
+                end
+            end
+            if isChecked("Corruption Radar On") then
+                for i = 1, GetObjectCountBR() do
+                    local object = GetObjectWithIndex(i)
+                    local ID = ObjectID(object)
+                    if isChecked("Use Storm Bolt on TFTB") then
+                        if ID == 161895 then
+                            local x1, y1, z1 = ObjectPosition("player")
+                            local x2, y2, z2 = ObjectPosition(object)
+                            local distance = math.sqrt(((x2 - x1) ^ 2) + ((y2 - y1) ^ 2) + ((z2 - z1) ^ 2))
+                            if distance <= 8 and isChecked("Use Int Shout on TFTB") and cd.intimidatingShout.remains() <= gcd then
+                                if cast.intimidatingShout(object) then 
+                                    return true
+                                end
+                            end
+                            if distance < 10 and not isLongTimeCCed(object) and cd.stormBolt.remains() <= gcd then
+                                if cast.stormBolt(object) then 
+                                    return true
+                                end
+                            end
+                        end
+                    end -- end the thing
+                end
+            end
+        end
+
         local function technoViking()
             --Use Demo Shout on CD
-            if isChecked("Demoralizing Shout - CD") and rage <= 100 then
+            if getOptionValue("Demoralizing Shout - CD") == 1 and rage <= 100 then
                 if cast.demoralizingShout() then
                     return
                 end
@@ -826,9 +852,7 @@ local function runRotation()
             end
             -- Drink
             if not (cast.able.shieldSlam() or cast.able.thunderClap()) and ipCapCheck() and rage >= 55 then
-                if cast.ignorePain() then
-                    return
-                end
+                CastSpellByName(GetSpellInfo(190456))
             end
             if not cast.able.shieldSlam() or (isExplosive("target") or cast.able.thunderClap()) then
                 if cast.devastate() then
@@ -837,8 +861,10 @@ local function runRotation()
             end
         end
 
+        if offGCD() then return end
+
         --- Lets do things now
-        if pause() or (IsMounted() or IsFlying() or UnitOnTaxi("player") or UnitInVehicle("player")) or mode.rotation == 2 then
+        if pause(true) or (IsMounted() or IsFlying() or UnitOnTaxi("player") or UnitInVehicle("player")) or mode.rotation == 2 then
             return true
         else
             -- combat check
@@ -853,6 +879,10 @@ local function runRotation()
             if inCombat and profileStop == false and not (IsMounted() or IsFlying()) and #enemies.yards8 >= 1 then
                 if getDistance(units.dyn5) < 5 then
                     StartAttack()
+                end
+
+                if corruptionstuff() then
+                    return
                 end
 
                 if actionList_Extras() then

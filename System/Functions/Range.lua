@@ -201,9 +201,9 @@ function getTotemDistance(Unit1)
   end
 
   if GetUnitIsVisible(Unit1) then
-    -- local objectCount = GetObjectCount() or 0
+    -- local objectCount = GetObjectCountBR() or 0
     local X2, Y2, Z2
-    for i = 1,GetObjectCount() do
+    for i = 1,GetObjectCountBR() do
       if GetUnitIsUnit(UnitCreator(GetObjectWithIndex(i)), "Player") and (UnitName(GetObjectWithIndex(i)) == "Searing Totem" or UnitName(GetObjectWithIndex(i)) == "Magma Totem") then
         X2,Y2,Z2 = GetObjectPosition(GetObjectIndex(i))
       end
@@ -233,7 +233,7 @@ function isSafeToAoE(spellID,Unit,effectRng,minUnits,aoeType)
     local enemiesValid, enemiesAll
     local maxRange = select(6,GetSpellInfo(spellID))
     if effectRng == nil then effectRng = 5 end
-    if maxRange == nil or maxRange == 0 then maxRange = tonumber(effectRng) else maxRange = tonumber(maxRange) end
+    if maxRange == nil or maxRange == 0 then maxRange = tonumber(effectRng) effectRng = 8 else maxRange = tonumber(maxRange) end
     if minUnits == nil then minUnits = 1 end
     if aoeType == "rect" then
         enemiesValid    = getEnemiesInRect(effectRng,maxRange,false)

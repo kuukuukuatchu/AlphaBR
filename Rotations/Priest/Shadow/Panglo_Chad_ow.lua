@@ -1,3 +1,4 @@
+--Version 1.0.0
 local rotationName = "MonkaGiga" -- Change to name of profile listed in options drop down
 
 ---------------
@@ -71,7 +72,7 @@ local function createOptions()
         -----------------------
         --- GENERAL OPTIONS --- -- Define General Options
         -----------------------
-        section = br.ui:createSection(br.ui.window.profile, "General")
+        section = br.ui:createSection(br.ui.window.profile, "General - Version 1.000")
         br.ui:createCheckbox(section, "Enemy Target Lock", "In Combat, Locks targetting to enemies to avoid shenanigans", 1)
         br.ui:createSpinnerWithout(section, "SWP Max Targets", 4, 1, 10, 1, "Limit that SWP will be cast on.")
 
@@ -219,6 +220,7 @@ local function runRotation()
         wipe(timersTable)
     end
 
+    units.get(5)
     units.get(8)
     enemies.get(5)
     enemies.get(8)
@@ -272,14 +274,14 @@ local function runRotation()
 
         for i = 1, #enemies.yards30 do
             thisUnit = enemies.yards30[i]
-            if isChecked("Dispel Magic") and canDispel(thisUnit, spell.dispelMagic) then
+            if isChecked("Dispel Magic") and canDispel(thisUnit, spell.dispelMagic) and not isBoss() then
                 if cast.dispelMagic() then
                     return
                 end
             end
         end
 
-        if mode.essence == 1 and inCombat and useCDs() and not br.player.mode.cooldown ~= 3 and voidForm and isChecked("Use lucid dreams") and ((power <= getOptionValue("Lucid - insanity")) and (buff.voidForm.stack() >= getOptionValue("Lucid - void stacks"))) then
+        if mode.essence == 1 and inCombat and not br.player.mode.cooldown ~= 3 and voidForm and isChecked("Use lucid dreams") and ((power <= getOptionValue("Lucid - insanity")) and (buff.voidForm.stack() >= getOptionValue("Lucid - void stacks"))) then
             if cast.memoryOfLucidDreams("player") then
                 return
             end
