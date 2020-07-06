@@ -424,11 +424,11 @@ actionList.Interrupts = function()
             if canInterrupt(thisUnit,getOptionValue("Interrupt At")) then
                 if isChecked("Counter Shot") and cd.counterShot.remains() <= gcdMax and br.timer:useTimer("Interrupts", 0.5) then
                     if cast.counterShot(thisUnit) then return end
-                elseif isChecked("Freezing Trap") and (cd.counterShot.remains() > gcdMax or not isChecked("Counter Shot")) and cd.freezingTrap.remains() <= gcdMax 
+                elseif isChecked("Freezing Trap") and not pause() and (cd.counterShot.remains() > gcdMax or not isChecked("Counter Shot")) and cd.freezingTrap.remains() <= gcdMax 
                     and br.timer:useTimer("Interrupts", 0.5) and getDistance(thisUnit) > 8 and getCastTimeRemain(thisUnit) > 3
                 then
                     if cast.freezingTrap(thisUnit,"ground") then return true end
-                elseif isChecked("Intimidation") and not UnitIsDeadOrGhost("pet") and UnitExists("pet") and (cd.counterShot.remains() > gcdMax or not isChecked("Counter Shot")) 
+                elseif isChecked("Intimidation") and not pause() and not UnitIsDeadOrGhost("pet") and UnitExists("pet") and (cd.counterShot.remains() > gcdMax or not isChecked("Counter Shot")) 
                     and cd.intimidation.remains() <= gcdMax and getDistance(thisUnit,"pet") <= 8 and br.timer:useTimer("Interrupts", 0.5) 
                 then
                     if cast.intimidation(thisUnit) then return end
@@ -773,12 +773,12 @@ actionList.St = function()
     end
     -- Barbed Shot
     -- barbed_shot,if=azerite.dance_of_death.rank>1&buff.dance_of_death.remains<gcd&crit_pct_current>40
-    if cast.able.barbedShot() and traits.danceOfDeath.rank > 1 and buff.danceOfDeath.remain() < gcdMax then
+    if traits.danceOfDeath.rank > 1 and buff.danceOfDeath.remain() < gcdMax then
         if cast.barbedShot() then return end
     end
     -- Blood of the Enemy
     -- blood_of_the_enemy,if=buff.aspect_of_the_wild.remains>10+gcd|target.time_to_die<10+gcd
-    if isChecked("Use Essence") and cast.able.bloodOfTheEnemy() and (buff.aspectOfTheWild.remain() > 10 + gcdMax
+    if isChecked("Use Essence") and (buff.aspectOfTheWild.remain() > 10 + gcdMax
         or not isChecked("Aspect of the Wild") or (ttd(units.dyn40) < 10 + gcdMax and useCDs()))
     then
         if cast.bloodOfTheEnemy() then return end
@@ -800,41 +800,41 @@ actionList.St = function()
     end
     -- Barbed Shot
     -- barbed_shot,if=talent.one_with_the_pack.enabled&charges_fractional>1.5|charges_fractional>1.8|cooldown.aspect_of_the_wild.remains<pet.turtle.buff.frenzy.duration-gcd&azerite.primal_instincts.enabled|target.time_to_die<9
-    if cast.able.barbedShot() and ((talent.oneWithThePack and charges.barbedShot.frac() > 1.5) or charges.barbedShot.frac() > 1.8
+    if ((talent.oneWithThePack and charges.barbedShot.frac() > 1.5) or charges.barbedShot.frac() > 1.8
         or (cd.aspectOfTheWild.remain() < buff.frenzy.remain("pet") - gcdMax and traits.primalInstincts.active) or (ttd(units.dyn40) < 9 and useCDs()))
     then
         if cast.barbedShot() then return end
     end
     -- Purifying Blast
     -- purifying_blast,if=buff.bestial_wrath.down|target.time_to_die<8
-    if isChecked("Use Essence") and cast.able.purifyingBlast() and (not buff.bestialWrath.exists() or (ttd(units.dyn40) < 8 and useCDs())) then
+    if isChecked("Use Essence") and (not buff.bestialWrath.exists() or (ttd(units.dyn40) < 8 and useCDs())) then
         if cast.purifyingBlast("best", nil, 1, 8) then return true end
     end
     -- Barrage
     -- barrage
-    if isChecked("A Murder Of Crows / Barrage") and cast.able.barrage() then
+    if isChecked("A Murder Of Crows / Barrage") then
         if cast.barrage() then return end
     end
     -- Cobra Shot
     -- cobra_shot,if=(focus-cost+focus.regen*(cooldown.kill_command.remains-1)>action.kill_command.cost|cooldown.kill_command.remains>1+gcd&cooldown.bestial_wrath.remains_guess>focus.time_to_max|buff.memory_of_lucid_dreams.up)&cooldown.kill_command.remains>1|target.time_to_die<3
-    if cast.able.cobraShot() and (((focus - cast.cost.cobraShot() + focusRegen * (cd.killCommand.remain() - 1) > cast.cost.killCommand()
+    if ((focus - cast.cost.cobraShot() + focusRegen * (cd.killCommand.remain() - 1) > cast.cost.killCommand()
         or (cd.killCommand.remain() > 1 + gcdMax and cd.bestialWrath.remains() > ttm) or buff.memoryOfLucidDreams.exists()) and cd.killCommand.remain() > 1)
-        or ttd(units.dyn40) < 3 and useCDs())
+        or ttd(units.dyn40) < 3 and useCDs()
     then
         if cast.cobraShot() then return end
     end
     -- Spitting Cobra
     -- spitting_cobra
-    if isChecked("Spitting Cobra") and talent.spittingCobra and cast.able.spittingCobra() then
+    if isChecked("Spitting Cobra") and talent.spittingCobra then
         if cast.spittingCobra() then return end
     end
     -- Barbed Shot
     -- barbed_shot,if=pet.turtle.buff.frenzy.duration-gcd>full_recharge_time
-    if cast.able.barbedShot() and buff.frenzy.duration("pet") - gcdMax > charges.barbedShot.timeTillFull() then
+    if buff.frenzy.duration("pet") - gcdMax > charges.barbedShot.timeTillFull() then
         if cast.barbedShot() then return end
     end
     -- Cobra Shot - Low Level
-    if cast.able.cobraShot() and level < 10 then
+    if level < 10 then
         if cast.cobraShot() then return end
     end
 end -- End Action List - Single Target
@@ -843,19 +843,19 @@ end -- End Action List - Single Target
 actionList.Cleave = function()
     -- Barbed Shot
     -- barbed_shot,target_if=min:dot.barbed_shot.remains,if=pet.cat.buff.frenzy.up&pet.cat.buff.frenzy.remains<=gcd.max
-    if cast.able.barbedShot(lowestBarbedShot) and (buff.frenzy.exists("pet") and buff.frenzy.remain("pet") <= gcdMax + 0.1) then
+    if (buff.frenzy.exists("pet") and buff.frenzy.remain("pet") <= gcdMax + 0.1) then
         if cast.barbedShot(lowestBarbedShot) then return end
     end
     -- Multishot
     -- multishot,if=gcd.max-pet.cat.buff.beast_cleave.remains>0.25
-    if cast.able.multishot() and buff.beastCleave.remain("pet") < gcdMax + 0.1
+    if buff.beastCleave.remain("pet") < gcdMax + 0.1
          and not isExplosive("target")
     then
         if cast.multishot() then return end
     end
     -- Barbeb Shot
     -- barbed_shot,target_if=min:dot.barbed_shot.remains,if=full_recharge_time<gcd.max&cooldown.bestial_wrath.remains
-    if cast.able.barbedShot(lowestBarbedShot) and (charges.barbedShot.timeTillFull() < gcdMax and cd.bestialWrath.remain() > gcdMax) then
+    if (charges.barbedShot.timeTillFull() < gcdMax and cd.bestialWrath.remain() > gcdMax) then
         if cast.barbedShot(lowestBarbedShot) then return end
     end
     -- Aspect of the Wild
@@ -865,8 +865,7 @@ actionList.Cleave = function()
     end
     -- Stampede
     -- stampede,if=buff.aspect_of_the_wild.up&buff.bestial_wrath.up|target.time_to_die<15
-    if isChecked("Stampede") and talent.stampede and cast.able.stampede()
-        and (buff.aspectOfTheWild.exists() and buff.bestialWrath.exists()) and (ttd(units.dyn40) > 15 or useCDs())
+    if isChecked("Stampede") and talent.stampede and (buff.aspectOfTheWild.exists() and buff.bestialWrath.exists()) and (ttd(units.dyn40) > 15 or useCDs())
     then
         if cast.stampede() then return end
     end
@@ -878,7 +877,7 @@ actionList.Cleave = function()
     then
         if cast.bestialWrath() then return end
     end
-    if cast.able.barbedShot(lowestBarbedShot) and traits.danceOfDeath.rank > 1 and buff.danceOfDeath.remain() < gcdMax + 0.5 then
+    if traits.danceOfDeath.rank > 1 and buff.danceOfDeath.remain() < gcdMax + 0.5 then
         if cast.barbedShot(lowestBarbedShot) then return end
     end
     -- Chimaera Shot
@@ -888,17 +887,17 @@ actionList.Cleave = function()
     end
     -- A Murder of Crows
     -- a_murder_of_crows
-    if isChecked("A Murder Of Crows / Barrage") and mode.murderOfCrows == 1 and cast.able.aMurderOfCrows() then
+    if isChecked("A Murder Of Crows / Barrage") and mode.murderOfCrows == 1 then
         if cast.aMurderOfCrows() then return end
     end
     -- Barrage
     -- barrage
-    if isChecked("A Murder Of Crows / Barrage") and cast.able.barrage() then
+    if isChecked("A Murder Of Crows / Barrage") then
         if cast.barrage() then return end
     end
     -- Kill Command
     -- kill_command,if=active_enemies<4|!azerite.rapid_reload.enabled
-    if cast.able.killCommand() and (#enemies.yards8t < 3 or not traits.rapidReload.active) then
+    if (#enemies.yards8t < 3 or not traits.rapidReload.active) then
         if cast.killCommand() then return end
     end
     -- Dire Beast
@@ -908,16 +907,16 @@ actionList.Cleave = function()
     end
     -- Barbed Shot
     -- barbed_shot,target_if=min:dot.barbed_shot.remains,if=pet.turtle.buff.frenzy.down&(charges_fractional>1.8|buff.bestial_wrath.up)|cooldown.aspect_of_the_wild.remains<pet.turtle.buff.frenzy.duration-gcd&azerite.primal_instincts.enabled|charges_fractional>1.4|target.time_to_die<9
-    if cast.able.barbedShot(lowestBarbedShot) and (not buff.frenzy.exists("pet") and (charges.barbedShot.frac() > 1.8 or buff.bestialWrath.exists())
+    if not buff.frenzy.exists("pet") and (charges.barbedShot.frac() > 1.8 or buff.bestialWrath.exists())
         or (traits.primalInstincts.active and isChecked("Aspect of the Wild") and useCDs() and cd.aspectOfTheWild.remain() < (buff.frenzy.remain("pet") - gcdMax))
-        or (useCDs() and ttd(units.dyn40) < 9))
+        or (useCDs() and ttd(units.dyn40) < 9)
     then
         if cast.barbedShot(lowestBarbedShot) then return end
     end
     -- Heart Essence
     if isChecked("Use Essence") then
         -- focused_azerite_beam
-        if isChecked("Use Essence") and cast.able.focusedAzeriteBeam() and not buff.bestialWrath.exists()
+        if isChecked("Use Essence") and not buff.bestialWrath.exists()
             and (enemies.yards30r >= 3 or useCDs())
         then
             if cast.focusedAzeriteBeam(nil,"rect",minCount, 30) then return end
@@ -935,23 +934,23 @@ actionList.Cleave = function()
             if cast.bloodOfTheEnemy() then return end
         end
         -- the_unbound_force,if=buff.reckless_force.up|buff.reckless_force_counter.stack<10
-        if cast.able.theUnboundForce() and (buff.recklessForce.exists() or buff.recklessForceCounter.stack() < 10) then
+        if buff.recklessForce.exists() or buff.recklessForceCounter.stack() < 10 then
             if cast.theUnboundForce() then return end
         end
     end
     -- Multishot
     -- multishot,if=azerite.rapid_reload.enabled&active_enemies>2
-    if cast.able.multishot() and traits.rapidReload.active and not isExplosive("target") then
+    if #enemies.yards8p > 2 and traits.rapidReload.active and not isExplosive("target") then
         if cast.multishot() then return end
     end
     -- Cobra Shot
     -- cobra_shot,if=cooldown.kill_command.remains>focus.time_to_max&(active_enemies<3|!azerite.rapid_reload.enabled)
-    if cast.able.cobraShot() and (cd.killCommand.remain() > ttm and (#enemies.yards8p < 3 or not traits.rapidReload.active)) then
+    if cd.killCommand.remain() > ttm and (#enemies.yards8p < 3 or not traits.rapidReload.active) then
         if cast.cobraShot() then return end
     end
     -- Spitting Cobra
     -- spitting_cobra
-    if isChecked("Spitting Cobra") and talent.spittingCobra and cast.able.spittingCobra() then
+    if isChecked("Spitting Cobra") and talent.spittingCobra then
         if cast.spittingCobra() then return end
     end
 end -- End Action List - Cleave
@@ -1019,8 +1018,8 @@ local function runRotation()
     --- Load Additional Rotation Files ---
     --------------------------------------
     if actionList.PetManagement == nil then
-        loadSupport("PetCuteOne")
-        actionList.PetManagement = br.rotations.support["PetCuteOne"]
+        loadSupport("PetKuu")
+        actionList.PetManagement = br.rotations.support["PetKuu"]
     end
     --------------
     --- Locals ---
@@ -1064,7 +1063,7 @@ local function runRotation()
     thp                                = getHP
     ttd                                = getTTD
     haltProfile                        = ((inCombat and profileStop) or IsMounted() or flying
-                                            or pause() or buff.feignDeath.exists() or mode.rotation==4)
+                                            or (isChecked("Pause Mode") and SpecificToggle("Pause Mode")) or buff.feignDeath.exists() or mode.rotation==4)
 
     -- Get Best Unit for Range
     -- units.get(range, aoe)
@@ -1128,14 +1127,12 @@ local function runRotation()
     --- Begin Profile ---
     ---------------------
     -- Profile Stop | Pause
-    if not inCombat and not UnitExists("target") and profileStop then
-        profileStop = false
-    elseif haltProfile then
+    if haltProfile then
         -----------------
         --- Pet Logic ---
         -----------------
-        if actionList.PetManagement() then return true end
-        if cast.able.playDead() and cast.last.feignDeath() and not buff.playDead.exists("pet") then
+        actionList.PetManagement()
+        if cast.last.feignDeath() and not buff.playDead.exists("pet") then
             if cast.playDead() then return end
         end
         StopAttack()
@@ -1145,46 +1142,85 @@ local function runRotation()
         -----------------
         --- Pet Logic ---
         -----------------
-        if actionList.PetManagement() then return true end
-        autoCorrupt()
-        -----------------------
-        --- Extras Rotation ---
-        -----------------------
-        if actionList.Extras() then return true end
+        actionList.PetManagement()
         --------------------------
         --- Defensive Rotation ---
         --------------------------
-        if actionList.Defensive() then return true end
+        actionList.Defensive()
         ------------------------------
-        --- Out of Combat Rotation ---
+        --------  Interrupts ---------
         ------------------------------
-        if actionList.PreCombat() then return true end
-        --------------------------
-        --- In Combat Rotation ---
-        --------------------------
-        if inCombat and isValidUnit("target") and opener.complete then
-            ------------------------------
-            --- In Combat - Interrupts ---
-            ------------------------------
-            if actionList.Interrupts() then return true end
-            ---------------------------
-            --- SimulationCraft APL ---
-            ---------------------------
-            if getOptionValue("APL Mode") == 1 and getHP("pet") ~= 0 then
-                -- auto_shot
-                StartAttack()
-                -- call_action_list,name=cds
-                if actionList.Cooldowns() then return end
-                -- call_action_list,name=st,if=active_enemies<2
-                if (mode.rotation == 1 and #enemies.yards8p < getOptionValue("Units To AoE")) or mode.rotation == 3 or level < 16 then
-                    if actionList.St() then return end
+        actionList.Interrupts()
+        if not pause() then
+            autoCorrupt()
+            -----------------------
+            --- Extras Rotation ---
+            -----------------------
+            actionList.Extras()        
+            if petExists then
+                br.revive = false
+                br.callP = false
+            end
+
+            local petActive = IsPetActive()
+            local petExists = UnitExists("pet")
+            local petHealth = getHP("pet")
+            if IsMounted() or IsFlying() or UnitHasVehicleUI("player") or CanExitVehicle("player") then
+                waitForPetToAppear = GetTime()
+            elseif mode.petSummon ~= 6 then
+                local callPet = spell["callPet"..mode.petSummon]
+                if waitForPetToAppear ~= nil and GetTime() - waitForPetToAppear > 2 then
+                    if not isMoving("player") and ((petExists and petActive and (callPet == nil or UnitName("pet") ~= select(2,GetCallPetSpellInfo(callPet)))) or petExists and getDistance("pet") > 60) then
+                        if cast.dismissPet() then waitForPetToAppear = GetTime(); return true end
+                    elseif callPet ~= nil then
+                        if ((petExists and petHealth == 0) or (br.callP == true and not petExists)) and not isMoving("player") then
+                            if cast.able.revivePet() and cast.timeSinceLast.revivePet() > gcdMax then
+                                if cast.revivePet("player") then br.revive = true; br.callP = false; waitForPetToAppear = GetTime(); return true end
+                            end
+                        elseif (not petExists and not buff.playDead.exists("pet")) or br.revive == true then
+                            if castSpell("player",callPet,false,false,false,true,true,true,true,false) then waitForPetToAppear = GetTime(); br.callP = true; br.revive = false; return true end
+                        end
+                    end
                 end
-                -- call_action_list,name=cleave,if=active_enemies>1
-                if (mode.rotation == 1 and #enemies.yards8p >= getOptionValue("Units To AoE")) or mode.rotation == 2 then
-                    if actionList.Cleave() then return end
+                if waitForPetToAppear == nil then
+                    waitForPetToAppear = GetTime()
                 end
-            end -- End SimC APL
-        end --End In Combat
+            elseif mode.petSummon == 6 and not isMoving("player") and petExists and petActive then
+                if cast.dismissPet() then waitForPetToAppear = GetTime(); return true end
+            end
+                -- Mend Pet
+            if isChecked("Mend Pet") and petExists and not deadPet
+                and not buff.mendPet.exists("pet") and petHealth < getOptionValue("Mend Pet")
+            then
+                if cast.mendPet() then return end
+            end
+            ------------------------------
+            --- Out of Combat Rotation ---
+            ------------------------------
+            actionList.PreCombat()
+            --------------------------
+            --- In Combat Rotation ---
+            --------------------------
+            if inCombat and isValidUnit("target") and opener.complete then
+                ---------------------------
+                --- SimulationCraft APL ---
+                ---------------------------
+                if getOptionValue("APL Mode") == 1 and getHP("pet") ~= 0 then
+                    -- auto_shot
+                    StartAttack()
+                    -- call_action_list,name=cds
+                    actionList.Cooldowns()
+                    -- call_action_list,name=st,if=active_enemies<2
+                    if (mode.rotation == 1 and #enemies.yards8p < getOptionValue("Units To AoE")) or mode.rotation == 3 or level < 16 then
+                        actionList.St()
+                    end
+                    -- call_action_list,name=cleave,if=active_enemies>1
+                    if (mode.rotation == 1 and #enemies.yards8p >= getOptionValue("Units To AoE")) or mode.rotation == 2 then
+                        actionList.Cleave()
+                    end
+                end -- End SimC APL
+            end --End In Combat
+        end -- End Pause Check
     end --End Rotation Logic
 end -- End runRotation
 local id = 253

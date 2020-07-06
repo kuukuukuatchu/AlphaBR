@@ -785,7 +785,7 @@ actionList.Cleave = function()
     end
     -- Aspect of the Wild
     -- aspect_of_the_wild
-    if isChecked("Aspect of the Wild") and useCDs() and cast.able.aspectOfTheWild() and (ttd(units.dyn40) > 15 or useCDs()) then
+    if isChecked("Aspect of the Wild") and not buff.aspectOfTheWild.exists() and useCDs() and cast.able.aspectOfTheWild() and (ttd(units.dyn40) > 15 or useCDs()) then
         if cast.aspectOfTheWild() then return end
     end
     -- Stampede
@@ -1051,6 +1051,10 @@ local function runRotation()
         opener.complete = false
     end
 
+    -----------------
+    --- Pet Logic ---
+    -----------------
+    if actionList.PetManagement() then return true end
     ---------------------
     --- Begin Profile ---
     ---------------------
@@ -1058,10 +1062,6 @@ local function runRotation()
     if not inCombat and not UnitExists("target") and profileStop then
         profileStop = false
     elseif haltProfile then
-        -----------------
-        --- Pet Logic ---
-        -----------------
-        if actionList.PetManagement() then return true end
         if cast.able.playDead() and cast.last.feignDeath() and not buff.playDead.exists("pet") then
             if cast.playDead() then return end
         end
@@ -1072,7 +1072,7 @@ local function runRotation()
         -----------------
         --- Pet Logic ---
         -----------------
-        if actionList.PetManagement() then return true end
+        -- if actionList.PetManagement() then return true end
         -----------------------
         --- Extras Rotation ---
         -----------------------
@@ -1098,7 +1098,7 @@ local function runRotation()
             ---------------------------
             if getOptionValue("APL Mode") == 1 then
                 -- auto_shot
-                StartAttack()
+                 StartAttack()
                 -- call_action_list,name=cds
                 if actionList.Cooldowns() then return end
                 -- call_action_list,name=st,if=active_enemies<2

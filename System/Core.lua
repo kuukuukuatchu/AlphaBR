@@ -63,9 +63,7 @@ function br.antiAfk()
 	if isChecked("Anti-Afk") and br.unlocked then --EasyWoWToolbox ~= nil then
 		if not IsHackEnabled("antiafk") and getOptionValue("Anti-Afk") == 1 then
 			SetHackEnabled("antiafk",true)
-		end
-	elseif isChecked("Anti-Afk") and br.unlocked --[[EasyWoWToolbox ~= nil]] and getOptionValue("Anti-Afk") == 2 then
-		if IsHackEnabled("antiafk") then
+		elseif IsHackEnabled("antiafk") and getOptionValue("Anti-Afk") == 2 then
 			SetHackEnabled("antiafk",false)
 		end
 	end
@@ -117,7 +115,7 @@ function BadRotationsUpdate(self)
 					end
 					br.ui:closeWindow("all")
 					return false
-				else--if br.timer:useTimer("playerUpdate", getUpdateRate()) then
+				elseif br.timer:useTimer("playerUpdate", getUpdateRate()) then
 					br.fallDist = getFallDistance() or 0
 					if isChecked("Talent Anywhere") then
 						talentAnywhere()

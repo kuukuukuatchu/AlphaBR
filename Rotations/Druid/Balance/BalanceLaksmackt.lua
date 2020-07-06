@@ -381,11 +381,12 @@ local function runRotation()
                 if br.enemy[i].distance < maxRange then
                     if getNumEnemies(thisUnit, radius) > enemiesInRange then
                         theReturnUnit = thisUnit
+
                     end
                 end
             end
         end
-        return select(theReturnUnit)
+        return select(1, theReturnUnit)
     end
 
 

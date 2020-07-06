@@ -204,33 +204,6 @@ function getLineOfSight(Unit1, Unit2)
 					--Print("cara False")
 					return false
 				end
-			elseif br.player and br.player.eID and br.player.eID == 2337 then
-				local xO, yO, zO
-				local xO2
-				local yO2
-				for i = 1, GetObjectCount() do
-					local object = GetObjectWithIndex(i)
-					local name = ObjectName(object)
-					local xO, yO, zO
-					if string.match(string.upper(name), string.upper("enta")) then
-						local facing = ObjectFacing(object)
-						xO, yO, zO = GetObjectPosition(object)
-						xO2 = xO + (100 * math.cos(facing))
-						O2 = yO + (100 * math.sin(facing))
-					end
-				end
-				if xO2 ~= nil then
-					local a = {x = xO, y = yO}
-					local b = {x = xO2, y = yO2}
-					local c = {x = X2, y = Y2}
-					local d = {x = pX, y = pY}
-
-					if math.doLinesIntersect(a,b,c,d) then 
-						return false
-					else 
-						return true
-					end
-				end
 			else
 				--Print("Skippped all the code")
                 return true
@@ -520,7 +493,7 @@ function enemyListCheck(Unit)
 	return GetObjectExists(Unit) and not UnitIsDeadOrGhost(Unit) and UnitInPhase(Unit) and UnitCanAttack("player", Unit) and UnitHealth(Unit) > 0 and
 		distance < 50 and
 		not isCritter(Unit) and
-		--mcCheck and
+		mcCheck and
 		not GetUnitIsUnit(Unit, "pet") and
 		UnitCreator(Unit) ~= ObjectPointer("player") and
 		GetObjectID(Unit) ~= 11492 and
@@ -682,10 +655,10 @@ function pause(skipCastingCheck)
 	end
 	-- Pause Hold/Auto
 	if	(pausekey and GetCurrentKeyBoardFocus() == nil and isChecked("Pause Mode")) or profileStop or
-		((IsMounted() or IsFlying() or UnitOnTaxi("player")) and --and (GetObjectExists("target") and GetObjectID("target") ~= 56877)
+		((IsMounted() or IsFlying()) and --and (GetObjectExists("target") and GetObjectID("target") ~= 56877)
 		not (UnitBuffID("player", 190784) or UnitBuffID("player", 164222) or UnitBuffID("player", 165803) or
 		UnitBuffID("player", 157059) or
-		UnitBuffID("player", 157060) or UnitBuffID("player", 302460))) or
+		UnitBuffID("player", 157060))) or
 		SpellIsTargeting() or
 		-- or (not UnitCanAttack("player","target") and not UnitIsPlayer("target") and GetUnitExists("target"))
 		(UnitCastingInfo("player") and not skipCastingCheck) or
@@ -695,7 +668,7 @@ function pause(skipCastingCheck)
 		UnitBuffID("player", 257427) or UnitBuffID("player", 225737) or  -- Eating
 		UnitBuffID("player", 274914) or UnitBuffID("player", 192001) or-- Drinking
 		UnitDebuffID("player", 252753) or -- Potion of Replenishment (BFA Mana channel) Apparently a debuff
-		UnitBuffID("player", 114018) or isCastingSpell(318763)
+		UnitBuffID("player", 114018)
 		-- or UnitBuffID("target",117961) --Impervious Shield - Qiang the Merciless
 		-- or UnitDebuffID("player",135147) --Dead Zone - Iron Qon: Dam'ren
 		-- or (((UnitHealth("target")/UnitHealthMax("target"))*100) > 10 and UnitBuffID("target",143593)) --Defensive Stance - General Nagrazim
@@ -922,11 +895,11 @@ function br.addonDebug(msg,system)
 	end
 	if isChecked("Addon Debug Messages") then 
 		if system == true and (getValue("Addon Debug Messages") == 1 or getValue("Addon Debug Messages") == 3) then
-			if br.timer:useTimer("System Delay", getUpdateRate()) then
+			if br.timer:useTimer("System Delay", 0.1) then
 				print(br.classColor .. "[BadRotations] System Debug: |cffFFFFFF" .. tostring(msg))
 			end
 		elseif system ~= true and (getValue("Addon Debug Messages") == 2 or getValue("Addon Debug Messages") == 3) then
-			if br.timer:useTimer("Profile Delay", getUpdateRate()) then
+			if br.timer:useTimer("Profile Delay", 0.1) then
 				print(br.classColor .. "[BadRotations] Profile Debug: |cffFFFFFF" .. tostring(msg))
 			end
 		end
