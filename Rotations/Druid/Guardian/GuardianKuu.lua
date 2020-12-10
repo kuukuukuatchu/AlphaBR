@@ -269,18 +269,6 @@ local function createOptions()
         -- Max Moonfire Targets
         br.ui:createSpinnerWithout(section, "Max Moonfire Targets", 3, 1, 10, 1, "|cff0070deSet to maximum number of targets to dot with Moonfire. Min: 1 / Max: 10 / Interval: 1")
         br.ui:checkSectionState(section)
-        -- Corruption
-        section = br.ui:createSection(br.ui.window.profile, "Corruption")
-        br.ui:createDropdownWithout(section, "Use Cloak", { "snare", "Eye", "THING", "Everything", "never" }, 5, "", "")
-        br.ui:createSpinnerWithout(section, "Eye Stacks", 3, 1, 10, 1, "How many stacks before using cloak")
-        br.ui:checkSectionState(section)
-        -- Essences
-        section = br.ui:createSection(br.ui.window.profile, "Essences")
-        br.ui:createDropdownWithout(section, "Use Concentrated Flame", { "DPS", "Heal", "Hybrid", "Never" }, 1)
-        br.ui:createSpinnerWithout(section, "Concentrated Flame Heal", 70, 10, 90, 5)
-        br.ui:createDropdown(section, "Lucid Dreams", { "Always", "CDS" }, 1)
-        br.ui:createSpinner(section, "Anima of Death", 75, 0, 100, 5, "|cffFFBB00Health Percentage to use at.")
-        br.ui:checkSectionState(section)
         -----------------------
         --- Cooldown Options---
         -----------------------
@@ -364,13 +352,13 @@ local function runRotation()
     UpdateToggle("BristlingFur", 0.25)
     UpdateToggle("Forms", 0.25)
     UpdateToggle("Maul", 0.25)
-    br.player.mode.removeCorruption = br.data.settings[br.selectedSpec].toggles["RemoveCorruption"]
-    br.player.mode.bristlingFur = br.data.settings[br.selectedSpec].toggles["BristlingFur"]
-    br.player.mode.ironfur = br.data.settings[br.selectedSpec].toggles["Ironfur"]
-    br.player.mode.taunt = br.data.settings[br.selectedSpec].toggles["Taunt"]
-    br.player.mode.forms = br.data.settings[br.selectedSpec].toggles["Forms"]
-    br.player.mode.maul = br.data.settings[br.selectedSpec].toggles["Maul"]
-    br.player.mode.wildCharge = br.data.settings[br.selectedSpec].toggles["WildCharge"]
+    br.player.ui.mode.removeCorruption = br.data.settings[br.selectedSpec].toggles["RemoveCorruption"]
+    br.player.ui.mode.bristlingFur = br.data.settings[br.selectedSpec].toggles["BristlingFur"]
+    br.player.ui.mode.ironfur = br.data.settings[br.selectedSpec].toggles["Ironfur"]
+    br.player.ui.mode.taunt = br.data.settings[br.selectedSpec].toggles["Taunt"]
+    br.player.ui.mode.forms = br.data.settings[br.selectedSpec].toggles["Forms"]
+    br.player.ui.mode.maul = br.data.settings[br.selectedSpec].toggles["Maul"]
+    br.player.ui.mode.wildCharge = br.data.settings[br.selectedSpec].toggles["WildCharge"]
 
     local buff = br.player.buff
     local cast = br.player.cast
@@ -396,7 +384,7 @@ local function runRotation()
     local level = br.player.level
     local lossPercent = getHPLossPercent("player", 5)
     local lowest = br.friend[1]
-    local mode = br.player.mode
+    local mode = br.player.ui.mode
     local moving = isMoving("player")
     local swimming = IsSwimming()
     local php = br.player.health
@@ -551,7 +539,7 @@ local function runRotation()
             end
         end
 
-        if br.player.mode.taunt == 1 and inInstance and combatTime > 5 then
+        if mode.taunt == 1 and inInstance and combatTime > 5 then
             for i = 1, #enemies.yards30 do
                 local thisUnit = enemies.yards30[i]
                 if UnitThreatSituation("player", thisUnit) ~= nil and UnitThreatSituation("player", thisUnit) <= 2 and UnitAffectingCombat(thisUnit) then
@@ -561,7 +549,7 @@ local function runRotation()
                 end
             end
         end
-        if br.player.mode.taunt == 2 and combatTime > 5 then
+        if mode.taunt == 2 and combatTime > 5 then
             for i = 1, #enemies.yards30 do
                 local thisUnit = enemies.yards30[i]
                 if UnitThreatSituation("player", thisUnit) ~= nil and UnitThreatSituation("player", thisUnit) <= 2 and UnitAffectingCombat(thisUnit) then
@@ -572,7 +560,7 @@ local function runRotation()
             end
         end
 
-        if isChecked("Wild Charge") and br.player.mode.wildCharge == 1 then
+        if isChecked("Wild Charge") and mode.wildCharge == 1 then
             if getDistance("target") > 9 and cast.able.wildCharge() and bear then
                 if cast.wildCharge("target") then
                     return
@@ -639,12 +627,6 @@ local function runRotation()
 
     local function List_Defensive()
         if useDefensive() then
-            if inCombat and isChecked("Lucid Dreams") and getSpellCD(298357) <= gcd and (getOptionValue("Lucid Dreams") == 1 or (getOptionValue("Lucid Dreams") == 2 and useCDs())) then
-                if cast.memoryOfLucidDreams("player") then
-                    return
-                end
-            end
-
             if isChecked("Healthstone/Potion") and php <= getOptionValue("Healthstone/Potion") and inCombat and (hasHealthPot() or hasItem(5512) or hasItem(166799)) then
                 if canUseItem(5512) then
                     useItem(5512)
@@ -714,12 +696,6 @@ local function runRotation()
                     return
                 end
             end
-            -- CF
-            if inCombat and getOptionValue("Use Concentrated Flame") ~= 1 and php <= getValue("Concentrated Flame Heal") then
-                if cast.concentratedFlame("player") then
-                    return
-                end
-            end
             -- Auto Soothe
             if isChecked("Auto Soothe") then
                 for i = 1, #enemies.yards40 do
@@ -728,24 +704,6 @@ local function runRotation()
                         if cast.soothe(thisUnit) then
                             return
                         end
-                    end
-                end
-            end
-            -- Corruption Stuff
-            if br.player.mode.removeCorruption == 1 and isChecked("Remove Corruption") then
-                if getOptionValue("Remove Corruption - Target") == 1 and canDispel("player", spell.removeCorruption) then
-                    if cast.removeCorruption("player") then
-                        return
-                    end
-                end
-                if getOptionValue("Remove Corruption - Target") == 2 and canDispel("target", spell.removeCorruption) then
-                    if cast.removeCorruption("target") then
-                        return
-                    end
-                end
-                if getOptionValue("Remove Corruption - Target") == 3 and canDispel("mouseover", spell.removeCorruption) then
-                    if cast.removeCorruption("mouseover") then
-                        return
                     end
                 end
             end
@@ -981,24 +939,11 @@ local function runRotation()
                     if distance < root_range and not isLongTimeCCed(object) then
                         CastSpellByName(root, object)
                     end
-                -- Corruption stuff
-                -- 1 = snare  2 = eye  3 = thing 4 = reverything = 5 = never   -- snare = 315176
-                    if br.player.equiped.shroudOfResolve and not debuff.massEntanglement.exists(object) and canUseItem(br.player.items.shroudOfResolve) and br.timer:useTimer("Cloak Delay", 2)then
-                        if getValue("Use Cloak") == 1 and debuff.graspingTendrils.exists("player")
-                                or getValue("Use Cloak") == 2 and debuff.eyeOfCorruption.stack("player") >= getValue("Eye Stacks")
-                                or getValue("Use Cloak") == 3 and debuff.grandDelusions.exists("player")
-                                or getValue("Use Cloak") == 4 and (debuff.graspingTendrils.exists("player") and debuff.eyeOfCorruption.stack("player") >= getValue("Eye Stacks"))
-                        then
-                            if br.player.use.shroudOfResolve() then
-                                br.addonDebug("Using shroudOfResolve")
-                            end
-                        end
-                    end
                 end
             end -- end root
         end -- end radar
         -- Ironfur
-        if br.player.mode.ironfur == 1 and (hasAggro >= 2) and bear and inCombat then
+        if mode.ironfur == 1 and (hasAggro >= 2) and bear and inCombat then
             if (traits.layeredMane.active and rage >= 45) or not buff.ironfur.exists() or buff.goryFur.exists() or rage >= 55 or buff.ironfur.remain() < 2 then
                 if cast.ironfur() then
                     return
@@ -1013,27 +958,15 @@ local function runRotation()
                 end
             end
         end
-
-        -- Anima of Death
-        if isChecked("Anima of Death") and essence.animaOfDeath.active and cd.animaOfDeath.remain() <= gcd and inCombat and #enemies.yards8 >= 3 and php <= getOptionValue("Anima of Death") then
-            if cast.animaOfDeath("player") then
-                br.addonDebug("Casting Anima of Death")
-                return
-            end
-        end
         -- Bristlingfur
-        if br.player.mode.bristlingFur == 1 and rage < 40 and (hasAggro >= 2) then
+        if mode.bristlingFur == 1 and rage < 40 and (hasAggro >= 2) then
             if cast.bristlingFur() then
                 return
             end
         end
-        -- Lunarbeam
-        if cast.lunarBeam() then
-            return
-        end
         -- Moonfire
         if #enemies.yards8 < 5 and inCombat then
-            if buff.galacticGuardian.exists() then
+            if buff.galacticGuardian.exists() or (level < 18 and not debuff.moonfire.exists(thisUnit)) then
                 if cast.moonfire(thisUnit) then
                     return
                 end
@@ -1053,7 +986,7 @@ local function runRotation()
             end
         end
         -- Maul
-        if br.player.mode.maul == 1 and isChecked("Auto Maul") and rageDeficit < 10 and #enemies.yards8 < 4 and (buff.incarnationGuardianOfUrsoc.exists() or not buff.incarnationGuardianOfUrsoc.exists()) then
+        if mode.maul == 1 and isChecked("Auto Maul") and rageDeficit < 10 and #enemies.yards8 < 4 and (buff.incarnationGuardianOfUrsoc.exists() or not buff.incarnationGuardianOfUrsoc.exists()) then
             if cast.maul() then
                 return
             end
@@ -1079,12 +1012,6 @@ local function runRotation()
         -- Thrash Spam
         if isChecked("Spam Thrash during Incarnation") and cast.able.thrashBear("player") and #enemies.yards8 >=1 and buff.incarnationGuardianOfUrsoc.exists() then
             if cast.thrashBear("player") then
-                return
-            end
-        end
-        -- CF
-        if inCombat and getOptionValue("Use Concentrated Flame") == 1 or (getOptionValue("Use Concentrated Flame") == 3 and php > getValue("Concentrated Flame Heal")) then
-            if cast.concentratedFlame("target") then
                 return
             end
         end
@@ -1186,10 +1113,10 @@ local function runRotation()
                 return true
             end
             if List_Interrupts() then
-                    return true
+                return true
             end
             if List_Defensive() then
-                    return true
+                return true
             end
             if List_Cooldowns() then
                 return
@@ -1198,7 +1125,7 @@ local function runRotation()
                 StartAttack()
             end
             if List_Bearmode() then
-                    return true
+                return true
             end
         end
     end -- End In Combat Rotation

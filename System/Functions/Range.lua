@@ -5,7 +5,7 @@ local testSpell = {
     ["ROGUE"] = 1766,
     ["DEATHKNIGHT"] = 49998,
     ["MONK"] = 100780,
-    ["SHAMAN"] = 17364,
+    ["SHAMAN"] = 73899,
     ["DRUIDC"] = 5221,
     ["DRUIDB"] = 33917,
     ["DHH"] = 162794,
@@ -65,11 +65,7 @@ function getDistanceCalc(Unit1,Unit2,option)
         if br.player ~= nil then
             if br.player.talent.balanceAffinity ~= nil then
                 if br.player.talent.balanceAffinity and option ~= "noMod" then
-                    if hasEquiped(137015) then
-                        rangeMod = 3 + (3 * .75)
-                    else
-                        rangeMod = 3
-                    end
+                    rangeMod = 5
                 end
             end
         end
@@ -135,7 +131,7 @@ function getDistanceCalc(Unit1,Unit2,option)
         end
     -- Modifier for Mastery: Sniper Training (Hunter - Marksmanship)
         if currentDist < 100 and isKnown(193468) and option ~= "noMod" then
-            currentDist = currentDist - (currentDist * 0.12)
+            currentDist = currentDist - (currentDist * 0.05)
         end
         if meleeSpell ~= nil then
             if IsSpellInRange(select(1,GetSpellInfo(meleeSpell)),Unit2) == 1 then

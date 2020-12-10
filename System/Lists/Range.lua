@@ -34,5 +34,5 @@ rangeOrMelee = {
 	[267] = "ranged",
 	[71] = "melee",
 	[72] = "melee",
-	[73] = "melee",
+    [73] = "melee",
 }

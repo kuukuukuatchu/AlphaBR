@@ -58,7 +58,7 @@ function castWiseAoEHeal(unitTable,spell,radius,health,minCount,maxCount,facingC
 		if bestCandidate ~= nil and #bestCandidate >= minCount and getLineOfSight("player",bestCandidate[0].unit) and getDistance("player",bestCandidate[0].unit) <= 40 then
 			-- here we would like instead to cast on unit
 			if castSpell(bestCandidate[0].unit,spell,facingCheck,movementCheck) then
-				if IsAoEPending() then SpellStopTargeting() br.addonDebug("Canceling Spell", true) end
+				--if IsAoEPending() then SpellStopTargeting() br.addonDebug("Canceling Spell", true) end
 				return true
 			end
 		end
@@ -553,9 +553,11 @@ function castGroundAtLocation(loc, SpellID)
 	local px,py,pz = ObjectPosition("player")
 	loc.z = select(3,TraceLine(loc.x, loc.y, loc.z+5, loc.x, loc.y, loc.z-5, 0x110)) -- Raytrace correct z, Terrain and WMO hit
 	if loc.z ~= nil and TraceLine(px, py, pz+2, loc.x, loc.y, loc.z+1, 0x100010) == nil and TraceLine(loc.x, loc.y, loc.z+4, loc.x, loc.y, loc.z, 0x1) == nil then -- Check z and LoS, ignore terrain and m2 colissions and check no m2 on hook location
-		ClickPosition(loc.x,loc.y,loc.z)
+		if SpellIsTargeting() then
+			ClickPosition(loc.x,loc.y,loc.z)
+		end
 		--if mouselookup then MouselookStart() end
-    	if IsAoEPending() then SpellStopTargeting() br.addonDebug("Canceling Spell", true) return false end
+    	--if SpellIsTargeting() then SpellStopTargeting() br.addonDebug("Canceling Spell", true) end
 		return true
 	end
 end

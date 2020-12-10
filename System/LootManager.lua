@@ -10,7 +10,7 @@ function SellGreys()
 			local item = GetContainerItemLink(bag, slot)
 			if item then
 				-- Is it grey quality item?
-				if string.find(item, qualityColors.grey) ~= nil then
+				if string.find(item, br.qualityColors.grey) ~= nil then
 					greyPrice = select(11, GetItemInfo(item)) * select(2, GetContainerItemInfo(bag, slot))
 					if greyPrice > 0 then
 						PickupContainerItem(bag, slot)
@@ -37,7 +37,7 @@ function DumpGreys(Num)
 			local item = GetContainerItemLink(bag, slot)
 			if item then
 				-- Is it grey quality item?
-				if string.find(item, qualityColors.grey) ~= nil then
+				if string.find(item, br.qualityColors.grey) ~= nil then
 					greyPrice = select(11, GetItemInfo(item)) * select(2, GetContainerItemInfo(bag, slot))
 					if greyPrice > 0 then
 						tinsert(greyTable, {Bag = bag, Slot = slot, Price = greyPrice, Item = item})
@@ -70,7 +70,7 @@ lM = br.lootManager
 -- Debug
 function br.lootManager:debug(message)
 	if message and lM.oldMessage ~= message then
-		br.addonDebug("<lootManager> " .. (math.floor(GetTime() * 1000) / 1000) .. " " .. message)
+		br.addonDebug("<lootManager> " .. (math.floor(GetTime() * 1000) / 1000) .. " " .. message, true)
 		lM.oldMessage = message
 	end
 end
@@ -87,8 +87,8 @@ function br.lootManager:emptySlots()
 end
 
 local looting = false
+local fetching = false
 function br.lootManager:getLoot(lootUnit)
-	local looting = false
 	-- if we have a unit to loot, check if its time to
 	if br.timer:useTimer("getLoot", getOptionValue("Auto Loot")) then
 		if getDistance(lootUnit) < 7 then
@@ -109,15 +109,17 @@ function br.lootManager:getLoot(lootUnit)
 				end
 			end
 		elseif isChecked("Fetch") and (not isInCombat("player") or br.player.enemies.get(40)[1] == nil) and UnitExists("pet") and not deadPet and getDistance(lootUnit) > 7 and getDistance(lootUnit) < 40 then
-			if not looting then
-				looting = true
+			if not fetching then
+				fetching = true
 				lM:debug("Looting " .. UnitName(lootUnit))
 				CastSpellByName(GetSpellInfo(125050))
 			end
 		end
-		-- Clean Up
-		ClearTarget()
+		if not isInCombat("player") and looting then
+			ClearTarget()
+		end
 		looting = false
+		fetching = false
 		lM.lootUnit = nil
 		br.lootable = {}
 		return

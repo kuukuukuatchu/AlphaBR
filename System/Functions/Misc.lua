@@ -178,12 +178,18 @@ function getLineOfSight(Unit1, Unit2)
 		end
 	end
 	local skipLoSTable = br.lists.los
-	if skipLoSTable[GetObjectID(Unit1)] or skipLoSTable[GetObjectID(Unit2)] then return true end
+	if skipLoSTable[GetObjectID(Unit1)] or skipLoSTable[GetObjectID(Unit2)]
+		 -- Kyrian Hunter Ability
+		or (Unit1 and Unit1 ~= "player" and getDebuffRemain(Unit1,308498) > 0)
+		or (Unit2 and Unit2 ~= "player" and getDebuffRemain(Unit2,308498) > 0)
+	then
+		return true
+	end
 	if GetObjectExists(Unit1) and GetUnitIsVisible(Unit1) and GetObjectExists(Unit2) and GetUnitIsVisible(Unit2) then
 		local X1, Y1, Z1 = GetObjectPosition(Unit1)
 		local X2, Y2, Z2 = GetObjectPosition(Unit2)
 		local pX, pY, pZ = GetObjectPosition("player")
-		if TraceLine(X1, Y1, Z1 + 2, X2, Y2, Z2 + 2, 0x10) == nil then
+		if TraceLine(X1, Y1, Z1 + 2, X2, Y2, Z2 + 2, 0x100111) == nil then
 			--Print("Past Traceline")
             if br.player and br.player.eID and br.player.eID == 2141 then
                 if pX < -108 and X2 < -108 then
@@ -313,6 +319,31 @@ function isInCombat(Unit)
 	else
 		return false
 	end
+end
+function isInArdenweald()
+	local tContains = tContains
+	local mapID = C_Map.GetBestMapForUnit("player")
+	return tContains(br.lists.maps.Ardenweald,mapID)
+end
+function isInBastion()
+	local tContains = tContains
+	local mapID = C_Map.GetBestMapForUnit("player")
+	return tContains(br.lists.maps.Bastion,mapID)
+end
+function isInMaldraxxus()
+	local tContains = tContains
+	local mapID = C_Map.GetBestMapForUnit("player")
+	return tContains(br.lists.maps.Maldraxxus,mapID)
+end
+function isInRevendreth()
+	local tContains = tContains
+	local mapID = C_Map.GetBestMapForUnit("player")
+	return tContains(br.lists.maps.Revendreth,mapID)
+end
+function isInTheMaw()
+	local tContains = tContains
+	local mapID = C_Map.GetBestMapForUnit("player")
+	return tContains(br.lists.maps.TheMaw,mapID)
 end
 -- if isInDraenor() then
 function isInDraenor()
@@ -488,9 +519,12 @@ function enemyListCheck(Unit)
 		playerBuff = 1
 	end
 	if targetBuff ~= playerBuff then return false end
+	local phaseReason = UnitPhaseReason(Unit)
 	local distance = getDistance(Unit, "player")
 	local mcCheck =	(isChecked("Attack MC Targets") and (not GetUnitIsFriend(Unit, "player") or UnitIsCharmed(Unit))) or not GetUnitIsFriend(Unit, "player")
-	return GetObjectExists(Unit) and not UnitIsDeadOrGhost(Unit) and UnitInPhase(Unit) and UnitCanAttack("player", Unit) and UnitHealth(Unit) > 0 and
+	local inPhase = not phaseReason or phaseReason == 2 or phaseReason == 3
+	if UnitDebuffID("player", 320102) and UnitIsPlayer(Unit) then return true end
+	return GetObjectExists(Unit) and not UnitIsDeadOrGhost(Unit) and inPhase and UnitCanAttack("player", Unit) and UnitHealth(Unit) > 0 and
 		distance < 50 and
 		not isCritter(Unit) and
 		mcCheck and
@@ -511,10 +545,11 @@ function isValidUnit(Unit)
 	local burnUnit = getOptionCheck("Forced Burn") and isBurnTarget(Unit) > 0
 	local isCC = getOptionCheck("Don't break CCs") and isLongTimeCCed(Unit) or false
 	local mcCheck = (isChecked("Attack MC Targets") and	(not GetUnitIsFriend(Unit, "player") or (UnitIsCharmed(Unit) and UnitCanAttack("player", Unit)))) or not GetUnitIsFriend(Unit, "player")
+	if playerTarget and UnitDebuffID("player", 320102) and UnitIsPlayer(Unit) then return true end
 	if playerTarget and br.units[UnitTarget("player")] == nil and not enemyListCheck("target") then return false end
 	if not pause(true) and Unit ~= nil and (br.units[Unit] ~= nil or Unit == "target" or burnUnit)
 		and mcCheck and not isCC and (dummy or burnUnit or (not UnitIsTapDenied(Unit) and isSafeToAttack(Unit)
-		and	((not hostileOnly and (reaction < 5 or playerTarget or targeting)) or (hostileOnly and (reaction < 4 or playerTarget or targeting)))))
+		and ((hostileOnly and reaction < 4) or (not hostileOnly and reaction < 5) or playerTarget or targeting)))
 	 then
 		return (playerTarget and (not inInstance or (inInstance and #br.friend == 1))) or targeting or burnUnit or isInProvingGround() or hasThreat(Unit)
 	end
@@ -578,23 +613,6 @@ function BurstToggle(toggle, delay)
 		end
 	end
 end
-function SlashCommandHelp(cmd, msg)
-	if cmd == nil then
-		cmd = ""
-	end
-	if msg == nil then
-		msg = ""
-	end
-	if cmd == "Print Help" then
-		Print(tostring(commandHelp))
-		return
-	end
-	if commandHelp == nil then
-		commandHelp = "BadRotations Slash Commands\n        /" .. cmd .. " - " .. msg
-	else
-		commandHelp = commandHelp .. "\n        /" .. cmd .. " - " .. msg
-	end
-end
 -- if pause() then
 -- set skipCastingCheck to true, to not check if player is casting
 -- (useful if you want to use off-cd stuff, or spells which can be cast while other is casting)
@@ -649,15 +667,15 @@ function pause(skipCastingCheck)
 		end
 	end
 	-- Pause Toggle
-	if br.data.settings[br.selectedSpec].toggles["Pause"] == 1 then
+	if br.data.settings[br.selectedSpec].toggles ~= nil and br.data.settings[br.selectedSpec].toggles["Pause"] == 1 then
 		ChatOverlay("\124cFFED0000 -- Paused -- ")
 		return true
 	end
 	-- Pause Hold/Auto
 	if	(pausekey and GetCurrentKeyBoardFocus() == nil and isChecked("Pause Mode")) or profileStop or
-		((IsMounted() or IsFlying()) and --and (GetObjectExists("target") and GetObjectID("target") ~= 56877)
+		((IsMounted() or IsFlying() or UnitOnTaxi("player") or UnitInVehicle("player")) and --and (GetObjectExists("target") and GetObjectID("target") ~= 56877)
 		not (UnitBuffID("player", 190784) or UnitBuffID("player", 164222) or UnitBuffID("player", 165803) or
-		UnitBuffID("player", 157059) or
+		UnitBuffID("player", 157059) or UnitBuffID("player", 315043) or
 		UnitBuffID("player", 157060))) or
 		SpellIsTargeting() or
 		-- or (not UnitCanAttack("player","target") and not UnitIsPlayer("target") and GetUnitExists("target"))

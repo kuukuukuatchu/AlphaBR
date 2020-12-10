@@ -18,10 +18,10 @@ function br.ui:createConfigWindow()
         br.ui:createCheckbox(section, "Auto-Sell/Repair", "Automatically sells grays and repairs when you open a repair vendor.")
         br.ui:createCheckbox(section, "Accept Queues", "Automatically accept LFD, LFR, .. queue.")
         br.ui:createCheckbox(section, "Overlay Messages", "Check to enable chat overlay messages.")
-        br.ui:createCheckbox(section, "Talent Anywhere", "Check to enable swapping of talents outside of rest areas.")
         br.ui:createSpinner(section,  "Notify Not Unlocked", 10, 5, 60, 5, "Will alert you at the set interval when Unlocker is not attached.")
         br.ui:createCheckbox(section, "Reset Options", "|cffFF0000 WARNING!|cffFFFFFF Checking this will reset setting on reload!")
         br.ui:createCheckbox(section, "Reset Saved Profiles", "|cffFF0000 WARNING!|cffFFFFFF Checking this will reset saved profiles on reload!")
+        br.ui:createCheckbox(section, "Auto Check for Updates", "EWT only. This uses the Git master head sha for comparison. |cffFF0000Experimental!")
         br.ui:checkSectionState(section)
     end
 
@@ -85,28 +85,30 @@ function br.ui:createConfigWindow()
         br.ui:createCheckbox(section, "Bypass Flying Check")
         br.ui:createCheckbox(section, "Pig Catcher", "Catch pig in Ring of Booty")
         br.ui:createSpinner(section, "Profession Helper", 0.5, 0, 1, 0.1, "Check to enable Professions Helper.", "Set Desired Recast Delay.")
-        br.ui:createDropdown(section, "Prospect Ores", {"BFA","Legion","WoD", "MoP", "Cata", "All"}, 1, "Prospect Desired Ores. Profession Helper must be checked.")
-        br.ui:createDropdown(section, "Mill Herbs", {"BFA","Legion","WoD", "MoP", "Cata", "All"}, 1, "Mill Desired Herbs. Profession Helper must be checked.")
+        br.ui:createDropdown(section, "Prospect Ores", {"SL","BFA","Legion","WoD", "MoP", "Cata", "All"}, 1, "Prospect Desired Ores. Profession Helper must be checked.")
+        br.ui:createDropdown(section, "Mill Herbs", {"SL","BFA","Legion","WoD", "MoP", "Cata", "All"}, 1, "Mill Desired Herbs. Profession Helper must be checked.")
         br.ui:createCheckbox(section, "Disenchant", "Disenchant Cata blues/greens. Profession Helper must be checked.")
         br.ui:createCheckbox(section, "Leather Scraps", "Combine leather scraps. Profession Helper must be checked.")
         br.ui:createCheckbox(section, "Lockboxes", "Unlock Lockboxes. Profession Helper must be checked.")
         br.ui:createDropdown(section, "Fishing", {"Enabled","Disabled"}, 2, "Turn EWT Fishing On/Off")
         br.ui:createCheckbox(section, "Fish Oil", "Turn Fish into Aromatic Fish Oil. Profession Helper must be checked.")
+        br.ui:createDropdown(section, "Bait", {"Lost Sole Bait","Silvergill Pike Bait","Pocked Bonefish Bait","Iridescent Amberjack Bait", "Spinefin Piranha Bait", "Elysian Thade Bait"}, 1, "Using the bait.")
         br.ui:createDropdown(section, "Anti-Afk", {"Enabled","Disabled"}, 2, "Turn EWT Anti-Afk On/Off")
         br.ui:createCheckbox(section, "Quaking Helper", "Auto cancel channeling and block casts during mythic+ affix quaking")
         br.ui:createCheckbox(section, "Debug Timers", "Useless to users, for Devs.")
         br.ui:createCheckbox(section, "Cache Debuffs", "Experimental feature still in testing")
-        --br.ui:createCheckbox(section, "Show Drawings", "Show drawings on screen using Lib Draw")
+        br.ui:createCheckbox(section, "Unit ID In Tooltip", "Show/Hide Unit IDs in Tooltip")
+        br.ui:createCheckbox(section, "Show Drawings", "Show drawings on screen using Lib Draw")
         br.ui:checkSectionState(section)
     end
 
     local function callSettingsEngine()
-        section = br.ui:createSection(br.ui.window.config, "Create New Settings Profiles or Load Existing")
+        section = br.ui:createSection(br.ui.window.config, "Export/Import from Settings Folder")
         --br.ui:createDropdownWithout(section, "Load Prior Saved Settings", {"Dungeons", "Mythic Dungeons", "Raids", "Mythic Raids"}, 1, "Select Profile to Load.")
-        br.ui:createProfileDropdown(section)
-        br.ui:createSaveButton(section, " +", 200, -5)
-        br.ui:createDeleteButton(section, " -", 220, -5)
-        br.ui:createLoadButton(section, "Load", 20, -40)
+--         br.ui:createProfileDropdown(section)
+--         br.ui:createSaveButton(section, " +", 200, -5)
+--         br.ui:createDeleteButton(section, " -", 220, -5)
+--         br.ui:createLoadButton(section, "Load", 20, -40)
         br.ui:createText(section,"Export/Import from Settings Folder")
         br.ui:createExportButton(section, "Export", 40, -90)
         br.ui:createImportButton(section, "Import", 140, -90)
@@ -117,7 +119,7 @@ function br.ui:createConfigWindow()
     local function callTrackerEngine()
         -- Main
         section = br.ui:createSection(br.ui.window.config, "Main Settings")
-        br.ui:createCheckbox(section,"Enable Tracker")
+        br.ui:createDropdown(section,"Enable Tracker", {"Default","Alternate"}, 1, "Use alternate drawing mode in DX11 if you experience issues with Default. You must type .enabledx at least once to enable EWT's DX Drawing. This is automatically saved by EWT.")
         br.ui:createCheckbox(section,"Draw Lines to Tracked Objects")
         br.ui:createCheckbox(section,"Auto Interact with Any Tracked Object")
         br.ui:createCheckbox(section, "Rare Tracker", "Track All Rares In Range")
@@ -143,7 +145,7 @@ function br.ui:createConfigWindow()
                 local i = 0      -- iterator variable
                 local iter = function ()   -- iterator function
                 i = i + 1
-                if a[i] == nil then 
+                if a[i] == nil then
                     return nil
                 else return a[i], t[a[i]]
                 end

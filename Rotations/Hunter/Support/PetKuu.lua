@@ -142,35 +142,35 @@ br.rotations.support["PetKuu"] = function()
         if cast.dash("pet") then end
     end
     -- Purge
-    if isChecked("Purge") and inCombat then
-        if #enemies.yards5p > 0 then
-            local dispelled = false
-            local dispelledUnit = "player"
-            for i = 1, #enemies.yards5p do
-                local thisUnit = enemies.yards5p[i]
-                if getOptionValue("Purge") == 1 or (getOptionValue("Purge") == 2 and UnitIsUnit(thisUnit,"target")) then
-                    if isValidUnit(thisUnit) and canDispel(thisUnit,spell.spiritShock) then
-                        if cast.able.spiritShock(thisUnit,"pet") then
-                            if cast.spiritShock(thisUnit,"pet") then dispelled = true; dispelledUnit = thisUnit; break end
-                        elseif cast.able.chiJiTranq(thisUnit,"pet") then
-                            if cast.chiJiTranq(thisUnit,"pet") then dispelled = true; dispelledUnit = thisUnit; break end
-                        elseif cast.able.naturesGrace(thisUnit,"pet") then
-                            if cast.naturesGrace(thisUnit,"pet") then dispelled = true; dispelledUnit = thisUnit; break end
-                        elseif cast.able.netherShock(thisUnit,"pet") then
-                            if cast.netherShock(thisUnit,"pet") then dispelled = true; dispelledUnit = thisUnit; break end
-                        elseif cast.able.sonicBlast(thisUnit,"pet") then
-                            if cast.sonicBlast(thisUnit,"pet") then dispelled = true; dispelledUnit = thisUnit; break end
-                        elseif cast.able.soothingWater(thisUnit,"pet") then
-                            if cast.soothingWater(thisUnit,"pet") then dispelled = true; dispelledUnit = thisUnit; break end
-                        elseif cast.able.sporeCloud(thisUnit,"pet") then
-                            if cast.sporeCloud(thisUnit,"pet") then dispelled = true; dispelledUnit = thisUnit; break end
-                        end
-                    end
-                end
-            end
-            if dispelled then br.addonDebug("Casting dispel on ".. UnitName(dispelledUnit)); end
-        end
-    end
+    -- if isChecked("Purge") and inCombat then
+    --     if #enemies.yards5p > 0 then
+    --         local dispelled = false
+    --         local dispelledUnit = "player"
+    --         for i = 1, #enemies.yards5p do
+    --             local thisUnit = enemies.yards5p[i]
+    --             if getOptionValue("Purge") == 1 or (getOptionValue("Purge") == 2 and UnitIsUnit(thisUnit,"target")) then
+    --                 if isValidUnit(thisUnit) and canDispel(thisUnit,spell.spiritShock) then
+    --                     if cast.able.spiritShock(thisUnit,"pet") then
+    --                         if cast.spiritShock(thisUnit,"pet") then dispelled = true; dispelledUnit = thisUnit; break end
+    --                     elseif cast.able.chiJiTranq(thisUnit,"pet") then
+    --                         if cast.chiJiTranq(thisUnit,"pet") then dispelled = true; dispelledUnit = thisUnit; break end
+    --                     elseif cast.able.naturesGrace(thisUnit,"pet") then
+    --                         if cast.naturesGrace(thisUnit,"pet") then dispelled = true; dispelledUnit = thisUnit; break end
+    --                     elseif cast.able.netherShock(thisUnit,"pet") then
+    --                         if cast.netherShock(thisUnit,"pet") then dispelled = true; dispelledUnit = thisUnit; break end
+    --                     elseif cast.able.sonicBlast(thisUnit,"pet") then
+    --                         if cast.sonicBlast(thisUnit,"pet") then dispelled = true; dispelledUnit = thisUnit; break end
+    --                     elseif cast.able.soothingWater(thisUnit,"pet") then
+    --                         if cast.soothingWater(thisUnit,"pet") then dispelled = true; dispelledUnit = thisUnit; break end
+    --                     elseif cast.able.sporeCloud(thisUnit,"pet") then
+    --                         if cast.sporeCloud(thisUnit,"pet") then dispelled = true; dispelledUnit = thisUnit; break end
+    --                     end
+    --                 end
+    --             end
+    --         end
+    --         if dispelled then br.addonDebug("Casting dispel on ".. UnitName(dispelledUnit)); end
+    --     end
+    -- end
     -- Growl
     if isChecked("Auto Growl") and inCombat then
         local _, autoCastEnabled = GetSpellAutocast(spell.growl)
