@@ -352,8 +352,8 @@ actionList.AOE = function()
     end
     -- Windfury Totem
     -- windfury_totem,if=runeforge.doom_winds.equipped&buff.doom_winds_debuff.down
-    if cast.able.windfuryTotem() and not unit.moving() and buff.windfuryTotem.remains("player","any") < 30 and #enemies.yards8 > 0
-        and runeforge.doomWinds.equiped and not buff.doomWinds.exists() and not ui.checked("Windfury Totem Key")
+    if cast.able.windfuryTotem() and not unit.moving() and #enemies.yards8 > 0 and runeforge.doomWinds.equiped
+        and not debuff.doomWinds.exists("player") and not ui.checked("Windfury Totem Key")
     then
         if cast.windfuryTotem() then ui.debug("Casting Windfury Totem [AOE Doom Winds]") return true end
     end
@@ -390,7 +390,7 @@ actionList.AOE = function()
     -- Crash Lightning
     -- crash_lightning,if=talent.crashing_storm.enabled|buff.crash_lightning.down
     if cast.able.crashLightning() and (talent.crashingStorm or not buff.crashLightning.exists()) then
-        if cast.crashLightning() then ui.debug("Casting Crash Lightning [AOE Crashing Storm / No Buff]") return true end
+        if cast.crashLightning(nil,"cone",1,8) then ui.debug("Casting Crash Lightning [AOE Crashing Storm / No Buff]") return true end
     end
     -- Lava Lash
     -- lava_lash,target_if=min:debuff.lashing_flames.remains,cycle_targets=1,if=talent.lashing_flames.enabled
@@ -400,7 +400,7 @@ actionList.AOE = function()
     -- Crash Lightning
     -- crash_lightning
     if cast.able.crashLightning() then
-        if cast.crashLightning() then ui.debug("Casting Crash Lightning [AOE]") return true end
+        if cast.crashLightning(nil,"cone",1,8) then ui.debug("Casting Crash Lightning [AOE]") return true end
     end
     -- Chain Lightning
     -- chain_lightning,if=buff.stormkeeper.up
@@ -533,8 +533,8 @@ actionList.Single = function()
     end
     -- Windfury Totem
     -- windfury_totem,if=runeforge.doom_winds.equipped&buff.doom_winds_debuff.down
-    if cast.able.windfuryTotem() and not unit.moving() and buff.windfuryTotem.remains("player","any") < 30 and #enemies.yards8 > 0 
-        and runeforge.doomWinds.equiped and not buff.doomWinds.exists() and not ui.checked("Windfury Totem Key")
+    if cast.able.windfuryTotem() and not unit.moving() and #enemies.yards8 > 0 and runeforge.doomWinds.equiped
+        and not debuff.doomWinds.exists("player") and not ui.checked("Windfury Totem Key")
     then
         if cast.windfuryTotem() then ui.debug("Casting Windfury Totem [ST Doom Winds]") return true end
     end
@@ -606,7 +606,7 @@ actionList.Single = function()
     -- Crash Lightning
     -- crash_lightning
     if cast.able.crashLightning() then
-        if cast.crashLightning() then ui.debug("Casting Crash Lightning [ST]") return true end
+        if cast.crashLightning(nil,"cone",1,8) then ui.debug("Casting Crash Lightning [ST]") return true end
     end
     -- Flame Shock
     -- flame_shock,target_if=refreshable
@@ -765,7 +765,7 @@ local function runRotation()
     enemies.get(8)
     enemies.get(8,"player",false,true)
     enemies.get(10)
-    enemies.yards11r = getEnemiesInRect(10,11,true) or 0
+    enemies.yards11r = getEnemiesInRect(10,11,false) or 0
     enemies.get(20)
     enemies.get(30)
     enemies.get(40,"player",false,true)
@@ -864,7 +864,7 @@ local function runRotation()
             -- ancestral_call,if=!talent.ascendance.enabled|buff.ascendance.up|cooldown.ascendance.remains>50
             -- bag_of_tricks,if=!talent.ascendance.enabled|!buff.ascendance.up
             if ui.checked("Racial") and ui.alwaysCdNever("Racial") and (((unit.race() == "Orc" or unit.race() == "DarkIronDwarf" or unit.race() == "MagharOrc")
-                and (not talent.ascendance or (ui.useCDs() and buff.ascendance.exists()) or cd.ascendance.remains() > 50 or (not ui.useCDS() and ui.alwaysCdNever("Racial"))))
+                and (not talent.ascendance or (ui.useCDs() and buff.ascendance.exists()) or cd.ascendance.remains() > 50 or (not ui.useCDs() and ui.alwaysCdNever("Racial"))))
                 or (unit.race() == "Troll" and (not talent.ascendance or (ui.useCDs() and buff.ascendance.exists()) or (ui.useCDs() and ui.alwaysCdNever("Racial")))))
             then
                 if cast.racial("player") then ui.debug("Casting Racial") return true end

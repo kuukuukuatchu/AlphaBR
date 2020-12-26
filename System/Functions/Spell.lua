@@ -116,7 +116,7 @@ function canInterrupt(unit,percentint)
 				end
 			elseif percentint > 0 then
 				if castType == "spellcast" then
-					castPercent = percentint
+					castPercent = math.random((percentint - 5), (5 + percentint))
 				end
 				if castType == "spellchannel" then
 					if castDuration > 60 then

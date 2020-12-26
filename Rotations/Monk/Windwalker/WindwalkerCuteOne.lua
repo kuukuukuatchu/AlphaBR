@@ -391,10 +391,10 @@ actionList.CdSef = function()
     then
         if cast.touchOfDeath("target") then ui.debug("Casting Touch of Death [CD SEF]") return true end
     end
-    -- Weapons of the Order
+    -- Weapons of Order
     -- weapons_of_order,if=(raid_event.adds.in>45|raid_event.adds.up)&cooldown.rising_sun_kick.remains<execute_time
-    if ui.alwaysCdNever("Covenant Ability") and cast.able.weaponsOfTheOrder() and cd.risingSunKick.remain() < cast.time.weaponsOfTheOrder() then
-        if cast.weaponsOfTheOrder() then ui.debug("Casting Weapons of the Order [CD SEF]") return true end
+    if ui.alwaysCdNever("Covenant Ability") and cast.able.weaponsOfOrder() and cd.risingSunKick.remain() < cast.time.weaponsOfOrder() then
+        if cast.weaponsOfOrder("player") then ui.debug("Casting Weapons of Order [CD SEF]") return true end
     end
     -- Faeline Stomp
     -- faeline_stomp,if=combo_strike&(raid_event.adds.in>10|raid_event.adds.up)
@@ -412,17 +412,15 @@ actionList.CdSef = function()
         if cast.bonedustBrew() then ui.debug("Casting Bonedust Brew [CD SEF]") return true end
     end
     -- Storm, Earth, and Fire
-    if cast.able.stormEarthAndFire() and ui.alwaysCdNever("Storm, Earth, and Fire")
-        and cd.fistsOfFury.remains() <= 9 and chi >= 2 and cd.whirlingDragonPunch.remains() <= 12
-    then
+    if cast.able.stormEarthAndFire() and ui.alwaysCdNever("Storm, Earth, and Fire") then
         -- storm_earth_and_fire,if=cooldown.storm_earth_and_fire.charges=2|fight_remains<20|(raid_event.adds.remains>15|!covenant.kyrian&((raid_event.adds.in>cooldown.storm_earth_and_fire.full_recharge_time|!raid_event.adds.exists)&(cooldown.invoke_xuen_the_white_tiger.remains>cooldown.storm_earth_and_fire.full_recharge_time|variable.hold_xuen))&cooldown.fists_of_fury.remains<=9&chi>=2&cooldown.whirling_dragon_punch.remains<=12)
         if charges.stormEarthAndFire.count() == 2 or (ui.useCDs() and unit.ttdGroup() < 20) or (ui.useAOE(8,2) or not covenant.kyrian.active
-            and (cd.invokeXuenTheWhiteTiger.remains() > charges.stormEarthAndFire.timeTillFull() or var.holdXuen))
+            and ((cd.invokeXuenTheWhiteTiger.remains() > charges.stormEarthAndFire.timeTillFull() or var.holdXuen)) and cd.fistsOfFury.remain() <= 9 and chi >= 2 and cd.whirlingDragonPunch.remains() <= 12)
         then
             if cast.stormEarthAndFire() then ui.debug("Casting Storm, Earth, and Fire") var.fixateTarget = "player" return true end
         end
         -- storm_earth_and_fire,if=covenant.kyrian&(buff.weapons_of_order.up|(fight_remains<cooldown.weapons_of_order.remains|cooldown.weapons_of_order.remains>cooldown.storm_earth_and_fire.full_recharge_time)&cooldown.fists_of_fury.remains<=9&chi>=2&cooldown.whirling_dragon_punch.remains<=12)
-        if covenant.kyrian.active and (buff.weaponsOfTheOrder.exists() or (unit.ttdGroup(5) < cd.weaponsOfTheOrder.remain() or cd.weaponsOfTheOrder.remain() > charges.stormEarthAndFire.timeTillFull())) then
+        if covenant.kyrian.active and (buff.weaponsOfOrder.exists() or (unit.ttdGroup(5) < cd.weaponsOfOrder.remain() or cd.weaponsOfOrder.remain() > charges.stormEarthAndFire.timeTillFull()) and cd.fistsOfFury.remain() <= 9 and chi >= 2 and cd.whirlingDragonPunch.remains() <= 12) then
             if cast.stormEarthAndFire() then ui.debug("Casting Storm, Earth, and Fire [Kyrian]") var.fixateTarget = "player" return true end
         end
     end
@@ -542,10 +540,10 @@ actionList.CdSerenity = function()
     then
         if cast.touchOfKarma() then ui.debug("Casting Touch of Karma [CD Serenity]") return true end
     end
-    -- Weapons of the Order
+    -- Weapons of Order
     -- weapons_of_order,if=cooldown.rising_sun_kick.remains<execute_time
-    if ui.alwaysCdNever("Covenant Abiity") and cast.able.weaponsOfTheOrder() and cd.risingSunKick.remains() < cast.time.weaponsOfTheOrder() then
-        if cast.weaponsOfTheOrder() then ui.debug("Casting Weapons of the Order [CD Serenity]") return true end
+    if ui.alwaysCdNever("Covenant Ability") and cast.able.weaponsOfOrder() and cd.risingSunKick.remains() < cast.time.weaponsOfOrder() then
+        if cast.weaponsOfOrder("player") then ui.debug("Casting Weapons of Order [CD Serenity]") return true end
     end
     -- Faeline Stomp
     -- faeline_stomp
@@ -573,108 +571,112 @@ actionList.CdSerenity = function()
     -- end
 end -- End Action List - CdSerenity
 
--- Actioin List - Weapons of the Order
+-- Actioin List - Weapons of Order
 actionList.WeaponsOfTheOrder = function()
     -- Call Action List - Cd Sef
-    -- call_action_list,name=cd_sef,if=!talent.serenity.enabled
+    -- call_action_list,name=cd_sef,if=!talent.serenity
     if not talent.serenity then
         if actionList.CdSef() then return true end
     end
     -- Call Action List - Cd Serenity
-    -- call_action_list,name=cd_serenity,if=talent.serenity.enabled
+    -- call_action_list,name=cd_serenity,if=talent.serenity
     if talent.serenity then
         if actionList.CdSerenity() then return true end
     end
     -- Energizing Elixir
     -- energizing_elixir,if=chi.max-chi>=2&energy.time_to_max>3
     if cast.able.energizingElixir() and chiMax - chi >= 2 and energyTTM() > 3 then
-        if cast.energizingElixir() then ui.debug("Casting Energizing Elixir [Weapons of the Order]") return true end
+        if cast.energizingElixir() then ui.debug("Casting Energizing Elixir [Weapons of Order]") return true end
     end
     -- Rising Sun Kick
     -- rising_sun_kick,target_if=min:debuff.mark_of_the_crane.remains
     if cast.able.risingSunKick(var.lowestMark) then
-        if cast.risingSunKick(var.lowestMark) then ui.debug("Casting Rising Sun Kick [Weapons of the Order]") return true end
+        if cast.risingSunKick(var.lowestMark) then ui.debug("Casting Rising Sun Kick [Weapons of Order]") return true end
     end
     -- Spinning Crane Kick
-    -- spinning_crane_kick,if=(!talent.hit_combo.enabled&conduit.calculated_strikes.enabled|combo_strike)&buff.dance_of_chiji.up
-    if cast.able.spinningCraneKick() and (not talent.hitCombo and conduit.calculatedStrikes.enabled or not wasLastCombo(spell.spinningCraneKick)) and buff.danceOfChiJi.exists() then
-        if cast.spinningCraneKick("player","aoe") then ui.debug("Casting Spinning Crane Kick [Weapons of the Order - Chi-Ji]") return true end
+    -- spinning_crane_kick,if=combo_strike&buff.dance_of_chiji.up
+    if cast.able.spinningCraneKick() and not wasLastCombo(spell.spinningCraneKick)
+        and buff.danceOfChiJi.exists() and cast.timeSinceLast.spinningCraneKick() > unit.gcd("true")
+    then
+        if cast.spinningCraneKick("player","aoe") then ui.debug("Casting Spinning Crane Kick [Weapons of Order - Chi-Ji]") return true end
     end
     -- Fists of Fury
     -- fists_of_fury,if=active_enemies>=2&buff.weapons_of_order_ww.remains<1
-    if cast.able.fistsOfFury()  and ui.useAOE(8,ui.value("Fists of Fury Min Units")) and buff.weaponsOfTheOrderWW.remains() < 1 then
-        if cast.fistsOfFury() then ui.debug("Casting Fists of Fury [Weapons of the Order - Low WW Buff]") return true end
+    if cast.able.fistsOfFury() and buff.weaponsOfOrderWW.remains() < 1 then-- and ui.useAOE(8,ui.value("Fists of Fury Min Units")) then
+        if cast.fistsOfFury() then ui.debug("Casting Fists of Fury [Weapons of Order - Low WW Buff]") return true end
     end
     -- Whirling Dragon Punch
     -- whirling_dragon_punch,if=active_enemies>=2
     if cast.able.whirlingDragonPunch() and cd.risingSunKick.exists() and cd.fistsOfFury.exists()
         and ui.useAOE(8,ui.value("Whirling Dragon Punch Min Units")) and not unit.moving() and not unit.isExplosive("target")
     then
-        if cast.whirlingDragonPunch("player","aoe",1,8) then ui.debug("Casting Whirling Dragon Punch [Weapons of the Order - AOE]") return true end
+        if cast.whirlingDragonPunch("player","aoe",1,8) then ui.debug("Casting Whirling Dragon Punch [Weapons of Order - AOE]") return true end
     end
     -- Spinning Crane Kick
-    -- spinning_crane_kick,if=(!talent.hit_combo.enabled&conduit.calculated_strikes.enabled|combo_strike)&active_enemies>=3&buff.weapons_of_order_ww.up
-    if cast.able.spinningCraneKick() and (not talent.hitCombo and conduit.calculatedStrikes.enabled or not wasLastCombo(spell.spinningCraneKick))
-        and ui.useAOE(8,3) and buff.weaponsOfTheOrderWW.exists()
+    -- spinning_crane_kick,if=combo_strike&active_enemies>=3&buff.weapons_of_order_ww.up
+    if cast.able.spinningCraneKick() and not wasLastCombo(spell.spinningCraneKick)
+        and ui.useAOE(8,3) and buff.weaponsOfOrderWW.exists() and cast.timeSinceLast.spinningCraneKick() > unit.gcd("true")
     then
-        if cast.spinningCraneKick("player","aoe") then ui.debug("Casting Spinning Crane Kick [Weapons of the Order - WW Buff]") return true end
+        if cast.spinningCraneKick("player","aoe") then ui.debug("Casting Spinning Crane Kick [Weapons of Order - WW Buff]") return true end
     end
     -- Blackout Kick
     -- blackout_kick,target_if=min:debuff.mark_of_the_crane.remains,if=combo_strike&active_enemies<=2
     if cast.able.blackoutKick(var.lowestMark) and not wasLastCombo(spell.blackoutKick) and ui.useST(5,2) then
-        if cast.blackoutKick(var.lowestMark) then ui.debug("Casting Blackout Kick [Weapons of the Order]") return true end
+        if cast.blackoutKick(var.lowestMark) then ui.debug("Casting Blackout Kick [Weapons of Order]") return true end
     end
     -- Whirling Dragon Punch
     -- whirling_dragon_punch
     if cast.able.whirlingDragonPunch() and cd.risingSunKick.exists() and cd.fistsOfFury.exists() then
-        if cast.whirlingDragonPunch("player","aoe",1,8) then ui.debug("Casting Whirling Dragon Punch [Weapons of the Order]") return true end
+        if cast.whirlingDragonPunch("player","aoe",1,8) then ui.debug("Casting Whirling Dragon Punch [Weapons of Order]") return true end
     end
     -- Fists of Fury
     -- fists_of_fury,interrupt=1,if=buff.storm_earth_and_fire.up&raid_event.adds.in>cooldown.fists_of_fury.duration*0.6
     if cast.able.fistsOfFury() and buff.stormEarthAndFire.exists() then
-        if cast.fistsOfFury() then ui.debug("Casting Fists of Fury [Weapons of the Order - SEF]") return true end
+        if cast.fistsOfFury() then ui.debug("Casting Fists of Fury [Weapons of Order - SEF]") return true end
     end
     -- Spinning Crane Kick
     -- spinning_crane_kick,if=buff.chi_energy.stack>30-5*active_enemies
-    if cast.able.spinningCraneKick() and buff.chiEnergy.stack() > 30 - 5 * #enemies.yards8 then
-        if cast.spinningCraneKick("player","aoe") then ui.debug("Casting Spinning Crane Kick [Weapons of the Order - Chi Energy]") return true end
+    if cast.able.spinningCraneKick() and buff.chiEnergy.stack() > 30 - 5 * #enemies.yards8
+        and not wasLastCombo(spell.spinningCraneKick) and cast.timeSinceLast.spinningCraneKick() > unit.gcd("true")
+    then
+        if cast.spinningCraneKick("player","aoe") then ui.debug("Casting Spinning Crane Kick [Weapons of Order - Chi Energy]") return true end
     end
     -- Fist of the White Tiger
     -- fist_of_the_white_tiger,target_if=min:debuff.mark_of_the_crane.remains,if=chi<3
     if cast.able.fistOfTheWhiteTiger(var.lowestMark) and chi < 3 then
-        if cast.fistOfTheWhiteTiger(var.lowestMark) then ui.debug("Casting Fist of the White Tiger [Weapons of the Order]") return true end
+        if cast.fistOfTheWhiteTiger(var.lowestMark) then ui.debug("Casting Fist of the White Tiger [Weapons of Order]") return true end
     end
     -- Expel Harm
     -- expel_harm,if=chi.max-chi>=1
     if cast.able.expelHarm() and (chiMax - chi >= 1) then
-        if cast.expelHarm() then ui.debug("Casting Expel Harm [Weapons of the Order]") return true end
+        if cast.expelHarm() then ui.debug("Casting Expel Harm [Weapons of Order]") return true end
     end
     -- Chi Burst
     -- chi_burst,if=chi.max-chi>=(1+active_enemies>1)
     if cast.able.chiBurst() and chiMax - chi >= 1 + var.chiBurstMoreThan1 then
-        if cast.chiBurst(nil,"rect",1,12) then ui.debug("Casting Chi Burst [Weapons of the Order]") return true end
+        if cast.chiBurst(nil,"rect",1,12) then ui.debug("Casting Chi Burst [Weapons of Order]") return true end
     end
     -- Tiger Palm
-    -- tiger_palm,target_if=min:debuff.mark_of_the_crane.remains+(debuff.recently_rushing_tiger_palm.up*20),if=(!talent.hit_combo.enabled|combo_strike)&chi.max-chi>=2
+    -- tiger_palm,target_if=min:debuff.mark_of_the_crane.remains+(debuff.recently_rushing_tiger_palm.up*20),if=(!talent.hit_combo|combo_strike)&chi.max-chi>=2
     if cast.able.tigerPalm(var.lowestMark) and (not talent.hitCombo or not wasLastCombo(spell.tigerPalm)) and chiMax - chi >= 2 then
-        if cast.tigerPalm(var.lowestMark) then ui.debug("Casting Tiger Palm [Weapons of the Order]") return true end
+        if cast.tigerPalm(var.lowestMark) then ui.debug("Casting Tiger Palm [Weapons of Order]") return true end
     end
     -- Chi Wave
     -- chi_wave
     if cast.able.chiWave() then
-        if cast.chiWave(nil,"aoe") then ui.debug("Casting Chi Wave [Weapons of the Order]") return true end
+        if cast.chiWave(nil,"aoe") then ui.debug("Casting Chi Wave [Weapons of Order]") return true end
     end
     -- Blackout Kick
     -- blackout_kick,target_if=min:debuff.mark_of_the_crane.remains,if=chi>=3|buff.weapons_of_order_ww.up
-    if cast.able.blackoutKick(var.lowestMark) and (chi >= 3 or buff.weaponsOfTheOrderWW.exists()) then
-        if cast.blackoutKick(var.lowestMark) then ui.debug("Casting Blackout Kick [Weapons of the Order - WW Buff]") return true end
+    if cast.able.blackoutKick(var.lowestMark) and (chi >= 3 or buff.weaponsOfOrderWW.exists()) and not wasLastCombo(spell.blackoutKick) then
+        if cast.blackoutKick(var.lowestMark) then ui.debug("Casting Blackout Kick [Weapons of Order - WW Buff]") return true end
     end
     -- Flying Serpent Kick
     -- flying_serpent_kick,interrupt=1
     if ui.mode.fsk == 1 and cast.able.flyingSerpentKick() then
-        if cast.flyingSerpentKick() then var.castFSK = true ui.debug("Casting Flying Serpent Kick [Weapons of the Order]") return true end
+        if cast.flyingSerpentKick() then var.castFSK = true ui.debug("Casting Flying Serpent Kick [Weapons of Order]") return true end
     end
-end -- End Action List - Weapons of the Order
+end -- End Action List - Weapons of Order
 
 -- Action List - Serenity
 actionList.Serenity = function()
@@ -682,15 +684,15 @@ actionList.Serenity = function()
     -- Fists of Fury
     -- fists_of_fury,if=buff.serenity.remains<1
     if cast.able.fistsOfFury() and buff.serenity.remain() < 1 then
-        if cast.fistsOfFury(nil,"cone",1,8) then ui.debug("Casting Fists of Fury [Serenity]") return true end
+        if cast.fistsOfFury() then ui.debug("Casting Fists of Fury [Serenity]") return true end
     end
     -- Basic Trinkets Module
     -- use_item,name=inscrutable_quantum_device
     -- use_item,name=dreadfire_vessel
     br.player.module.BasicTrinkets()
     -- Spinning Crane Kick
-    -- spinning_crane_kick,if=(!talent.hit_combo.enabled&conduit.calculated_strikes.enabled|combo_strike)&(active_enemies>=3|active_enemies>1&!cooldown.rising_sun_kick.up)
-    if cast.able.spinningCraneKick() and ((not talent.hitCombo and conduit.calculatedStrikes) or not wasLastCombo(spell.spinningCraneKick)) 
+    -- spinning_crane_kick,if=combo_strike&(active_enemies>=3|active_enemies>1&!cooldown.rising_sun_kick.up)
+    if cast.able.spinningCraneKick() and not wasLastCombo(spell.spinningCraneKick) 
         and ((ui.mode.rotation == 1 and (#enemies.yards8 >= 3 or (#enemies.yards8 > 1 and cd.risingSunKick.exists()))) or (ui.mode.rotation == 2 and #enemies.yards8 > 0))
         and cast.timeSinceLast.spinningCraneKick() > unit.gcd("true")
     then
@@ -704,23 +706,28 @@ actionList.Serenity = function()
     -- Fists of Fury
     -- fists_of_fury,if=active_enemies>=3
     if cast.able.fistsOfFury() and ui.useAOE(5,3) then
-        if cast.fistsOfFury() then ui.debug("Casting Fists of Fury [Serenity]") return true end
+        if cast.fistsOfFury() then ui.debug("Casting Fists of Fury [Serenity AOE]") return true end
     end
     -- Spinning Crane Kick
-    -- spinning_crane_kick,if=(!talent.hit_combo.enabled&conduit.calculated_strikes.enabled|combo_strike)&buff.dance_of_chiji.up
-    if cast.able.spinningCraneKick() and ((not talent.hitCombo and conduit.calculatedStrikes) or not wasLastCombo(spell.spinningCraneKick)) and buff.danceOfChiJi.exists()
+    -- spinning_crane_kick,if=combo_strike&buff.dance_of_chiji.up
+    if cast.able.spinningCraneKick() and not wasLastCombo(spell.spinningCraneKick) and buff.danceOfChiJi.exists()
         and cast.timeSinceLast.spinningCraneKick() > unit.gcd("true")
     then
         if cast.spinningCraneKick() then ui.debug("Casting Spinning Crane Kick [Serenity Dance of Chi-Ji") return true end
     end
     -- Blackout Kick
-    -- blackout_kick,target_if=min:debuff.mark_of_the_crane.remains,if=(combo_strike|!talent.hit_combo.enabled)&buff.weapons_of_order_ww.up&cooldown.rising_sun_kick.remains>2
-    if cast.able.blackoutKick(var.lowestMark) and (not wasLastCombo(spell.blackoutKick) or not talent.hitCombo) and buff.weaponsOfTheOrderWW.exists() and cd.risingSunKick.remain() > 2 then
-        if cast.blackoutKick(var.lowestMark) then ui.debug("Casting Blackout Kick [Serenity Weapons of the Order]") return true end
+    -- blackout_kick,target_if=min:debuff.mark_of_the_crane.remains,if=combo_strike&buff.weapons_of_order_ww.up&cooldown.rising_sun_kick.remains>2
+    if cast.able.blackoutKick(var.lowestMark) and not wasLastCombo(spell.blackoutKick) and buff.weaponsOfOrderWW.exists() and cd.risingSunKick.remain() > 2 then
+        if cast.blackoutKick(var.lowestMark) then ui.debug("Casting Blackout Kick [Serenity Weapons of Order]") return true end
+    end
+    -- Fists of Fury
+    -- fists_of_fury,interrupt_if=!cooldown.rising_sun_kick.up
+    if cast.able.fistsOfFury() and cd.risingSunKick.exists() then
+        if cast.fistsOfFury() then ui.debug("Casting Fists of Fury [Serenity RSK on CD]") return true end
     end
     -- Spinning Crane Kick
-    -- spinning_crane_kick,if=(!talent.hit_combo.enabled&conduit.calculated_strikes.enabled|combo_strike)&debuff.bonedust_brew.up
-    if cast.able.spinningCraneKick() and (not talent.hitCombo and conduit.calculatedStrikes or not wasLastCombo(spell.spinningCraneKick))
+    -- spinning_crane_kick,if=combo_strike&debuff.bonedust_brew.up
+    if cast.able.spinningCraneKick() and not wasLastCombo(spell.spinningCraneKick)
         and debuff.bonedustBrew.exists(units.dyn8) and cast.timeSinceLast.spinningCraneKick() > unit.gcd("true")
     then
         if cast.spinningCraneKick() then ui.debug("Casting Spinning Crane Kick [Serenity Bonedust Brew]") return true end
@@ -731,7 +738,7 @@ actionList.Serenity = function()
         if cast.fistOfTheWhiteTiger(var.lowestMark) then ui.debug("Casting Fist of the White Tiger [Serenity]") return true end
     end
     -- Blackout Kick
-    -- blackout_kick,target_if=min:debuff.mark_of_the_crane.remains,if=combo_strike|!talent.hit_combo.enabled
+    -- blackout_kick,target_if=min:debuff.mark_of_the_crane.remains,if=combo_strike|!talent.hit_combo
     if cast.able.blackoutKick(var.lowestMark) and (not wasLastCombo(spell.blackoutKick) or not talent.hitCombo)
         and cast.timeSinceLast.blackoutKick() > unit.gcd("true")
     then
@@ -765,28 +772,28 @@ actionList.SingleTarget = function()
         if cast.energizingElixir() then ui.debug("Casting Energizing Elixir [ST]") return true end
     end
     -- Spinning Crane Kick
-    -- spinning_crane_kick,if=(!talent.hit_combo.enabled&conduit.calculated_strikes.enabled|combo_strike)&buff.dance_of_chiji.up&(raid_event.adds.in>buff.dance_of_chiji.remains-2|raid_event.adds.up)
-    if cast.able.spinningCraneKick() and ((not talent.hitCombo and conduit.calculatedStrikes) or not wasLastCombo(spell.spinningCraneKick)) and buff.danceOfChiJi.exists()
+    -- spinning_crane_kick,if=combo_strike&buff.dance_of_chiji.up&(raid_event.adds.in>buff.dance_of_chiji.remains-2|raid_event.adds.up)
+    if cast.able.spinningCraneKick() and not wasLastCombo(spell.spinningCraneKick) and buff.danceOfChiJi.exists()
         and cast.timeSinceLast.spinningCraneKick() > unit.gcd("true")
     then
         if cast.spinningCraneKick("player","aoe") then ui.debug("Casting Spinning Crane Kick [ST Dance of Chi-Ji]") return true end
     end
     -- Rising Sun Kick
-    -- rising_sun_kick,target_if=min:debuff.mark_of_the_crane.remains,if=cooldown.serenity.remains>1|!talent.serenity.enabled
+    -- rising_sun_kick,target_if=min:debuff.mark_of_the_crane.remains,if=cooldown.serenity.remains>1|!talent.serenity
     if cast.able.risingSunKick(var.lowestMark) and (cd.serenity.remain() > 1 or not talent.serenity) then
         if cast.risingSunKick(var.lowestMark) then ui.debug("Casting Rising Sun Kick [ST]") return true end
     end
     -- Fists of Fury
     -- fists_of_fury,if=(raid_event.adds.in>cooldown.fists_of_fury.duration*0.8|raid_event.adds.up)&(energy.time_to_max>execute_time-1|chi.max-chi<=1|buff.storm_earth_and_fire.remains<execute_time+1)|fight_remains<execute_time+1
-    if cast.able.fistsOfFury() and cast.timeSinceLast.stormEarthAndFire() > unit.gcd(true) and ui.useAOE(8,ui.value("Fists of Fury Min Units")) 
+    if cast.able.fistsOfFury() and cast.timeSinceLast.stormEarthAndFire() > unit.gcd(true) --and ui.useAOE(8,ui.value("Fists of Fury Min Units"))
         and (energyTTM() > var.fofExecute - 1 or chiMax - chi <= 1 or buff.stormEarthAndFire.remains() < var.fofExecute + 1 or (ui.useCDs() and units.ttdGroup(5) < var.fofExecute + 1))
     then
         if cast.fistsOfFury() then ui.debug("Casting Fists of Fury [ST]") return true end
     end
     -- Crackling Jade Lightning
-    -- crackling_jade_lightning,if=buff.the_emperors_capacitor.stack>19&energy.time_to_max>execute_time-1&cooldown.rising_sun_kick.remains>execute_time|buff.the_emperors_capacitor.stack>14&(cooldown.serenity.remains<5&talent.serenity.enabled|cooldown.weapons_of_order.remains<5&covenant.kyrian|fight_remains<5)
+    -- crackling_jade_lightning,if=buff.the_emperors_capacitor.stack>19&energy.time_to_max>execute_time-1&cooldown.rising_sun_kick.remains>execute_time|buff.the_emperors_capacitor.stack>14&(cooldown.serenity.remains<5&talent.serenity|cooldown.weapons_of_order.remains<5&covenant.kyrian|fight_remains<5)
     if cast.able.cracklingJadeLightning() and buff.theEmperorsCapacitor.stack() > 19 and energyTTM() > cast.time.cracklingJadeLightning() - 1 and cd.risingSunKick.remains() > cast.time.cracklingJadeLightning()
-        or buff.theEmperorsCapacitor.stack() > 14 and (cd.serenity.remains() < 5 and talent.serenity or cd.weaponsOfTheOrder.remains() < 5 and covenant.kryian.active or (ui.useCDs() and unit.ttdGroup(5) < 5))
+        or buff.theEmperorsCapacitor.stack() > 14 and (cd.serenity.remains() < 5 and talent.serenity or cd.weaponsOfOrder.remains() < 5 and covenant.kryian.active or (ui.useCDs() and unit.ttdGroup(5) < 5))
     then
         if cast.cracklingJadeLightning() then ui.debug("Casting Crackling Jade Lightning [ST The Emperor's Capacitor]") return true end
     end
@@ -829,15 +836,15 @@ actionList.SingleTarget = function()
     -- Spinning Crane Kick
     -- spinning_crane_kick,if=buff.chi_energy.stack>30-5*active_enemies&buff.storm_earth_and_fire.down&(cooldown.rising_sun_kick.remains>2&cooldown.fists_of_fury.remains>2|cooldown.rising_sun_kick.remains<3&cooldown.fists_of_fury.remains>3&chi>3|cooldown.rising_sun_kick.remains>3&cooldown.fists_of_fury.remains<3&chi>4|chi.max-chi<=1&energy.time_to_max<2)|buff.chi_energy.stack>10&fight_remains<7
     if cast.able.spinningCraneKick() and (buff.chiEnergy.stack() > 30 - 5 * #enemies.yards5 --and not wasLastCombo(spell.spinningCraneKick)
-        and not buff.stormEarthAndFire.exists() and (cd.risingSunKick.remain() > 2 and cd.fistsOfFury.remain() > 2 or cd.risingSunKick.remain() < 3
-        and cd.fistsOfFury.remain() > 3 and chi > 3 or cd.risingSunKick.remain() > 3 and cd.fistsOfFury.remain() < 3 and chi > 4 or chiMax - chi <= 1
-        and energyTTM() < 2) or buff.chiEnergy.stack() > 10 and (unit.isBoss(units.dyn5) and unit.ttd(units.dyn5) < 7))
+        and not buff.stormEarthAndFire.exists() and (((cd.risingSunKick.remain() > 2 and cd.fistsOfFury.remain() > 2) or (cd.risingSunKick.remain() < 3
+        and cd.fistsOfFury.remain() > 3 and chi > 3) or (cd.risingSunKick.remain() > 3 and cd.fistsOfFury.remain() < 3 and chi > 4) or (chiMax - chi <= 1
+        and energyTTM() < 2)) or buff.chiEnergy.stack() > 10) and (unit.isBoss(units.dyn5) and unit.ttd(units.dyn5) < 7))
         and cast.timeSinceLast.spinningCraneKick() > unit.gcd("true")
     then
         if cast.spinningCraneKick(nil,"aoe") then ui.debug("Casting Spinning Crane Kick [ST]") return true end
     end
     -- Blackout Kick
-    -- blackout_kick,target_if=min:debuff.mark_of_the_crane.remains,if=combo_strike&(talent.serenity.enabled&cooldown.serenity.remains<3|cooldown.rising_sun_kick.remains>1&cooldown.fists_of_fury.remains>1|cooldown.rising_sun_kick.remains<3&cooldown.fists_of_fury.remains>3&chi>2|cooldown.rising_sun_kick.remains>3&cooldown.fists_of_fury.remains<3&chi>3|chi>5|buff.bok_proc.up)
+    -- blackout_kick,target_if=min:debuff.mark_of_the_crane.remains,if=combo_strike&(talent.serenity&cooldown.serenity.remains<3|cooldown.rising_sun_kick.remains>1&cooldown.fists_of_fury.remains>1|cooldown.rising_sun_kick.remains<3&cooldown.fists_of_fury.remains>3&chi>2|cooldown.rising_sun_kick.remains>3&cooldown.fists_of_fury.remains<3&chi>3|chi>5|buff.bok_proc.up)
     if cast.able.blackoutKick(var.lowestMark) and not wasLastCombo(spell.blackoutKick) and ((talent.serenity and cd.serenity.remain() < 3 or cd.risingSunKick.remain() > 1
         and cd.fistsOfFury.remain() > 1 or cd.risingSunKick.remain() < 3 and cd.fistsOfFury.remain() > 3 and chi > 2 or cd.risingSunKick.remain() > 3
         and cd.fistsOfFury.remain() < 3 and chi > 3 or chi > 5 or buff.blackoutKick.exists()))
@@ -891,21 +898,21 @@ actionList.AoE = function()
         if cast.energizingElixir() then ui.debug("Casting Energizing Elixir [AOE]") return true end
     end
     -- Spinning Crane Kick
-    -- spinning_crane_kick,if=(!talent.hit_combo.enabled&conduit.calculated_strikes.enabled|combo_strike)&(buff.dance_of_chiji.up|debuff.bonedust_brew.up)
-    if cast.able.spinningCraneKick() and ((not talent.hitCombo and conduit.calculatedStrikes) or not wasLastCombo(spell.spinningCraneKick)) and (buff.danceOfChiJi.exists() or debuff.bonedustBrew.exists(units.dyn8))
+    -- spinning_crane_kick,if=combo_strike&(buff.dance_of_chiji.up|debuff.bonedust_brew.up)
+    if cast.able.spinningCraneKick() and not wasLastCombo(spell.spinningCraneKick) and (buff.danceOfChiJi.exists() or debuff.bonedustBrew.exists(units.dyn8))
         and cast.timeSinceLast.spinningCraneKick() > unit.gcd("true")
     then
         if cast.spinningCraneKick(nil,"aoe") then ui.debug("Casting Spinning Crane Kick [AOE Dance of Chi-Ji / Bonedust Brew]") return true end
     end
     -- Fists of Fury
     -- fists_of_fury,if=energy.time_to_max>execute_time|chi.max-chi<=1
-    if cast.able.fistsOfFury() and ui.useAOE(8,ui.value("Fists of Fury Min Units"))
+    if cast.able.fistsOfFury() --and ui.useAOE(8,ui.value("Fists of Fury Min Units"))
         and (energyTTM() > var.fofExecute or chiMax - chi <= 1)
     then
         if cast.fistsOfFury() then ui.debug("Casting Fists of Fury [AOE]") return true end
     end
     -- Rising Sun Kick
-    -- rising_sun_kick,target_if=min:debuff.mark_of_the_crane.remains,if=(talent.whirling_dragon_punch.enabled&cooldown.rising_sun_kick.duration>cooldown.whirling_dragon_punch.remains+4)&(cooldown.fists_of_fury.remains>3|chi>=5)
+    -- rising_sun_kick,target_if=min:debuff.mark_of_the_crane.remains,if=(talent.whirling_dragon_punch&cooldown.rising_sun_kick.duration>cooldown.whirling_dragon_punch.remains+4)&(cooldown.fists_of_fury.remains>3|chi>=5)
     if cast.able.risingSunKick(var.lowestMark) and ((talent.whirlingDragonPunch and var.rskDuration > cd.whirlingDragonPunch.remain() + 4) and (cd.fistsOfFury.remain() > 3 or chi >= 5)) then
         if cast.risingSunKick(var.lowestMark) then ui.debug("Casting Rising Sun Kick [AOE]") return true end
     end
@@ -915,8 +922,8 @@ actionList.AoE = function()
         if cast.rushingJadeWind() then ui.debug("Casting Rushing Jade Wind [AOE]") return true end
     end
     -- Spinning Crane Kick
-    -- spinning_crane_kick,if=(!talent.hit_combo.enabled&conduit.calculated_strikes.enabled|combo_strike)&((cooldown.bonedust_brew.remains>2&(chi>3|cooldown.fists_of_fury.remains>6)&(chi>=5|cooldown.fists_of_fury.remains>2))|energy.time_to_max<=3)
-    if cast.able.spinningCraneKick() and ((not talent.hitCombo and conduit.calculatedStrikes) or not wasLastCombo(spell.spinningCraneKick))
+    -- spinning_crane_kick,if=combo_strike&((cooldown.bonedust_brew.remains>2&(chi>3|cooldown.fists_of_fury.remains>6)&(chi>=5|cooldown.fists_of_fury.remains>2))|energy.time_to_max<=3)
+    if cast.able.spinningCraneKick() and not wasLastCombo(spell.spinningCraneKick)
         and ((cd.bonedustBrew.remains() > 2 and (chi > 3 or cd.fistsOfFury.remain() > 6) and (chi >= 5 or cd.fistsOfFury.remain() > 2)) or energyTTM() <= 3)
         and cast.timeSinceLast.spinningCraneKick() > unit.gcd("true")
     then
@@ -941,11 +948,11 @@ actionList.AoE = function()
     end
     -- Crackling Jade Lightning
     -- crackling_jade_lightning,if=buff.the_emperors_capacitor.stack>19&energy.time_to_max>execute_time-1&cooldown.fists_of_fury.remains>execute_time
-    if cast.able.cracklingJadeLightning() and buff.theEmperorsCapacitor.stack() > 19 and energyTTM() > cast.time.cracklingJadeLightninig() and cd.fistsOfFury.remains() > csat.time.cracklingJadeLightning() then
+    if cast.able.cracklingJadeLightning() and buff.theEmperorsCapacitor.stack() > 19 and energyTTM() > cast.time.cracklingJadeLightninig() and cd.fistsOfFury.remains() > cast.time.cracklingJadeLightning() then
         if cast.cracklingJadeLightning() then ui.debug("Casting Crackling Jade Lightning [AOE The Emperor's Capacitor]") return true end
     end
     -- Tiger Palm
-    -- tiger_palm,target_if=min:debuff.mark_of_the_crane.remains+(debuff.recently_rushing_tiger_palm.up*20),if=chi.max-chi>=2&(!talent.hit_combo.enabled|combo_strike)
+    -- tiger_palm,target_if=min:debuff.mark_of_the_crane.remains+(debuff.recently_rushing_tiger_palm.up*20),if=chi.max-chi>=2&(!talent.hit_combo|combo_strike)
     if cast.able.tigerPalm(var.lowestMark) and (chiMax - chi >= 2 and (not talent.hitCombo or not wasLastCombo(spell.tigerPalm)))
         and cast.timeSinceLast.tigerPalm() > unit.gcd("true")
     then
@@ -962,9 +969,9 @@ actionList.AoE = function()
         if cast.flyingSerpentKick() then var.castFSK = true ui.debug("Casting Flying Serpent Kick [AOE]") return true end
     end
     -- Blackout kick
-    -- blackout_kick,target_if=min:debuff.mark_of_the_crane.remains,if=combo_strike&(buff.bok_proc.up|talent.hit_combo.enabled&prev_gcd.1.tiger_palm&chi=2&cooldown.fists_of_fury.remains<3|chi.max-chi<=1&prev_gcd.1.spinning_crane_kick&energy.time_to_max<3)
+    -- blackout_kick,target_if=min:debuff.mark_of_the_crane.remains,if=combo_strike&(buff.bok_proc.up|talent.hit_combo&prev_gcd.1.tiger_palm&chi=2&cooldown.fists_of_fury.remains<3|chi.max-chi<=1&prev_gcd.1.spinning_crane_kick&energy.time_to_max<3)
     if cast.able.blackoutKick(var.lowestMark) and (not wasLastCombo(spell.blackoutKick) and (buff.blackoutKick.exists() or talent.hitCombo
-        and cast.last.tigerPalm(1) and (chi == 2 or (chi == 3 and unit.level() < 17)) and cd.fistsOfFury.remain() < 3 or chiMax - chi <= 1 and wasLastCombo(spell.spinningCraneKick) and enegyTTM < 3))
+        and cast.last.tigerPalm(1) and (chi == 2 or (chi == 3 and unit.level() < 17)) and cd.fistsOfFury.remain() < 3 or chiMax - chi <= 1 and wasLastCombo(spell.spinningCraneKick) and energyTTM() < 3))
         and cast.timeSinceLast.blackoutKick() > unit.gcd("true")
     then
         if cast.blackoutKick(var.lowestMark) then ui.debug("Casting Blackout Kick [AOE]") return true end
@@ -1228,9 +1235,9 @@ local function runRotation()
             if buff.serenity.exists() then
                 if actionList.Serenity() then return true end
             end
-            -- Call Action List - Weapons of the Order
+            -- Call Action List - Weapons of Order
             -- call_action_list,name=weapons_of_order,if=buff.weapons_of_order.up
-            if buff.weaponsOfTheOrder.exists() then
+            if buff.weaponsOfOrder.exists() then
                 if actionList.WeaponsOfTheOrder() then return true end
             end
             -- Opener
@@ -1240,29 +1247,29 @@ local function runRotation()
             end
             -- Fist of the White Tiger
             -- fist_of_the_white_tiger,target_if=min:debuff.mark_of_the_crane.remains,if=chi.max-chi>=3&(energy.time_to_max<1|energy.time_to_max<4&cooldown.fists_of_fury.remains<1.5|cooldown.weapons_of_order.remains<2)
-            if cast.able.fistOfTheWhiteTiger(var.lowestMark) and chiMax - chi >= 3 and (energyTTM() < 1 or (energyTTM() < 4 and cd.fistsOfFury.remain() < 1.5) or cd.weaponsOfTheOrder.remains() < 2) then
+            if cast.able.fistOfTheWhiteTiger(var.lowestMark) and chiMax - chi >= 3 and (energyTTM() < 1 or (energyTTM() < 4 and cd.fistsOfFury.remain() < 1.5) or cd.weaponsOfOrder.remains() < 2) then
                 if cast.fistOfTheWhiteTiger(var.lowestMark) then ui.debug("Casting Fist of the White Tiger [High Energy]") return true end
             end
             -- Expel Harm
             -- expel_harm,if=chi.max-chi>=1&(energy.time_to_max<1|cooldown.serenity.remains<2|energy.time_to_max<4&cooldown.fists_of_fury.remains<1.5|cooldown.weapons_of_order.remains<2)
-            if cast.able.expelHarm() and chiMax - chi >= 1 and (energyTTM() < 1 or cd.serenity.remain() < 2 or (energyTTM() < 2 and cd.fistsOfFury.remain() < 1.5) or cd.weaponsOfTheOrder.remains() < 2) then
+            if cast.able.expelHarm() and chiMax - chi >= 1 and (energyTTM() < 1 or cd.serenity.remain() < 2 or (energyTTM() < 2 and cd.fistsOfFury.remain() < 1.5) or cd.weaponsOfOrder.remains() < 2) then
                 if cast.expelHarm() then ui.debug("Casting Expel Harm [High Energy]") return true end
             end
             -- Tiger Palm
             -- tiger_palm,target_if=min:debuff.mark_of_the_crane.remains,if=combo_strike&chi.max-chi>=2&(energy.time_to_max<1|cooldown.serenity.remains<2|energy.time_to_max<4&cooldown.fists_of_fury.remains<1.5|cooldown.weapons_of_order.remains<2)
             if cast.able.tigerPalm(var.lowestMark) and not wasLastCombo(spell.tigerPalm) and chiMax - chi >= 2 
-                and (energyTTM() < 1 or cd.serenity.remain() < 2 or (energyTTM() < 4 and cd.fistsOfFury.remain() < 1.5) or cd.weaponsOfTheOrder.remains() < 2)
+                and (energyTTM() < 1 or cd.serenity.remain() < 2 or (energyTTM() < 4 and cd.fistsOfFury.remain() < 1.5) or cd.weaponsOfOrder.remains() < 2)
                 and cast.timeSinceLast.tigerPalm() > unit.gcd("true")
             then
                 if cast.tigerPalm(var.lowestMark) then ui.debug("Casting Tiger Palm [Max Energy / Pre-Serenity]") return true end
             end
             -- Call Action List - CdSef
-            -- call_action_list,name=cd_sef,if=!talent.serenity.enabled
+            -- call_action_list,name=cd_sef,if=!talent.serenity
             if not talent.serenity then
                 if actionList.CdSef() then return true end
             end
             -- Call Action List - CdSerenity
-            -- call_action_list,name=cd_serenity,if=talent.serenity.enabled
+            -- call_action_list,name=cd_serenity,if=talent.serenity
             if talent.serenity then
                 if actionList.CdSerenity() then return true end
             end

@@ -162,50 +162,31 @@ function isBlackListed(Unit)
 			end
 		end
 	end
-	-- returns true if target should be burnt
-	function isBurnTarget(unit)
-		local coef = 0
-		-- check if unit is valid
-		if getOptionCheck("Forced Burn") then
-			local unitID = GetObjectID(unit)
-			local burnUnit = br.lists.burnUnits[unitID]
-			local unitTime = br.units[unit] ~= nil and br.units[unit].timestamp or GetTime() - 1
-			-- if unit have selected debuff
-			if burnUnit and (burnUnit.cast == nil or not isCasting(burnUnit.cast,unitID)) and (GetTime() - unitTime) > 0.75 then
-				if burnUnit.buff and UnitBuffID(unit,burnUnit.buff) then
-					coef = burnUnit.coef
-				end
-				if not burnUnit.buff and (UnitName(unit) == burnUnit.name or burnUnit or burnUnit.id == unitID) then
-					--if not GetUnitIsUnit("target",unit) then TargetUnit(unit) end
-					coef = burnUnit.coef
-				end
+	return coef
+end
+
+-- returns true if target should be burnt
+function isBurnTarget(unit)
+	local coef = 0
+	-- check if unit is valid
+	if getOptionCheck("Forced Burn") then
+		local unitID = GetObjectID(unit)
+		local burnUnit = br.lists.burnUnits[unitID]
+		local unitTime = br.units[unit] ~= nil and br.units[unit].timestamp or GetTime() - 1
+		-- if unit have selected debuff
+		if burnUnit and (burnUnit.cast == nil or not isCasting(burnUnit.cast,unitID)) and (GetTime() - unitTime) > 0.75 then
+			if burnUnit.buff and UnitBuffID(unit,burnUnit.buff) then
+				coef = burnUnit.coef
 			end
-		end
-		return coef
-	end
-	-- check for a unit see if its a cc candidate
-	function isCrowdControlCandidates(Unit)
-		-- check if unit is valid
-		if GetObjectExists(Unit) then
-			local unitID = GetObjectID(Unit)
-		end
-		-- cycle list of candidates
-		local crowdControlUnit = br.lists.ccUnits[unitID]
-		if crowdControlUnit then
-			-- check if unit is valid
-			if GetObjectExists(crowdControlUnit.unit) then
-				-- is in the list of candidates
-				if (crowdControlUnit.buff == nil or UnitBuffID(Unit,crowdControlUnit.buff))
-						and (crowdControlUnit.spell == nil or getCastingInfo(Unit) == GetSpellInfo(crowdControlUnit.spell))
-				then -- doesnt have more requirements or requirements are met
-					return true
-				end
+			if not burnUnit.buff and (UnitName(unit) == burnUnit.name or burnUnit or burnUnit.id == unitID) then
+				--if not GetUnitIsUnit("target",unit) then TargetUnit(unit) end
+				coef = burnUnit.coef
 			end
 		end
 	end
 	return coef
 end
-
+	
 -- check for a unit see if its a cc candidate
 function isCrowdControlCandidates(Unit)
 	local unitID

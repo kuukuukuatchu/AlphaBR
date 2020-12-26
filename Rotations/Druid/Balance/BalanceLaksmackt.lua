@@ -281,8 +281,9 @@ local function runRotation()
     enemies.get(12, "target") -- enemies.yards12t
     enemies.get(15)
     enemies.get(15, "target") -- enemies.yards15t
-    enemies.get(45)
     enemies.get(40)
+    enemies.get(45)
+
 
     local furyUnits = 0
     if cast.able.furyOfElune() then
@@ -726,7 +727,7 @@ local function runRotation()
             end
 
 
-            --covenant heregetTTD
+            --covenant here
             if useCDs() and cast.able.convokeTheSpirits("target") and getTTD("target") > 10 then
                 if cast.convokeTheSpirits("target") then
                     return true
@@ -756,9 +757,10 @@ local function runRotation()
                     thisUnit = enemies.yards45[i]
                     if UnitAffectingCombat(thisUnit) then
                         if cast.able.sunfire()
-                                and not cast.last.sunfire(1) and debuff.sunfire.count() < getOptionValue("Max Sunfire Targets")
+                                and (not cast.last.sunfire(1) and debuff.sunfire.count() < getOptionValue("Max Sunfire Targets")
                                 and debuff.sunfire.refresh(thisUnit)
-                                and ttd(thisUnit) > (14 - #enemies.yards45 + debuff.sunfire.remains(thisUnit)) and eclipse_in
+                                and ttd(thisUnit) > (14 - #enemies.yards45 + debuff.sunfire.remains(thisUnit)) and eclipse_in)
+                                or isMoving("player") and not cast.last.sunfire(1)
                         then
                             if cast.sunfire(thisUnit) then
                                 return true
@@ -766,11 +768,11 @@ local function runRotation()
                         end
                         -- moonfire
                         if cast.able.moonfire(thisUnit) and debuff.moonfire.count() < getOptionValue("Max Moonfire Targets") then
-                            if (not debuff.moonfire.exists(thisUnit) or debuff.moonfire.refresh(thisUnit)) and getTTD(thisUnit) > (14 + (#enemies.yards45 * 1.5)) / #enemies.yards45 + debuff.moonfire.remain(thisUnit) then
+                            if (not debuff.moonfire.exists(thisUnit) or debuff.moonfire.refresh(thisUnit)) and getTTD(thisUnit) > (14 + (#enemies.yards45 * 1.5)) / #enemies.yards45 + debuff.moonfire.remain(thisUnit) or isMoving("player") then
                                 if ((cd.incarnationChoseOfElune.remain() == 0 or cd.celestialAlignment.remain() == 0)
                                         or #enemies.yards45 < (4 * (1 + (talent.twinMoons and 0 or 1)))
                                         or (current_eclipse == "solar" or (current_eclipse == "any" or current_eclipse == "lunar") and not talent.soulOfTheForest)
-                                ) or isMoving("player") and (talent.soulOfTheForest and not buff.starfall.exists() or not talent.soulOfTheForest)
+                                ) or isMoving("player")
                                 then
                                     if cast.moonfire(thisUnit) then
                                         return true
@@ -836,12 +838,12 @@ local function runRotation()
                         and pewbuff or buff.ravenousFrenzy.exists() and hasteAmount > 0.6
                         or not is_cleave and (buff.celestialAlignment.remain() > buff.eclipse_lunar.remain() or buff.incarnationChoseOfElune.remain() > buff.eclipse_lunar.remain())
                 then
-                    if cast.wrath(units.dyn45) then
+                    if cast.wrath(enemies.dyn45) then
                         return true
                     end
                 end
                 if cast.able.starfire() then
-                    if cast.starfire(units.dyn45) then
+                    if cast.starfire(enemies.dyn45) then
                         return true
                     end
                 end

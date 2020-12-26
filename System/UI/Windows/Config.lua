@@ -7,6 +7,7 @@ function br.ui:createConfigWindow()
     local function callGeneral()
         -- General
         section = br.ui:createSection(br.ui.window.config, "General")
+        br.ui:createCheckbox(section, "LoS Flag Check")
         br.ui:createCheckbox(section, "Auto Delay", "Check to dynamically change update rate based on current FPS.")
         br.ui:createSpinnerWithout(section, "Bot Update Rate", 0.1, 0.0, 1.0, 0.01, "Adjust the update rate of Bot operations. Increase to improve FPS but may cause reaction delays. Will be ignored if Auto Delay is checked. Default: 0.1")
         rotationLog = br.ui:createCheckbox(section, "Rotation Log", "Display Rotation Log.");
@@ -82,7 +83,7 @@ function br.ui:createConfigWindow()
         -- Other Features
         section = br.ui:createSection(br.ui.window.config, "Other Features")
         --br.ui:createCheckbox(section, "PokeRotation")
-        br.ui:createCheckbox(section, "Bypass Flying Check")
+        br.ui:createCheckbox(section, "Bypass Vehicle Check")
         br.ui:createCheckbox(section, "Pig Catcher", "Catch pig in Ring of Booty")
         br.ui:createSpinner(section, "Profession Helper", 0.5, 0, 1, 0.1, "Check to enable Professions Helper.", "Set Desired Recast Delay.")
         br.ui:createDropdown(section, "Prospect Ores", {"SL","BFA","Legion","WoD", "MoP", "Cata", "All"}, 1, "Prospect Desired Ores. Profession Helper must be checked.")

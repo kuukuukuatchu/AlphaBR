@@ -90,7 +90,10 @@ function br.loader:new(spec,specName)
     self.profile = specName
 
     -- Mandatory !
-    if br.rotations[spec] == nil then br.loader.loadProfiles() end
+    if br.rotations[spec] == nil then
+        br.loader.loadProfiles() 
+        br.rotationChanged = true
+    end
     if br.rotations[spec][br.selectedProfile] then
         self.rotation = br.rotations[spec][br.selectedProfile]
     else

@@ -85,16 +85,16 @@ if not metaTable1 then
 	end
 	-- Verifying the target is a Valid Healing target
 	function HealCheck(tar)
-		if ((UnitIsVisible(tar)
+		if (((UnitIsVisible(tar)
 			and not UnitIsCharmed(tar)
 			and GetUnitReaction("player",tar) > 4
 			and UnitIsConnected(tar)
 			and not UnitIsDeadOrGhost(tar))
-			or novaEngineTables.SpecialHealUnitList[tonumber(select(2,getGUID(tar)))] ~= nil or (getOptionCheck("Heal Pets") and UnitIsOtherPlayersPet(tar) or UnitGUID(tar) == UnitGUID("pet")))
+			or (getOptionCheck("Heal Pets") and UnitIsOtherPlayersPet(tar) or UnitGUID(tar) == UnitGUID("pet")))
 			and CheckBadDebuff(tar)
 			and CheckCreatureType(tar)
+			and not UnitPhaseReason(tar) or novaEngineTables.SpecialHealUnitList[tonumber(select(2,getGUID(tar)))] ~= nil)
 			and getLineOfSight("player", tar)
-			and not UnitPhaseReason(tar)
 		then return true
 		else return false end
 	end
