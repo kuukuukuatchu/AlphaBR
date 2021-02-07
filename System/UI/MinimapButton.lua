@@ -1,3 +1,4 @@
+local addonName, br = ...
 -- Minimap Button
 function br:MinimapButton()
 	local dragMode = nil --"free", nil

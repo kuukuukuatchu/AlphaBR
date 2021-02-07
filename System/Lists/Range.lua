@@ -1,4 +1,5 @@
-rangeOrMelee = {
+local addonName, br = ...
+br.rangeOrMelee = {
 	[250] = "melee",
 	[251] = "melee",
 	[252] = "melee",

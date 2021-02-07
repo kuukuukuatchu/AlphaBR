@@ -1,3 +1,4 @@
+local addonName, br = ...
 -- ProbablyEngine Rotations
 -- Released under modified BSD, see attached LICENSE.
 

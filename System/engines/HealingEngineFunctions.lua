@@ -1,4 +1,5 @@
-﻿-- here we want to define functions to use with the healing profiles
+﻿local addonName, br = ...
+-- here we want to define functions to use with the healing profiles
 -- find best tank to put our lb/beacon/earth shield on
 function getFocusedTank()
 	local tanks = getTanksTable()
@@ -30,8 +31,10 @@ end
 function getTanksTable()
 	local tanksTable = {}
 	for i = 1, #br.friend do
-		if br.friend[i].role == "TANK" then
-			tinsert(tanksTable, br.friend[i])
+		if br.friend[i] then
+			if br.friend[i].role == "TANK" then
+				tinsert(tanksTable, br.friend[i])
+			end
 		end
 	end
 	-- We are sorting by Health first
@@ -58,7 +61,7 @@ function castWiseAoEHeal(unitTable,spell,radius,health,minCount,maxCount,facingC
 		if bestCandidate ~= nil and #bestCandidate >= minCount and getLineOfSight("player",bestCandidate[0].unit) and getDistance("player",bestCandidate[0].unit) <= 40 then
 			-- here we would like instead to cast on unit
 			if castSpell(bestCandidate[0].unit,spell,facingCheck,movementCheck) then
-				--if IsAoEPending() then SpellStopTargeting() br.addonDebug("Canceling Spell", true) end
+				if IsAoEPending() then SpellStopTargeting() br.addonDebug("Canceling Spell", true) end
 				return true
 			end
 		end
@@ -268,7 +271,7 @@ function isInside(x,y,ax,ay,bx,by,dx,dy)
 	local bay = by - ay
 	local dax = dx - ax
 	local day = dy - ay
-
+	if (x == nil or y == nil) then return false end 
 	if ((x - ax) * bax + (y - ay) * bay <= 0.0) then return false end
 	if ((x - bx) * bax + (y - by) * bay >= 0.0) then return false end
 	if ((x - ax) * dax + (y - ay) * day <= 0.0) then return false end
@@ -557,7 +560,7 @@ function castGroundAtLocation(loc, SpellID)
 			ClickPosition(loc.x,loc.y,loc.z)
 		end
 		--if mouselookup then MouselookStart() end
-    	--if SpellIsTargeting() then SpellStopTargeting() br.addonDebug("Canceling Spell", true) end
+    	if SpellIsTargeting() then SpellStopTargeting() br.addonDebug("Canceling Spell", true) end
 		return true
 	end
 end

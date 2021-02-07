@@ -1,4 +1,4 @@
-local br = _G["br"]
+local addonName, br = ...
 if br.api == nil then br.api = {} end
 br.api.conduit = function(conduit,k,v)
     local soulbindID = C_Soulbinds.GetActiveSoulbindID()
@@ -24,19 +24,18 @@ br.api.conduit = function(conduit,k,v)
                 end
             end
         end
-
-        if conduit[k].name == nil then
-            local spellName, spellRank, spellIcon = GetSpellInfo(v)
-            conduit[k] = {
-                state = 0,
-                icon = spellIcon,
-                row = 0,
-                conduitID = 0,
-                name = spellName,
-                rank = 0,--spellRank,
-                id = spellID,
-                enabled = false
-            }
-        end
+    end
+    if conduit[k].name == nil then
+        local spellName, spellRank, spellIcon = GetSpellInfo(v)
+        conduit[k] = {
+            state = 0,
+            icon = spellIcon,
+            row = 0,
+            conduitID = 0,
+            name = spellName,
+            rank = 0,--spellRank,
+            id = spellID,
+            enabled = false
+        }
     end
 end

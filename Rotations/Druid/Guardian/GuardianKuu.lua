@@ -1,3 +1,4 @@
+local addonName, br = ...
 local rotationName = "Kuu"
 
 ---------------
@@ -220,7 +221,7 @@ local function createOptions()
         ----------------------
         --- General Options---
         ----------------------
-        section = br.ui:createSection(br.ui.window.profile, "General - Version 1.010")
+        section = br.ui:createSection(br.ui.window.profile, "General - Version 1.03")
         -- Travel Shapeshifts
         br.ui:createDropdownWithout(section, "Cat Key", br.dropOptions.Toggle, 6, "Set a key for cat")
         br.ui:createDropdownWithout(section, "Travel Key", br.dropOptions.Toggle, 6, "Set a key for travel")
@@ -262,6 +263,8 @@ local function createOptions()
         br.ui:createSpinner(section, "Healthstone/Potion", 60, 0, 100, 5, "Health Percent to Cast At")
         -- Survival Instincts
         br.ui:createSpinner(section, "Survival Instincts", 40, 0, 100, 5, "Health Percent to Cast At")
+        -- Rage Dump
+        br.ui:createSpinnerWithout(section, "Rage Dump Amount", 40, 0, 100, 5, "Rage Deficit to use Ironfur/Maul")
         -- Ironfur Stacks
         br.ui:createSpinner(section, "Ironfur", 0, 0, 10, 1, "Set max stacks of ironfur before dumping rage into maul instead (0 for no limit)")
         -- Ironfur
@@ -374,6 +377,7 @@ local function runRotation()
     local snapLossHP = 0
     local spell = br.player.spell
     local talent = br.player.talent
+    local tanks = getTanksTable()
     local traits = br.player.traits
     local travel, flight, bear, cat, noform =
         br.player.buff.travelForm.exists(),
@@ -402,6 +406,7 @@ local function runRotation()
     units.get(8)
     units.get(40)
     enemies.get(5)
+    enemies.get(5,"player",false,true)
     enemies.get(8)
     enemies.get(8, "target")
     enemies.get(10)
@@ -426,7 +431,7 @@ local function runRotation()
         [129758] = "Irontide Grenadier"
     }
 
-    local function List_Extras()
+    local function actionList_Extras()
         -- Bear Form when not in combat and target selected and within 20yrds
         if
             (mode.forms == 1 or (mode.forms == 2 and not SpecificToggle("Travel Key") and not SpecificToggle("Cat Key") and not GetCurrentKeyBoardFocus())) and
@@ -436,6 +441,7 @@ local function runRotation()
                 not bear and
                 ((unit.distance("target") < 30 and not unit.swimming()) or (unit.distance("target") < 10 and unit.swimming()))
          then
+            unit.cancelForm()
             if cast.bearForm("player") then
                 br.addonDebug("Casting Bear Form [Target In 20yrds]")
                 return true
@@ -449,7 +455,7 @@ local function runRotation()
              then
                 if br.timer:useTimer("Travel Delay", 1) then
                     -- if unit.form() ~= 0 and not cast.last.travelForm() then
-                    --     unit.cancelForm()
+                        unit.cancelForm()
                     --     br.addonDebug("Cancel Form [Flying]")
                     -- elseif unit.form() == 0 then
                     if cast.travelForm("player") then
@@ -550,11 +556,13 @@ local function runRotation()
     end
     local function travel_form()
         if not IsIndoors() and not travel then
+            unit.cancelForm()
             if cast.travelForm("player") then
                 br.addonDebug("Casting Travel Form Outdoors")
                 return
             end
         elseif IsIndoors() and not cat then
+            unit.cancelForm()
             if cast.catForm("player") then
                 br.addonDebug("Casting Cat Form Indoors")
                 return
@@ -607,9 +615,9 @@ local function runRotation()
     local function actionList_BigHit()
         -- Trinkets
         if (ui.value("Trinket Use") == 1 or (ui.value("Trinket Use") == 2 and useCDs())) then
-            if ui.value("Trinket Type") == 2 and php <= ui.value("Trinket 1") and use.able.slot(13) then
+            if ui.checked("Trinket 1") and ui.value("Trinket Type") == 2 and php <= ui.value("Trinket 1") and use.able.slot(13) then
                 use.slot(13)
-            elseif ui.value("Trinket Type") == 2 and php <= ui.value("Trinket 2") and use.able.slot(14) then
+            elseif ui.checked("Trinket 2") and ui.value("Trinket Type") == 2 and php <= ui.value("Trinket 2") and use.able.slot(14) then
                 use.slot(14)
             end
         end
@@ -628,21 +636,21 @@ local function runRotation()
             end
         end
         -- Survival Instincts
-        if php < 35 then
+        if (charges.survivalInstincts.count == 2 or php < 35) and not buff.survivalInstincts.exists() then
             if cast.survivalInstincts() then
                 br.addonDebug("Casting Survival Instincts (Big Hit)")
                 return
             end
         end
         -- Barkskin
-        if not buff.survivalInstincts.exists() and buff.ironfur.stack() < 2 then
+        if not buff.survivalInstincts.exists() then
             if cast.barkskin() then
                 br.addonDebug("Casting Barkskin (Big Hit)")
                 return
             end
         end
         -- Ironfur
-        if buff.ironfur.remain() < 1.5 and not buff.survivalInstincts.exists() and not buff.barkskin.exists() then
+        if buff.ironfur.remain() < 1.5 and not buff.survivalInstincts.exists() then
             if cast.ironfur() then
                 br.addonDebug("Casting Ironfur (Big Hit IF Expiring)")
                 return
@@ -664,7 +672,7 @@ local function runRotation()
         end
     end
 
-    local function List_Defensive()
+    local function actionList_Defensive()
         if useDefensive() then
             if ui.checked("Healthstone/Potion") and php <= ui.value("Healthstone/Potion") and (hasHealthPot() or hasItem(5512) or hasItem(166799)) then
                 if canUseItem(5512) then
@@ -764,7 +772,7 @@ local function runRotation()
             end
             -- Survival Instincts
             if ui.checked("Survival Instincts") then
-                if php <= ui.value("Survival Instincts") and inCombat and not buff.survivalInstincts.exists() and not buff.barkskin.exists() then
+                if php <= ui.value("Survival Instincts") and inCombat and not buff.survivalInstincts.exists() then
                     if cast.survivalInstincts() then
                         return
                     end
@@ -772,7 +780,7 @@ local function runRotation()
             end
             -- Barkskin
             if ui.checked("Barkskin") then
-                if php <= ui.value("Barkskin") and not buff.survivalInstincts.exists() and not buff.ironfur.exists() then
+                if php <= ui.value("Barkskin") and not buff.survivalInstincts.exists() then
                     if cast.barkskin() then
                         return
                     end
@@ -782,7 +790,7 @@ local function runRotation()
             if ui.checked("Ironfur") and bear then
                 if (buff.ironfur.stack() < ui.value("Ironfur") or ui.value("Ironfur") == 0) then
                     if
-                        (rageDeficit <= 12 or buff.ironfur.remain() < 2) and
+                        (rageDeficit <= ui.value("Rage Dump Amount") or buff.ironfur.remain() < 2) and
                             (hasAggro >= 2 or (ui.checked("Ironfur (No Aggro)") and not (hasAggro >= 1) and php <= ui.value("Ironfur (No Aggro)")))
                      then
                         if cast.ironfur() then
@@ -790,7 +798,7 @@ local function runRotation()
                         end
                     end
                 else
-                    if (rageDeficit <= 12) then
+                    if rageDeficit <= ui.value("Rage Dump Amount") and mode.maul == 1 then
                         if cast.maul() then
                             return
                         end
@@ -825,7 +833,7 @@ local function runRotation()
                 end
             end
             -- Remove Corruption
-            if ui.checked("Remove Corruption") then
+            if ui.checked("Remove Corruption") and ((mode.forms == 1 and ((mode.travel == 2 and travel) or (mode.travel == 1 and not travel))) or mode.forms ~= 1) then
                 if ui.value("Remove Corruption - Target") == 1 and canDispel("player", spell.removeCorruption) then
                     if cast.removeCorruption("player") then
                         return
@@ -845,7 +853,7 @@ local function runRotation()
         end
     end
     -- Incap Logic
-    local function List_Interrupts()
+    local function actionList_Interrupts()
         if useInterrupts() then
             if ui.checked("Incapacitating Roar Logic (M+)") then
                 if cast.able.incapacitatingRoar() then
@@ -1062,7 +1070,7 @@ local function runRotation()
         end
     end
 
-    local function List_Bearmode()
+    local function actionList_Bearmode()
         if (mode.forms == 1 and ((mode.travel == 2 and travel) or (mode.travel == 1 and not travel))) or mode.forms ~= 1 then
             if not bear and not buff.prowl.exists() and not cast.last.bearForm() then
                 if cast.bearForm() then
@@ -1107,9 +1115,9 @@ local function runRotation()
             end
             -- Trinkets
             if (ui.value("Trinket Use") == 1 or (ui.value("Trinket Use") == 2 and useCDs())) then
-                if (ui.value("Trinket Type") == 1 or (ui.value("Trinket Type") == 2 and php <= ui.value("Trinket 1"))) and use.able.slot(13) then
+                if ui.checked("Trinket 1") and (ui.value("Trinket Type") == 1 or (ui.value("Trinket Type") == 2 and php <= ui.value("Trinket 1"))) and use.able.slot(13) then
                     use.slot(13)
-                elseif (ui.value("Trinket Type") == 1 or (ui.value("Trinket Type") == 2 and php <= ui.value("Trinket 1"))) and use.able.slot(14) then
+                elseif ui.checked("Trinket 1") and (ui.value("Trinket Type") == 1 or (ui.value("Trinket Type") == 2 and php <= ui.value("Trinket 1"))) and use.able.slot(14) then
                     use.slot(14)
                 end
             end
@@ -1135,39 +1143,34 @@ local function runRotation()
             end
             -- Moonfire
             if talent.galacticGuardian and buff.galacticGuardian.exists() then
-                if debuff.moonfire.count() < ui.value("Max Moonfire Targets") then
-                    for i = 1, #enemies.yards8 do
-                        local thisUnit = enemies.yards8[i]
-                        if not debuff.moonfire.exists(thisUnit) or debuff.moonfire.refresh(thisUnit) then
-                            if cast.moonfire(thisUnit) then
-                                br.addonDebug("Casting Moonfire (Galactic Guardian)")
-                                return
-                            end
-                        end
-                    end
+                if cast.moonfire(thisUnit) then
+                    br.addonDebug("Casting Moonfire (Galactic Guardian)")
+                    return
                 end
             end
             -- Maul
-            if conduit.savageCombatant.enabled and buff.savageCombatant.stack() == 3 and rage >= 50 and php > 75 then
-                if cast.maul() then
-                    br.addonDebug("Casting Maul (Savage Combatant)")
-                    return
+            if mode.maul == 1 and (#enemies.yards8 < 4 or ui.value("Ironfur") ~= 0) then
+                if conduit.savageCombatant.enabled and buff.savageCombatant.stack() == 3 and rage >= 50 and php > 75 then
+                    if cast.maul() then
+                        br.addonDebug("Casting Maul (Savage Combatant)")
+                        return
+                    end
                 end
-            end
-            if talent.toothAndClaw and buff.toothAndClaw.exists() and not debuff.toothAndClaw.exists("target") and rage > 60 then
-                if cast.maul() then
-                    br.addonDebug("Casting Maul (Tooth and Claw)")
-                    return
+                if talent.toothAndClaw and buff.toothAndClaw.exists() and not debuff.toothAndClaw.exists("target") and rage > 60 then
+                    if cast.maul() then
+                        br.addonDebug("Casting Maul (Tooth and Claw)")
+                        return
+                    end
                 end
-            end
-            if not conduit.savageCombatant.enabled and not talent.toothAndClaw and rageDeficit < 10 and php >= 75 then
-                if cast.maul() then
-                    br.addonDebug("Casting Maul")
-                    return
+                if not conduit.savageCombatant.enabled and not talent.toothAndClaw and rageDeficit < 10 and php >= 75 then
+                    if cast.maul() then
+                        br.addonDebug("Casting Maul")
+                        return
+                    end
                 end
             end
             -- Mangle
-            if debuff.thrashBear.stack("target") == 3 and not debuff.thrashBear.refresh("target") then
+            if debuff.thrashBear.stack("target") == 3 and not debuff.thrashBear.refresh("target") and #enemies.yards8 < 5 then
                 if cast.mangle() then
                     br.addonDebug("Casting Mangle (Thrash Bleed)")
                     return
@@ -1179,9 +1182,11 @@ local function runRotation()
                 return
             end
             -- Mangle
-            if cast.mangle() then
-                br.addonDebug("Casting Mangle")
-                return
+            if #enemies.yards8 < 5 then
+                if cast.mangle() then
+                    br.addonDebug("Casting Mangle")
+                    return
+                end
             end
             -- Adaptive Swarm
             if ui.checked("Use Covenant") and covenant.necrolord.active and debuff.adaptiveSwarm.count() < 2 then
@@ -1207,8 +1212,8 @@ local function runRotation()
             end
             -- Moonfire
             if debuff.moonfire.count() < ui.value("Max Moonfire Targets") then
-                for i = 1, #enemies.yards8 do
-                    local thisUnit = enemies.yards8[i]
+                for i = 1, #enemies.yards40 do
+                    local thisUnit = enemies.yards40[i]
                     if not debuff.moonfire.exists(thisUnit) or debuff.moonfire.refresh(thisUnit) then
                         if cast.moonfire(thisUnit) then
                             br.addonDebug("Casting Moonfire (Refresh)")
@@ -1247,19 +1252,13 @@ local function runRotation()
                     travel_form()
                 end
             end
-            List_Extras()
+            actionList_Extras()
+            actionList_OOC()
         end -- End Out of Combat Rotation
         -----------------------------
         --- In Combat - Rotations ---
         -----------------------------
         if inCombat and not UnitBuffID("player", 115834) then
-            List_Interrupts()
-            List_Defensive()
-            if ui.checked("Big Hit Oh Shit!") and SpecificToggle("Big Hit Oh Shit!") and not GetCurrentKeyBoardFocus() and bear then
-                if br.timer:useTimer("Big Hit Delay", 2) then
-                    actionList_BigHit()
-                end
-            end
             if mode.forms == 2 then
                 if SpecificToggle("Cat Key") and not GetCurrentKeyBoardFocus() and talent.feralAffinity then
                     cat_dps()
@@ -1272,7 +1271,14 @@ local function runRotation()
                     return
                 end
             end
-            List_Bearmode()
+            actionList_Interrupts()
+            actionList_Defensive()
+            if ui.checked("Big Hit Oh Shit!") and SpecificToggle("Big Hit Oh Shit!") and not GetCurrentKeyBoardFocus() and bear then
+                if br.timer:useTimer("Big Hit Delay", 2) then
+                    actionList_BigHit()
+                end
+            end
+            actionList_Bearmode()
         end
     end -- End In Combat Rotation
 end -- End runRotation

@@ -1,4 +1,4 @@
-local br = _G["br"]
+local addonName, br = ...
 br.engines = {}
 -- Main Engine
 function br:Engine()
@@ -14,8 +14,10 @@ function br:ObjectManager()
 		if br.unlocked then
 			if br.data ~= nil and br.data.settings ~= nil and br.data.settings[br.selectedSpec] ~= nil and br.data.settings[br.selectedSpec].toggles ~= nil then
 				if br.data.settings[br.selectedSpec].toggles["Power"] ~= nil and br.data.settings[br.selectedSpec].toggles["Power"] == 1 then
-					br:updateOM()
-					br.om:Update()
+					--if br.timer:useTimer("omUpdate", 1) then
+						br:updateOM()
+						br.om:Update()
+					--end
 				end
 			end
 		end
@@ -45,23 +47,6 @@ function br:getUpdateRate()
 		updateRate = getOptionValue("Bot Update Rate")
 	end
 	return updateRate
-end
-
-function br.antiAfk()
-	if br.unlocked and br.player then
-		local ui = br.player.ui
-		local IsHackEnabled = _G["IsHackEnabled"]
-		local SetHackEnabled = _G["SetHackEnabled"]
-		if ui.checked("Anti-Afk") then
-			if not IsHackEnabled("antiafk") and ui.value("Anti-Afk") == 1 then
-				SetHackEnabled("antiafk", true)
-			end
-		elseif ui.checked("Anti-Afk") and ui.value("Anti-Afk") == 2 then
-			if IsHackEnabled("antiafk") then
-				SetHackEnabled("antiafk", false)
-			end
-		end
-	end
 end
 
 local collectGarbage = true
@@ -101,6 +86,7 @@ function BadRotationsUpdate(self)
 			-- BR Main Toggle Off
 			if br.data.settings[br.selectedSpec].toggles["Power"] ~= nil and br.data.settings[br.selectedSpec].toggles["Power"] ~= 1 then
 				-- BR Main Toggle On - Main Cycle
+				-- BR Main Toggle On - Main Cycle
 				-- Clear Queue
 				if br.player ~= nil and br.player.queue ~= nil and #br.player.queue ~= 0 then
 					wipe(br.player.queue)
@@ -125,22 +111,6 @@ function BadRotationsUpdate(self)
 				if isCastingSpell(318763) then
 					return true
 				end
-				--Quaking helper
-				if getOptionCheck("Pig Catcher") then
-					-- Automatic catch the pig
-					if select(8, GetInstanceInfo()) == 1754 then
-						for i = 1, GetObjectCountBR() do
-							local ID = ObjectID(GetObjectWithIndex(i))
-							local object = GetObjectWithIndex(i)
-							local x1, y1, z1 = ObjectPosition("player")
-							local x2, y2, z2 = ObjectPosition(object)
-							local distance = math.sqrt(((x2 - x1) ^ 2) + ((y2 - y1) ^ 2) + ((z2 - z1) ^ 2))
-							if ID == 130099 and distance < 10 and br.timer:useTimer("Pig Delay", 0.5) then
-								InteractUnit(object)
-							end
-						end
-					end
-				end
 				-- Blizz CastSpellByName bug bypass
 				if br.castID then
 					-- Print("Casting by ID")
@@ -153,6 +123,8 @@ function BadRotationsUpdate(self)
 				end
 				-- Initialize Player
 				if br.player == nil or br.player.profile ~= br.selectedSpec or br.rotationChanged then
+					-- Load Last Profile Tracker
+					--br:loadLastProfileTracker()
 					br.selectedProfile = br.data.settings[br.selectedSpec]["RotationDrop"] or 1
 					-- Load Profile
 					-- br.loaded = false
@@ -161,6 +133,7 @@ function BadRotationsUpdate(self)
 					br.ui:closeWindow("profile")
 					br.player:createOptions()
 					br.player:createToggles()
+					
 					br.player:update()
 					if br.player ~= nil and br.rotationChanged then
 						br:saveLastProfileTracker()
@@ -193,23 +166,16 @@ function BadRotationsUpdate(self)
 					br.smartQueue()
 				end
 				-- Update Player
-				if br.player ~= nil and not CanExitVehicle() then
+				if br.player ~= nil and (not CanExitVehicle() or (UnitExists("target") and getDistance("target") < 5)) then
 					br.player:update()
+				end
+				-- Automatic catch the pig
+				if getOptionCheck("Freehold - Pig Catcher") or getOptionCheck("De Other Side - Bomb Snatcher") then
+					bossHelper()
 				end
 				-- Healing Engine
 				if isChecked("HE Active") then
 					br.friend:Update()
-					local groupSize
-					groupSize = GetNumGroupMembers()
-					if groupSize == 0 then
-						groupSize = 1
-					end
-					if #br.friend < groupSize and br.timer:useTimer("Reform", 5) then
-						br.addonDebug("Group size (" .. groupSize .. ") does not match #br.friend (" .. #br.friend .. "). Recreating br.friend.", true)
-						table.wipe(br.memberSetup.cache)
-						table.wipe(br.friend)
-						SetupTables()
-					end
 				end
 				-- Auto Loot
 				autoLoot()
@@ -217,27 +183,20 @@ function BadRotationsUpdate(self)
 				local thisSpec = select(2, GetSpecializationInfo(GetSpecialization()))
 				if thisSpec ~= "" and thisSpec ~= br.selectedSpec then
 					-- Closing the windows will save the position
-					br.ui:saveWindowPosition()
 					br.ui:closeWindow("all")
 					br:saveSettings(nil, nil, br.selectedSpec, br.selectedProfileName)
 					-- Update Selected Spec/Profile
-					br.data.settings[br.selectedSpec] = {}
-					br.ui.window.config = {}
 					br.selectedSpec = select(2, GetSpecializationInfo(GetSpecialization()))
-					if br.selectedSpec == "" then
-						br.selectedSpec = "Initial"
-					end
-					br.activeSpecGroup = GetActiveSpecGroup()
-					br.equipHasChanged = true
-					br.rotationChanged = true
+					br.selectedSpecID = GetSpecializationInfo(GetSpecialization())
 					br.loader.loadProfiles()
-					br:loadLastProfileTracker()
+					br.loadLastProfileTracker()
+					br.activeSpecGroup = GetActiveSpecGroup()
 					br.data.loadedSettings = false
-					br:loadSettings(nil, nil, nil, br.data.settings[br.selectedSpec]["RotationDropValue"])
+					-- Load Default Settings
 					br:defaultSettings()
+					br.rotationChanged = true
 					wipe(br.commandHelp)
 					br:slashHelpList()
-					return
 				end
 				-- Show Main Button
 				if br.data.settings ~= nil and br.data.settings[br.selectedSpec].toggles["Main"] ~= 1 and br.data.settings[br.selectedSpec].toggles["Main"] ~= 0 then
@@ -271,8 +230,6 @@ function BadRotationsUpdate(self)
 				br:AcceptQueues()
 				--Tracker
 				br.objectTracker()
-				-- Anti-Afk
-				br.antiAfk()
 				-- Fishing
 				br.fishing()
 				-- Profession Helper

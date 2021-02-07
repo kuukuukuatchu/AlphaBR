@@ -1,3 +1,4 @@
+local addonName, br = ...
 -- item charges
 function itemCharges(itemID)
 	local charges = GetItemCount(itemID, false, true)

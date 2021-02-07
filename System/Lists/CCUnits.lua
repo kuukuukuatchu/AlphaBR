@@ -1,3 +1,4 @@
+local addonName, br = ...
 if br.lists == nil then
     br.lists = {}
 end
@@ -27,14 +28,14 @@ br.lists.ccUnits = {
 
     --Theater of Pain
     [164510] = { name = "Shambling Arbalest" }, -- Nasty dot - needs to be cc'ed
+    [330586] = { name = "Devour Flesh" }, -- Big heal from Putrid Butcher
 
     -- Plaguefall
     [171887] = { name = "Slimy Smorgasbord" }, -- Plaguefall Dungeon
-    [164737] = { name = "Enveloping Webbing", spell = 328475 }, -- Plaguefall Dungeon
     [168572] = { name = "Fungistorm", spell = 330423 }, -- big AOE, can be stunned
     [168572] = { name = "Fungistorm", spell = 328177 }, -- -- big AOE, can be stunned
     [163862] = { name = "Bulwark of Maldraxxus", spell = 336451 }, -- Prevent the shield from going on
-
+    [163892] = { name = "Corroded Claws", spell = 320512 }, -- Prevent the shield from going on 
 
 
     -- Thorghast

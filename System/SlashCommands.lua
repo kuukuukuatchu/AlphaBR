@@ -1,3 +1,4 @@
+local addonName, br = ...
 -- Slash Commands
 ---------------------------------
 function Print(msg)

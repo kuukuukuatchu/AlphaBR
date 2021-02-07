@@ -1,3 +1,4 @@
+local addonName, br = ...
 -- Provides functions to help debugging and profiling
 
 br.debug.cpu = {}

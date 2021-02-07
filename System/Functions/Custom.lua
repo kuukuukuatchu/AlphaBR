@@ -1,3 +1,4 @@
+local addonName, br = ...
 -- Functions from coders for public use
 local sqrt, cos, sin = math.sqrt, math.cos, math.sin
 --[[                                                                                                ]]
@@ -1034,4 +1035,9 @@ function BWCheck()
             end
         end
     end
+end
+
+-- Check Instance IDs from https://wow.gamepedia.com/InstanceID
+function getCurrentZoneId()
+    return select(8, GetInstanceInfo())
 end

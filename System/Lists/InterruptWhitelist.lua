@@ -1,3 +1,4 @@
+local addonName, br = ...
 if br.lists == nil then
 	br.lists = {}
 end
@@ -5,7 +6,12 @@ end
 br.lists.interruptWhitelist = {
 	-- Castle Nathria start
 	[333002] = true, -- Vulgar Brand
+	[265407] = true, -- Dinner Bell
 	-- Castle Nathria end
+	-- Plaguefall start
+	[328475] = true, -- Enveloping Webbing
+	[319070] = true, -- Corrosive Gunk
+	-- Plaguefall end
 	-- De other side start
 	-- [333227] = true, -- Undying rage
 	[332329] = true, -- Devoted Sacrifice
@@ -13,10 +19,13 @@ br.lists.interruptWhitelist = {
 	[332666] = true, -- Heal
 	[332612] = true, -- Healing Wave
 	[332084] = true, -- Self Cleaning Cycle
+	[321764] = true, -- Bark Armor
+	[333875] = true, -- Deaths Embrace
 	-- De other side end
 	-- Sanguine Depths start
 	[319654] = true, -- hungering-drain
 	[321038] = true, -- wrack-soul
+	[322433] = true, -- Stoneskin
 	-- Sanguine Depths end
 	-- Halls of Atonement start
 	[325700] = true, -- collect-sins
@@ -52,6 +61,7 @@ br.lists.interruptWhitelist = {
 	[330562] = true, -- demoralizing-shout
 	[330868] = true, -- Necrotic Bolt Volley
 	[330784] = true, -- Necrotic Bolt
+	[330810] = true, -- Bind Soul
 	-- Theater of Pain end
 	-- Necrotic Wake start
 	[334748] = true, -- drain-fluids
@@ -60,6 +70,7 @@ br.lists.interruptWhitelist = {
 	[320170] = true, -- necrotic-bolt
 	[338353] = true, -- goresplatter
 	[333623] = true, -- frostbolt Volley
+	[323190] = true, -- Meat Shield
 	-- Necrotic Wake end
 	-- Castle start
 	[337110] = true, -- dreadbolt-volley

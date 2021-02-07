@@ -1,4 +1,4 @@
-
+local addonName, br = ...
 function TTDRefresh(hpLimit)
 	if not enemyTable then
 		enemyTable = {

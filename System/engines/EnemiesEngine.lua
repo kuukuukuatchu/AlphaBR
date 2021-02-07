@@ -1,3 +1,4 @@
+local addonName, br = ...
 -----------------------------------------Bubba's Healing Engine--------------------------------------]]
 --Modified to enemies engine by fisker
 if not metaTable2 then
@@ -198,6 +199,7 @@ if not metaTable2 then
 		end
 		-- Updating the values of the Unit
 		function o:UpdateUnit()
+			
 			local startTime = debugprofilestop()
 			o.posX, o.posY, o.posZ = ObjectPosition(o.unit)
 			o.name = UnitName(o.unit)
@@ -239,9 +241,10 @@ if not metaTable2 then
 					o.debuffs = o:UpdateDebuffs(o.debuffs,o.unit)
 					-- o.range = getDistanceCalc(o.unit)
 					if br.enemy[o.unit] == nil then
+						
 						o:AddUnit(br.enemy)
 					end
-					-- br.enemy[o.unit].range = o.range
+					-- br.enemy[o.unit].range = o.
 					br.enemy[o.unit].debuffs = o.debuffs
 				else
 					if br.enemy[o.unit] ~= nil then

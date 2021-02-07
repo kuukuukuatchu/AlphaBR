@@ -85,6 +85,7 @@ local function createOptions()
         section = br.ui:createSection(br.ui.window.profile, "Defensive")
             -- Basic Healing Module
             br.player.module.BasicHealing(section)
+            br.ui:createSpinnerWithout(section, "PoS removes Necrotic", 20, 0, 50, 1, "","|cffFFFFFFNecrotic stacks Phial of Serenity to use at")
 		    -- Fiery Brand
             br.ui:createSpinner(section, "Fiery Brand",  50,  0,  100,  5,  "|cffFFBB00Health Percentage to use at.");
             -- Demon Spikes
@@ -92,6 +93,9 @@ local function createOptions()
             br.ui:createSpinnerWithout(section, "Hold Demon Spikes", 1, 0, 2, 1, "|cffFFBB00Number of Demon Spikes the bot will hold for manual use.");
             -- Metamorphosis
             br.ui:createSpinner(section, "Metamorphosis",  40,  0,  100,  5,  "|cffFFBB00Health Percentage to use at.");
+            -- Sigil of Chains
+            br.ui:createSpinner(section, "Sigil of Chains - HP",  50,  0,  100,  5,  "|cffFFBB00Health Percentage to use at.");
+            br.ui:createSpinner(section, "Sigil of Chains - AoE", 3, 0, 10, 1, "|cffFFFFFFNumber of Units in 8 Yards to Cast At")
             -- Sigil of Misery
             br.ui:createSpinner(section, "Sigil of Misery - HP",  50,  0,  100,  5,  "|cffFFBB00Health Percentage to use at.");
             br.ui:createSpinner(section, "Sigil of Misery - AoE", 3, 0, 10, 1, "|cffFFFFFFNumber of Units in 8 Yards to Cast At")
@@ -210,9 +214,9 @@ actionList.Defensive = function()
         -- Demon Spikes
         -- demon_spikes
         if ui.checked("Demon Spikes") and unit.inCombat() and cast.able.demonSpikes() and charges.demonSpikes.count() > ui.value("Hold Demon Spikes") and unit.hp() <= ui.value("Demon Spikes") then
-            if (charges.demonSpikes.count() == 2 or not buff.demonSpikes.exists()) and not debuff.fieryBrand.exists(units.dyn5) and not buff.metamorphosis.exists() then
+            -- if (charges.demonSpikes.count() == 2 or not buff.demonSpikes.exists()) and not debuff.fieryBrand.exists(units.dyn5) and not buff.metamorphosis.exists() then
                 if cast.demonSpikes() then ui.debug("Casting Demon Spikes") return true end
-            end
+            -- end
         end
         -- Metamorphosis
         -- metamorphosis,if=!(talent.demonic.enabled)&(!covenant.venthyr.enabled|!dot.sinful_brand.ticking)|target.time_to_die<15
@@ -231,6 +235,9 @@ actionList.Defensive = function()
         end
         -- Basic Healing Module
         module.BasicHealing()
+        if ui.checked("PoS removes Necrotic") and unit.instance() and debuff.necroticWound.stacks() >= ui.value("PoS removes Necrotic") and use.able.phialOfSerenity() then
+            if use.phialOfSerenity() then return true end
+        end
         -- Sigil of Misery
         if ui.checked("Sigil of Misery - HP") and cast.able.sigilOfMisery()
             and unit.hp() <= ui.value("Sigil of Misery - HP") and unit.inCombat() and #enemies.yards8 > 0
@@ -241,6 +248,17 @@ actionList.Defensive = function()
             and #enemies.yards8 >= ui.value("Sigil of Misery - AoE") and unit.inCombat()
         then
             if cast.sigilOfMisery("best",false,ui.value("Sigil of Misery - AoE"),8) then ui.debug("Casting Sigil of Misery [AOE]") return true end
+        end
+        -- Sigil of Chains
+        if ui.checked("Sigil of Chains - HP") and cast.able.sigilOfChains()
+            and unit.hp() <= ui.value("Sigil of Chains - HP") and unit.inCombat() and #enemies.yards8 > 0
+        then
+            if cast.sigilOfChains("player","ground") then ui.debug("Casting Sigil of Chains [HP]") return true end
+        end
+        if ui.checked("Sigil of Chains - AoE") and cast.able.sigilOfChains()
+            and #enemies.yards8 >= ui.value("Sigil of Chains - AoE") and unit.inCombat()
+        then
+            if cast.sigilOfChains("best",false,ui.value("Sigil of Chains - AoE"),8) then ui.debug("Casting Sigil of Chains [AOE]") return true end
         end
     end -- End Defensive Toggle
 end -- End Action List - Defensive
@@ -473,10 +491,17 @@ local function runRotation()
     elseif (unit.inCombat() and var.profileStop==true) or unit.mounted() or unit.flying() or var.pause() or ui.mode.rotation==4 then
         return true
     else
+        if actionList.Defensive() then return true end
         -----------------------
         --- Extras Rotation ---
         -----------------------
         if actionList.Extras() then return true end
+        --------------------------
+        --- Defensive Rotation ---
+        --------------------------
+        if not unit.inCombat() then
+            if actionList.Defensive() then return true end
+        end
         ------------------------------
         --- Out of Combat Rotation ---
         ------------------------------

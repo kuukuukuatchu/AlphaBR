@@ -1,10 +1,10 @@
+local addonName, br = ...
 ----------------------------------------------------------------------------------------------------
 -- Variables
 ----------------------------------------------------------------------------------------------------
 local cdnUrl = "https://cdn.badrotations.org/"
 local apiUrl = "https://www.badrotations.org/"
 
-local br = _G["br"]
 br.updater = {}
 
 local addonPath

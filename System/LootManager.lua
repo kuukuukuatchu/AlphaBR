@@ -1,3 +1,4 @@
+local addonName, br = ...
 -- Sell Greys Macros
 SLASH_Greys1 = "/grey"
 SLASH_Greys2 = "/greys"

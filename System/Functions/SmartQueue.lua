@@ -1,3 +1,4 @@
+local addonName, br = ...
 br.queueSpell = false
 local queueSpellTime
 local queueSpellPos = {x = 0, y = 0, z = 0}

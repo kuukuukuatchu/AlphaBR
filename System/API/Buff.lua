@@ -1,3 +1,4 @@
+local addonName, br = ...
 if br.api == nil then br.api = {} end
 -- buff is the table located at br.player.buff
 -- v is the spellID passed from the builder which cycles all the collected buff spells from the spell list for the spec

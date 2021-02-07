@@ -1,3 +1,4 @@
+local addonName, br = ...
 local runeTable = {}
 function getChi(Unit)
 	return UnitPower(Unit, 12)

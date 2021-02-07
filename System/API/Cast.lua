@@ -1,4 +1,4 @@
-local br = _G["br"]
+local addonName, br = ...
 if br.api == nil then br.api = {} end
 ----------------------
 --- ABOUT THIS API ---

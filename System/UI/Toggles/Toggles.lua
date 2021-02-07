@@ -1,3 +1,4 @@
+local addonName, br = ...
 -- this handles old profiles buttons
 function TogglesFrame()
 	GarbageButtons()

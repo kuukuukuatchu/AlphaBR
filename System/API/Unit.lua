@@ -1,3 +1,4 @@
+local addonName, br = ...
 if br.api == nil then br.api = {} end
 ----------------------
 --- ABOUT THIS API ---
@@ -147,6 +148,10 @@ br.api.unit = function(self)
         local isHumanoid = _G["isHumanoid"]
         if thisUnit == nil then thisUnit = "target" end
         return isHumanoid(thisUnit)
+    end
+    -- ID
+    unit.id = function(thisUnit)
+        return GetObjectID(thisUnit)
     end
     --  In Combat
     unit.inCombat = function(thisUnit)

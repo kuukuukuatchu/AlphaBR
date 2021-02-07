@@ -1,3 +1,4 @@
+local addonName, br = ...
 function GetObjectExists(Unit)
 	if Unit == nil then return false end
 	return GetUnitIsVisible(Unit)
@@ -222,8 +223,10 @@ function getHP(Unit)
 		else
 			if not UnitIsDeadOrGhost(Unit) and GetUnitIsVisible(Unit) then
 				for i = 1,#br.friend do
-					if br.friend[i].guidsh == string.sub(UnitGUID(Unit),-5) then
-						return br.friend[i].hp
+					if br.friend[i] then
+						if br.friend[i].guidsh == string.sub(UnitGUID(Unit),-5) then
+							return br.friend[i].hp
+						end
 					end
 				end
 				if getOptionCheck("Incoming Heals") == true and UnitGetIncomingHeals(Unit,"player") ~= nil then
@@ -320,10 +323,10 @@ function isBoss(unit)
 		local healthMax = UnitHealthMax(unit)
 		local pHealthMax = UnitHealthMax("player")
 		local instance = select(2,IsInInstance())
-		return isInstanceBoss(unit) or isDummy(unit) 
+		return isInstanceBoss(unit) or isDummy(unit)
 			or (not isChecked("Boss Detection Only In Instance") and not UnitIsTrivial(unit) and instance ~= "party"
 				and ((class == "rare" and healthMax > 4 * pHealthMax) or class == "rareelite" or class == "worldboss"
-					or (class == "elite" and healthMax > 4 * pHealthMax and instance ~= "raid")	or UnitLevel(unit) < 0))
+					or (class == "elite" and ((healthMax > 4 * pHealthMax and instance ~= "raid") or instance == "scenario")) or UnitLevel(unit) < 0))
 	end
 	return false
 end

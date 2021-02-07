@@ -1,9 +1,9 @@
 -- define br global that will hold the bot global background features
-br = {}
+local addonName, br = ...
+br.data = {}
+br.data.settings = {}
 br.addonName = "BadRotations"
 br.commandHelp = {}
-br.data = {}
-br.data.ui = {}
 br.deadPet = false
 -- developers debug, use /run br.data.settings[br.selectedSpec].toggles["isDebugging"] = true
 br.debug = {}
@@ -29,6 +29,7 @@ br.prevQueueWindow = GetCVar("SpellQueueWindow")
 br.profile = {}
 br.rotations = {}
 br.selectedSpec = "None"
+br.selectedSpecID = 0
 br.selectedProfile = 1
 br.selectedProfileName = "None"
 br.settingsDir = "\\"
@@ -100,7 +101,7 @@ end
 -- Run
 function br:Run()
 	if br.selectedSpec == nil then
-		br.selectedSpec = select(2, GetSpecializationInfo(GetSpecialization()))
+		br.selectedSpecID, br.selectedSpec = select(GetSpecializationInfo(GetSpecialization()))
 		if br.selectedSpec == "" then
 			br.selectedSpec = "Initial"
 		end
@@ -167,6 +168,7 @@ end
 -- Load Saved Settings
 function br:loadSavedSettings()
 	if br.initializeSettings then
+		br.initOM = true
 		br.loader.loadProfiles()
 		br:loadLastProfileTracker()
 		if br.data.settings[br.selectedSpec]["RotationDropValue"] then
@@ -213,19 +215,21 @@ function frame:OnEvent(event, arg1, arg2, arg3, arg4, arg5)
 	end
 	if event == "PLAYER_ENTERING_WORLD" then
 		-- Update Selected Spec
-		br.selectedSpec = select(2, GetSpecializationInfo(GetSpecialization()))
-		if br.selectedSpec == "" then
-			br.selectedSpec = "Initial"
-		end
+		br.selectedSpecID, br.selectedSpec = GetSpecializationInfo(GetSpecialization())		
+    	if br.selectedSpec == "" then br.selectedSpec = "Initial" end
 		br.activeSpecGroup = GetActiveSpecGroup()
 		if br.data == nil then
 			br.data = {}
 		end
 		if br.data.tracker == nil then
+			Print("br.data.tracker not found")
 			br.data.tracker = {}
 		end
 		if br.data.settings == nil then
 			br.data.settings = {}
+		end
+		if br.data.ui == nil then
+			br.data.ui = {}
 		end
 		if br.data.settings[br.selectedSpec] == nil then
 			br.data.settings[br.selectedSpec] = {}

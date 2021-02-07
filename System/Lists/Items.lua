@@ -1,3 +1,4 @@
+local addonName, br = ...
 if br.lists == nil then br.lists = {} end
 function getHeirloomNeck()
     local necks = {
@@ -65,7 +66,6 @@ br.lists.items = {
     greaterFlaskOfTheUndertow       = 168654,
     greaterFlaskOfTheVastHorizon    = 168653,
     -- Healing Items
-    kyrianBell                      = 179982,
     phialOfSerenity                  = 177278,
     -- Healthstones
     healthstone                     = 5512,
@@ -133,8 +133,24 @@ br.lists.items = {
     vigorTrinket                    = 165572,
     visionOfDemise                  = 169307,
     hummingBlackDragonscale         = 174044,
+
     --weapons that are clickable
     neuralSynapseEnhancer           = 168973,
     -- Legendary 8.3 cloak
     shroudOfResolve                 = 169223,
+    ----------- SL items below -----------
+    --Trinkets
+    inscrutableQuantumDevice        = 179350,
+    bottledFlayedWingToxin          = 178742,
+    dreadfireVessel                 = 184030,
+    --Consumables
+    potionOfSpectralAgility         = 171270,
+    shadowCoreOil                   = 171285,
+    spectralFlaskOfPower            = 171276,
+    -- Music of Bastion
+    ascendedFlute                   = 180064,
+    benevolentGong                  = 179977,
+    heavenlyDrum                    = 180062,
+    kyrianBell                      = 179982,
+    unearthlyChime                  = 180063,
 }

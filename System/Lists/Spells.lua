@@ -1,3 +1,4 @@
+local addonName, br = ...
 local function flipRace()
     local race = select(2,UnitRace("player"))
     local class = select(3,UnitClass("player"))
@@ -517,6 +518,7 @@ br.lists.spells = {
                 infernalStrike              = 189110,
                 metamorphosis               = 187827,
                 shear                       = 203782,
+                sigilOfChains               = 202138,
                 sigilOfFlame                = 204596,
                 sigilOfMisery               = 207684,
                 sigilOfSilence              = 202137,
@@ -689,14 +691,25 @@ br.lists.spells = {
                 kindredEmpowerment          = 327022,
                 onethsClearVision           = 338661,
                 ravenousFrenzy              = 323546,
-                PrimordialArcanicPulsar     = 338668,
+                primordialArcanicPulsar     = 338668,
+                balanceOfAllThings          = 339942,
+                balanceOfAllThingsNature    = 339943, -- Nature Buff
+                balanceOfAllThingsArcane    = 339946, -- Arcane Buff
+                timewornDreambinder	        = 339949,
+                kindredEmpowerment          = 327022,
+                onethsClearVision           = 338661,
+                ravenousFrenzy              = 323546,
 
             },
             conduits                        = {
+                preciseAlignment            = 340706,
+
 
             },
             covenants                       = {
                 loneEmpowerment             = 338142,
+                ravenousFrenzy              = 323546,
+                empowerBond                 = 326647,
             },
             debuffs                         = {
                 stellarFlare                = 202347,
@@ -705,9 +718,16 @@ br.lists.spells = {
                 stellarEmpowerment          = 197637,
             },
             glyphs                          = {
+            },
+
+            runeforges                      = {
+                timewornDreambinder	        = 339949,
+		        balanceOfAllThings          = 339942,
+                primordialArcanicPulsar     = 338668,
+                lycarasFleetingGlimpse      = 340059,
 
             },
-            talents                         = {
+            talents                       = {
                 feralAffinity               = 202157,
                 forceOfNature               = 205636,
                 furyOfElune                 = 202770,
@@ -775,6 +795,7 @@ br.lists.spells = {
                 scentOfBlood                = 285646,
                 survivalInstincts           = 61336,
                 tigersFury                  = 5217,
+                stampedingRoar              = 77764,
             },
             conduits                        = {
 
@@ -896,6 +917,7 @@ br.lists.spells = {
                 starsurge                   = 197626,
                 sunfire                     = 93402,
                 tranquility                 = 740,
+                typhoon                     = 132469,
                 yserasGift                  = 145108,
                 swipeResto                  = 213764,
                 naturesSwiftness            = 132158,
@@ -937,6 +959,7 @@ br.lists.spells = {
             },
             runeforges                      = {
                 theDarkTitansLesson         = 338831,
+                verdantInfusion             = 338829,
 
             },
             talents                         = {
@@ -1000,6 +1023,7 @@ br.lists.spells = {
                 solarWrathMoonkin           = 197629,
                 soothe                      = 2908,
                 stampedingRoar              = 106898,
+                stampedingRoarCat           = 77764,
                 starsurgeAff                = 197626,
                 sunfireMoonkin              = 197630,
                 swiftmend                   = 18562,
@@ -1018,6 +1042,7 @@ br.lists.spells = {
 
             },
             buffs                           = {
+                adaptiveSwarm               = 325748,
                 barkskin                    = 22812,
                 bearForm                    = 5487,
                 burningEssence              = 138927,
@@ -1029,6 +1054,7 @@ br.lists.spells = {
                 ironfur                     = 192081,
                 kindredEmpowerment          = 327139,
                 kindredSpirits              = 326434,
+                kindredEmpowermentEnergize  = 327022, --/kindred-empowerment  this is when someone else cast it on you
                 loneSpirit                  = 338041,
                 moonkinForm                 = 197625,
                 prowl                       = 5215,
@@ -1037,10 +1063,13 @@ br.lists.spells = {
                 shadowmeld                  = 58984,
                 soulshape                   = 310143,
                 stagForm                    = 210053,
-                stampedingRoar              = 77764,
+                stampedingRoar              = 106898,
+                stampedingRoarCat           = 77764,
                 suddenAmbush                = 340698,
                 travelForm                  = 783,
+                treantForm                  = 114282,
                 wildGrowth                  = 48438,
+                onethsPerception            = 339800,
             },
             conduits                        = {
                 deepAllegiance              = 341378,
@@ -1186,6 +1215,9 @@ br.lists.spells = {
             },
             glyphs                          = {
 
+            },
+            interrupts                      = {
+                counterShot                 = 147362,
             },
             talents                         = {
                 barrage                     = 120360,--
@@ -1464,6 +1496,9 @@ br.lists.spells = {
             },
             glyphs                          = {
 
+            },
+            interrupts                      = {
+                freezingTrap                = 187650,
             },
             runeforges                      = {
                 eagletalonsTrueFocus        = 336849,
@@ -1767,10 +1802,14 @@ br.lists.spells = {
             },
             buffs                           = {
                 arcaneIntellect             = 1459,
+                disciplinaryCommand         = 327365,
+                expandedPotential           = 327489,
                 focusMagic                  = 321358,
+                freezingWinds               = 327364,
                 iceBlock                    = 45438,
                 incantersFlow               = 1463,
-         		slowFall	                = 130,
+                slowFall	                = 130,
+                slickIce                    = 327509,
                 runeOfPower                 = 116014,
             },
             conduits                        = {
@@ -1784,6 +1823,7 @@ br.lists.spells = {
             },
             debuffs                         = {
                 frostNova                   = 122,
+                mirrorsOfTorment            = 314793,
             },
             glyphs                          = {
 
@@ -1867,6 +1907,7 @@ br.lists.spells = {
                 soothingMist                = 115175,
                 thunderFocusTea             = 116680,
                 invokeYulonTheJadeSerpent   = 322118,
+                invokeChiJiTheRedCrane      = 325197,
                 fortifyingBrew              = 243435,
             },
             artifacts                       = {
@@ -1895,7 +1936,9 @@ br.lists.spells = {
                 essenceFont                 = 191840,
                 risingMist                  = 22170,
                 soothingMistJadeStatue      = 198533,
-                envelopingBreath            = 3205209
+                envelopingBreath            = 3205209,
+                invokeChiJiTheRedCrane      = 343820,
+                ancientTeachingOfTheMonastery = 347553
             },
             debuffs                         = {
                 mysticTouch                 = 8647,
@@ -2000,7 +2043,7 @@ br.lists.spells = {
                 tigerPalm                   = 100780,
                 touchOfDeath                = 322109,
                 transcendence               = 101643,
-                transcendanceTransfer       = 119996,
+                transcendenceTransfer       = 119996,
                 vivify                      = 116670,
                 zenFlight                   = 125883,
                 zenPilgrimage               = 126892,
@@ -2265,6 +2308,7 @@ br.lists.spells = {
                 holyAvenger                 = 105809,
                 retributionAura             = 183435,
                 seraphim                    = 152262,
+                vanquishersHammer           = 328204,
             },
             conduits                        = {
 
@@ -2302,6 +2346,9 @@ br.lists.spells = {
                 seraphim                    = 152262,
                 unbreakableSpirit           = 114154,
             },
+            runeforges                      = {
+                madParagon                  = 337594,
+            }
         },
     },
     PRIEST = {
@@ -3303,10 +3350,11 @@ br.lists.spells = {
                 doomWinds                   = 335902,
                 elementalEquilibrium        = 336730,
                 primalLavaActuators         = 335895,
-                echoesOfGreatSundering       = 336215,
-                skybreakersFieryDemise       = 336734,
-                spiritwalkersTidalTotem      = 335891,
-                deeptremorStone              = 336739,  
+                echoesOfGreatSundering      = 336215,
+                skybreakersFieryDemise      = 336734,
+                spiritwalkersTidalTotem     = 335891,
+                deeptremorStone             = 336739, 
+                windspeakersLavaResurgence  = 336063
             },
             talents                         = {
                 naturesGuardian             = 30884,
@@ -3458,6 +3506,7 @@ br.lists.spells = {
             debuffs                         = {
                 doom                        = 603,
                 shadowflame                 = 205181,
+                corruption                  = 172,
             },
             glyphs                          = {
 
@@ -4003,6 +4052,7 @@ br.lists.spells = {
                 flaskOfEndlessFathoms           = 251837,
                 flaskOfTheVastHorizon           = 251838,
                 flaskOfTheUndertow              = 251839,
+                flayedWingToxin                 = 345546,
                 fruitfulMachinatins             = 242623, -- Absorb Shield from Deceiver's Grand Design
                 mistcallerOcarina               = 330067, -- SL Trinket with group buff
                 greaterFlaskOfEndlessFathoms    = 298837,
@@ -4061,6 +4111,7 @@ br.lists.spells = {
                 conductiveInk                   = 302565,
                 dampening                       = 110310,
                 eyeOfLeotheras                  = 206649,
+                necroticWound                   = 209858,
                 razorCoral                      = 303568, --304877,
                 repeatPerformance               = 304409,
                 shiverVenom                     = 301624,

@@ -1,3 +1,4 @@
+local addonName, br = ...
 -- if shouldStopCasting(12345) then
 function shouldStopCasting(Spell)
 	-- if we are on a boss fight

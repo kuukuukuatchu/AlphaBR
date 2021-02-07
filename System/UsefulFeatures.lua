@@ -1,3 +1,4 @@
+local addonName, br = ...
 function br:AcceptQueues()
 	if getOptionCheck("Accept Queues") then
 		-- Accept Queues

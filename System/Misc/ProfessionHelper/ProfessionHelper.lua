@@ -1,3 +1,4 @@
+local addonName, br = ...
 function ProfessionHelper()
 	if isChecked("Profession Helper") then
 		if not isInCombat("player") and not (IsMounted() or IsFlying()) then

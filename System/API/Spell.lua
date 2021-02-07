@@ -1,3 +1,4 @@
+local addonName, br = ...
 if br.api == nil then br.api = {} end
 -- cd is the table located at br.player.cd
 -- charges is the table located at br.player.charges

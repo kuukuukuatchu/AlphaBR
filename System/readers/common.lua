@@ -1,3 +1,4 @@
+local addonName, br = ...
 function br.read.commonReaders()
 	---------------
 	--[[ Readers ]]

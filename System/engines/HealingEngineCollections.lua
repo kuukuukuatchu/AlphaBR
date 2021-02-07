@@ -1,3 +1,4 @@
+local addonName, br = ...
 novaEngineTables = { }
 -- This is for the Dispel Check, all Debuffs we want dispelled go here
 -- valid arguments: stacks = num range = num
@@ -114,7 +115,7 @@ novaEngineTables.DispelID = {
 	-- Maut
 	[314993] = {stacks = 0, range = 10}, --https://www.wowhead.com/spell=314992/drain-essence
 	-- Nalthor the Rimebinder (Necrotic Wake)
-	[320788] = {stacks = 0, range = 18}, --https://www.wowhead.com/spell=320788/frozen-binds
+	[320788] = {stacks = 0, range = 15}, --https://www.wowhead.com/spell=320788/frozen-binds
 
 
 
@@ -212,7 +213,11 @@ novaEngineTables.SpecialHealUnitList = {
 	[6460] = "Boss#3 SoO",
 	[6464] = "Boss#3 SoO",
 	[90388] ="Tortured Essence",
-	[133392] = "Avatar of Sethraliss"
+	[133392] = "Avatar of Sethraliss",
+	[171577] = "Ripped Soul",
+	[173112] = "Pierced Soul",
+	[165759] = "Kael'thas Sunstrider",
+	[165778] = "Essence Font"
 };
 -- set dot that need to be healed to max(needs to be topped) to very low values so that engine will prioritize them
 -- the value used here will be substract from current health, we could use negative values to add back health instead

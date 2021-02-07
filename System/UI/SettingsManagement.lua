@@ -1,3 +1,4 @@
+local addonName, br = ...
 local function getFolderClassName(class)
 	local formatClass = class:sub(1, 1):upper() .. class:sub(2):lower()
 	if formatClass == "Deathknight" then
@@ -55,6 +56,11 @@ function br:checkDirectories(folder, class, spec, profile)
 	if profile == nil then
 		profile = br.selectedProfileName
 	end
+	-- Print("Profile by selectedProfileName: "..tostring(br.selectedProfileName))
+	-- if (profile == "None" or profile == nil) and br.selectedSpec ~= "None" then
+	-- 	profile = br.rotations[GetSpecializationInfo(GetSpecialization())][br.selectedProfile].name
+	-- end
+	-- Print("Profile by SpecID, selectedProfile: "..tostring(profile))
 	local profileDir = specDir .. profile .. "\\"
 	if not DirectoryExists(profileDir) then
 		CreateDirectory(profileDir)
@@ -91,7 +97,7 @@ function br:loadSettings(folder, class, spec, profile)
 			if profileFound then
 				br.profile = deepcopy(brprofile)
 			end
-			Print("Loaded Settings for Profile " .. profile)
+			Print("Loaded Settings for Profile " .. tostring(profile))
 		end
 		if not fileFound then
 			Print("No File Called 'savedSettings.lua' Found In " .. loadDir)
@@ -160,19 +166,22 @@ function br:loadLastProfileTracker()
 		if br.data.tracker[selectedProfile] == nil then
 			br.data.tracker[selectedProfile] = {}
 		end
-		if br.data.tracker[selectedProfile]["RotationDrop"] ~= nil then
-			br.data.settings[selectedProfile]["RotationDrop"] = br.data.tracker[selectedProfile]["RotationDrop"]
-		else
-			br.data.settings[selectedProfile]["RotationDrop"] = 1
-			br.data.tracker[selectedProfile]["RotationDrop"] = 1
+		local rotationFound = false
+		if br.data.tracker[br.selectedSpec]["RotationDropValue"] then
+			for i = 1, #br.rotations[specID] do
+				if br.rotations[specID][i].name == br.data.tracker[br.selectedSpec]["RotationDropValue"] then
+					br.data.settings[br.selectedSpec]["RotationDropValue"] = br.data.tracker[br.selectedSpec]["RotationDropValue"]
+					br.data.settings[br.selectedSpec]["RotationDrop"] = i
+					rotationFound = true
+					break
+				end
+			end
+		end
+		if not rotationFound then
+			br.data.settings[br.selectedSpec]["RotationDropValue"] = br.rotations[specID][1].name
+			br.data.settings[br.selectedSpec]["RotationDrop"] = 1
 		end
 		Print("Tracker Load - Last Profile: " .. tostring(br.data.settings[selectedProfile]["RotationDrop"]))
-		if br.data.tracker[selectedProfile]["RotationDropValue"] ~= nil then
-			br.data.settings[selectedProfile]["RotationDropValue"] = br.data.tracker[selectedProfile]["RotationDropValue"]
-		else
-			br.data.settings[selectedProfile]["RotationDropValue"] = br.rotations[specID][1].name
-			br.data.tracker[selectedProfile]["RotationDropValue"] = br.rotations[specID][1].name
-		end
 		Print("Tracker Load - Last Profile Name: " .. tostring(br.data.settings[selectedProfile]["RotationDropValue"]))
 	else
 		Print("No Tracker found for " .. selectedProfile .. "! Creating Tracker....")
@@ -182,33 +191,39 @@ end
 
 function br:saveLastProfileTracker()
 	local saveDir = br:checkDirectories(nil, nil, nil, "Tracker")
-	local specID = GetSpecializationInfo(GetSpecialization())
+	local specID = GetSpecializationInfo(GetSpecialization()) or br.selectedSpecID
 	if br.data ~= nil and br.data.settings ~= nil and br.data.settings[br.selectedSpec] ~= nil then
 		if br.data.tracker ~= nil then
 			if br.data.tracker[br.selectedSpec] == nil then
 				br.data.tracker[br.selectedSpec] = {}
 			end
-			if br.data.settings[br.selectedSpec]["RotationDrop"] then
-				br.data.tracker[br.selectedSpec]["RotationDrop"] = br.data.settings[br.selectedSpec]["RotationDrop"]
-			else
-				br.data.settings[br.selectedSpec]["RotationDrop"] = 1
-				br.data.tracker[br.selectedSpec]["RotationDrop"] = 1
-			end
 			if br.data.settings[br.selectedSpec]["RotationDropValue"] then
-				br.data.tracker[br.selectedSpec]["RotationDropValue"] = br.data.settings[br.selectedSpec]["RotationDropValue"]
+				local rotationFound = false
+				for i = 1, #br.rotations[specID] do
+					if br.rotations[specID][i].name == br.data.settings[br.selectedSpec]["RotationDropValue"] then
+						br.data.tracker[br.selectedSpec]["RotationDropValue"] = br.data.settings[br.selectedSpec]["RotationDropValue"]
+						br.data.tracker[br.selectedSpec]["RotationDrop"] = i
+						rotationFound = true
+						break
+					end
+				end
+				if not rotationFound then
+					br.data.tracker[br.selectedSpec]["RotationDropValue"] = br.rotations[specID][1].name
+					br.data.tracker[br.selectedSpec]["RotationDrop"] = 1
+				end
 			else
 				br.data.settings[br.selectedSpec]["RotationDropValue"] = br.rotations[specID][1].name
 				br.data.tracker[br.selectedSpec]["RotationDropValue"] = br.rotations[specID][1].name
+				br.data.settings[br.selectedSpec]["RotationDrop"] = 1
+				br.data.tracker[br.selectedSpec]["RotationDrop"] = 1
 			end
 		end
-	elseif br.data.tracker then
-		print("Nothing found, recreating tracker spec")
-		if br.data.tracker[br.selectedSpec] == nil then
-			br.data.tracker[br.selectedSpec] = {}
-		end
 	else
-		print("Nothing found, recreating tracker")
+		Print("Nothing found, recreating tracker")
 		br.data.tracker = {}
+		br.data.tracker[br.selectedSpec] = {}
+		br.data.tracker[br.selectedSpec]["RotationDrop"] = 1
+		br.data.tracker[br.selectedSpec]["RotationDropValue"] = br.rotations[specID][1].name
 	end
 	Print("Saving Tracker to Directory: " .. tostring(saveDir))
 	br.tableSave(br.data.tracker, saveDir .. "lastProfileTracker.lua")

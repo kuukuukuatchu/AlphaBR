@@ -1,4 +1,5 @@
-local br = _G["br"]
+
+local addonName, br = ...
 if br.api == nil then br.api = {} end
 br.api.module = function(self)
     -- Local reference to actionList
@@ -27,8 +28,8 @@ br.api.module = function(self)
             br.ui:createSpinner(section, "Healthstone/Potion", 60, 0, 100, 5, "|cffFFFFFFHealth Percent to Cast At")
             -- Heirloom Neck
             br.ui:createSpinner(section, "Heirloom Neck", 80, 0, 100, 5, "|cffFFFFFFHealth Percent to Cast At")
-            -- Kyrian Bell
-            br.ui:createCheckbox(section, "Kyrian Bell","|cffFFFFFFCheck to use.")
+            -- Music of Bastion
+            br.ui:createCheckbox(section, "Music of Bastion","|cffFFFFFFCheck to use.")
             -- Phial of Serenity
             br.ui:createSpinner(section, "Phial of Serenity", 30, 0, 80, 5, "|cffFFFFFFHealth Percent to Cast At")
         end
@@ -65,11 +66,23 @@ br.api.module = function(self)
             then
                 if cast.racial() then ui.debug("Casting Gift of the Naaru") return true end
             end
-            -- Kyrian Bell
-            if ui.checked("Kyrian Bell") and (isInArdenweald() or isInBastion() or isInMaldraxxus() or isInRevendreth())-- or isInTheMaw())
-                and use.able.kyrianBell() and has.kyrianBell()
-            then
-                if use.kyrianBell() then ui.debug("Using Kyrian Bell") return true end
+            -- Music of Bastion
+            if ui.checked("Music of Bastion") and (isInArdenweald() or isInBastion() or isInMaldraxxus() or isInRevendreth()) then
+                if use.able.ascendedFlute() and has.ascendedFlute() then
+                    if use.ascendedFlute() then ui.debug("Using Ascended Flute") return true end
+                end
+                if use.able.benevolentGong() and has.benevolentGong() then
+                    if use.benevolentGong() then ui.debug("Using Benevolent Gong") return true end
+                end
+                if use.able.heavenlyDrum() and has.heavenlyDrum() then
+                    if use.heavenlyDrum() then ui.debug("Using Heavenly Drum") return true end
+                end
+                if use.able.kyrianBell() and has.kyrianBell() then
+                    if use.kyrianBell() then ui.debug("Using Kyrian Bell") return true end
+                end
+                if use.able.unearthlyChime() and has.unearthlyChime() then
+                    if use.unearthlyChime() then ui.debug("Using Unearthly Chime") return true end
+                end
             end
             -- Phial of Serenity
             if ui.checked("Phial of Serenity") then
@@ -80,7 +93,6 @@ br.api.module = function(self)
                     if use.phialOfSerenity() then ui.debug("Using Phial of Serenity") return true end
                 end
             end
-            return true
         end
     end
 

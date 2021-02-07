@@ -1,4 +1,4 @@
-local br = _G["br"]
+local addonName, br = ...
 if br.api == nil then br.api = {} end
 br.api.covenant = function(covenant,k,v)
     local activeID = C_Covenants.GetActiveCovenantID()

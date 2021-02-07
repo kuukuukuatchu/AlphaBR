@@ -1,3 +1,4 @@
+local addonName, br = ...
 if br.api == nil then br.api = {} end
 -- power is the table located at br.player.power
 -- v is the powerID passed from the builder which cycles all the collected power from the power list

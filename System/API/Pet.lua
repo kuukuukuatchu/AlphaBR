@@ -1,3 +1,4 @@
+local addonName, br = ...
 if br.api == nil then br.api = {} end
 br.api.pets = function(pet,k,v,brplayer)
     -- Active Pet - EX: br.player.pet.active.exists()

@@ -1,3 +1,4 @@
+local addonName, br = ...
 -- TODO: create new healing debug frame
 br.ui.window.healing = {}
 function br.ui:createHealingWindow()

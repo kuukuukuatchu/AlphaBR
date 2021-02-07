@@ -1,4 +1,4 @@
-local br = _G["br"]
+local addonName, br = ...
 if br.api == nil then br.api = {} end
 br.api.runeforge = function(runeforge,k,v)
     runeforge[k].equiped = false

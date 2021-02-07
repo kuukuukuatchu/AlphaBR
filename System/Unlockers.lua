@@ -1,3 +1,4 @@
+local addonName, br = ...
 function br:loadUnlockerAPI()
     local unlocked = false
     local class = br.class
@@ -26,6 +27,10 @@ function br:loadUnlockerAPI()
         GetObjectCountBR = GetObjectCount
         GetObjectWithIndex = GetObjectWithIndex
         GetObjectWithGUID = GetObjectWithGUID
+        GetNpcCount = GetObjectCount
+        GetPlayerCount = GetObjectCount
+        GetNpcWithIndex = GetObjectWithIndex
+        GetPlayerWithIndex = GetObjectWithIndex
         -- Unit
         UnitBoundingRadius = UnitBoundingRadius
         UnitCombatReach = UnitCombatReach
@@ -70,30 +75,119 @@ function br:loadUnlockerAPI()
         FaceDirection = function(a) if wmbapi.GetObject(a) then wmbapi.FaceDirection(GetAnglesBetweenObjects(a,"player"),true) else wmbapi.FaceDirection(a,true) end end
         -- Object
         ObjectTypeFlags = wmbapi.ObjectTypeFlags
-        ObjectPointer = function(...) return ... and wmbapi.GetObject(...) end
+        ObjectPointer = function(obj) 
+            if UnitIsVisible(obj) then
+                return wmbapi.GetObject(obj)
+            else
+                return ""
+            end
+        end
         ObjectExists = wmbapi.ObjectExists
         ObjectIsVisible = UnitIsVisible
-        ObjectPosition = wmbapi.ObjectPosition
-        ObjectFacing = wmbapi.ObjectFacing
-        ObjectName = UnitName
-        ObjectID = wmbapi.ObjectId
-        ObjectIsUnit = function(...) return ... and wmbapi.ObjectIsType(...,wmbapi.GetObjectTypeFlagsTable().Unit) end
-        GetDistanceBetweenPositions = wmbapi.GetDistanceBetweenPositions
-        GetDistanceBetweenObjects = wmbapi.GetDistanceBetweenObjects
-        GetPositionBetweenObjects = wmbapi.GetPositionBetweenObjects
-        GetPositionFromPosition = wmbapi.GetPositionFromPosition
-        ObjectIsFacing = wmbapi.ObjectIsFacing
+        ObjectPosition = function(obj) 
+            local x,y,z = wmbapi.ObjectPosition(obj) 
+            if x then
+                return x,y,z
+            else
+                return 0,0,0
+            end
+        end
+        ObjectFacing = function(obj) 
+            if UnitIsVisible(obj) then
+                return wmbapi.ObjectFacing(obj)
+            else
+                return 0
+            end
+        end
+        ObjectName = function(obj) 
+            if UnitIsVisible(obj) then
+                return UnitName(obj)
+            else
+                return ""
+            end
+        end
+        ObjectID = function(obj) 
+            if UnitIsVisible(obj) then
+                return wmbapi.ObjectId(obj)
+            else
+                return 0
+            end
+        end
+        ObjectDescriptor = function(obj,offset,type) return UnitIsVisible(obj) and wmbapi.ObjectDescriptor(obj,offset,type) end
+        ObjectIsUnit = function(obj) return UnitIsVisible(obj) and wmbapi.ObjectIsType(obj,wmbapi.GetObjectTypeFlagsTable().Unit) end
+        GetDistanceBetweenPositions = function(...) return (... and wmbapi.GetDistanceBetweenPositions(...)) or 0 end
+        GetDistanceBetweenObjects = function(obj1,obj2) 
+            if UnitIsVisible(obj1) and UnitIsVisible(obj2) then
+                return wmbapi.GetDistanceBetweenObjects(obj1,obj2)
+            else
+                return 0
+            end
+        end
+        GetPositionBetweenObjects = function(obj1,obj2,dist) 
+            if UnitIsVisible(obj1) and UnitIsVisible(obj2) then
+                return wmbapi.GetPositionBetweenObjects(obj1,obj2,dist)
+            else
+                return 0,0,0
+            end
+        end
+        GetPositionFromPosition = function(...) return (... and wmbapi.GetPositionFromPosition(...)) or 0,0,0 end
+        ObjectIsFacing = function(obj1,obj2,toler) 
+            if UnitIsVisible(obj1) and UnitIsVisible(obj2) then
+                return (toler and wmbapi.ObjectIsFacing(obj1,obj2,toler)) or (not toler and wmbapi.ObjectIsFacing(obj1,obj2))
+            end
+        end
         ObjectInteract = InteractUnit
         -- Object Manager
         GetObjectCountBR = wmbapi.GetObjectCount
+        GetNpcCount = wmbapi.GetNpcCount
+        GetPlayerCount = wmbapi.GetPlayerCount
         GetObjectWithIndex = wmbapi.GetObjectWithIndex
-        GetObjectWithGUID = wmbapi.GetObjectWithGUID
+        GetNpcWithIndex = wmbapi.GetNpcWithIndex
+        GetPlayerWithIndex = wmbapi.GetPlayerWithIndex
+        GetObjectWithGUID = function(GUID)
+            if GUID and #GUID > 1 then
+                return wmbapi.GetObjectWithGUID(GUID)
+            else
+                return "" 
+            end
+        end
         -- Unit
-        UnitBoundingRadius = wmbapi.UnitBoundingRadius
-        UnitCombatReach = wmbapi.UnitCombatReach
-        UnitTarget = wmbapi.UnitTarget
-        UnitCastID = function(...) return select(7,GetSpellInfo(UnitCastingInfo(...))) , select(7,GetSpellInfo(UnitChannelInfo(...))), wmbapi.UnitCastingTarget(...), wmbapi.UnitCastingTarget(...) end
-        UnitCreator = wmbapi.UnitCreator 
+        UnitBoundingRadius = function(obj) 
+            if UnitIsVisible(obj) then
+                return wmbapi.UnitBoundingRadius(obj)
+            else
+                return 0
+            end
+        end
+        UnitCombatReach = function(obj) 
+            if UnitIsVisible(obj) then
+                return wmbapi.UnitCombatReach(obj)
+            else
+                return 0
+            end
+        end
+        UnitTarget = function(obj) 
+            if UnitIsVisible(obj) then
+                return wmbapi.UnitTarget(obj)
+            else
+                return ""
+            end
+        end
+        UnitCastID = function(obj)
+            if UnitIsVisible(obj) then
+                local spellId,target = wmbapi.UnitCasting(obj)
+                return spellId or 0,spellId or 0,target or "",target or ""
+            else
+                return 0,0,"",""
+            end
+        end
+        UnitCreator = function(obj) 
+            if UnitIsVisible(obj) then
+                return wmbapi.UnitCreator(obj)
+            else
+                return ""
+            end
+        end
         -- World
         TraceLine = wmbapi.TraceLine
         GetCameraPosition = wmbapi.GetCameraPosition
@@ -114,10 +208,8 @@ function br:loadUnlockerAPI()
             return wmbapi.ScreenToWorld(X / sx, Y / sy)
         end
         GetMousePosition = function()
-            local def_x, def_y, real_x, real_y = 768*(GetScreenWidth()/GetScreenHeight()), 768, GetPhysicalScreenSize()
             local cur_x, cur_y = GetCursorPosition()
-            local res_x, res_y = cur_x*(real_x/def_x), real_y-cur_y*(real_y/def_y)
-            return res_x, res_y, res_x, res_y
+            return cur_x, cur_y
         end
         -- Hacks
         IsHackEnabled = function() return end

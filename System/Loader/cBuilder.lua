@@ -1,3 +1,4 @@
+local addonName, br = ...
 br.loader = {}
 local class = select(2,UnitClass('player'))
 local level = UnitLevel('player')
@@ -578,7 +579,7 @@ function br.loader:new(spec,specName)
                     for l, w in pairs(self.debuff[k].bleed) do
                         if --[[not UnitAffectingCombat("player") or]] UnitIsDeadOrGhost(l) then
                             self.debuff[k].bleed[l] = nil
-                        elseif not self.debuff[k].exists(l) then
+                        elseif not self.debuff[k].exists(l,"EXACT") then
                             self.debuff[k].bleed[l] = 0
                         end
                     end

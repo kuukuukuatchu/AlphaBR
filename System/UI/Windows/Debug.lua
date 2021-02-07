@@ -1,3 +1,4 @@
+local addonName, br = ...
 -- TODO: create new debug frame
 br.ui.window.debug = {}
 function br.ui:createDebugWindow()

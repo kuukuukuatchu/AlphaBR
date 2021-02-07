@@ -1,3 +1,4 @@
+local addonName, br = ...
 br.class = select(3, UnitClass("player"))
 br.guid = UnitGUID("player")
 -- specific reader location
@@ -82,6 +83,16 @@ function cl:common(...)
     br.read.enrageReader(...)
     local timeStamp, param, hideCaster, source, sourceName, sourceFlags, sourceRaidFlags, destination, destName, destFlags, destRaidFlags, spell, spellName, _, spellType = CombatLogGetCurrentEventInfo()
     br.guid = UnitGUID("player")
+    -- Unit Dies - Remove from enemy tracking
+    if param == "UNIT_DIED" and br.unlocked then
+        -- Print("Unit Died Updating Tables")
+        -- local unit = GetObjectWithGUID(destination)
+        br.om:Update()
+        -- if br.enemy ~= nil and br.enemy[unit] ~= nil then br.enemy[unit] = nil end
+        -- if br.damaged ~= nil and br.damaged[unit] ~= nil then br.damaged[unit] = nil end
+        -- if br.units ~= nil and br.units[unit] ~= nil then br.units[unit] = nil end
+        --if br.unitSetup ~= nil and br.unitSetup.cache ~= nil and br.unitSetup.cache[unit] ~= nil then br.unitSetup.cache[unit] = nil end
+    end
     --[[Combat Validation]]
     if br.player ~= nil then
         local inInstance, instanceType = IsInInstance()
@@ -417,6 +428,16 @@ function cl:common(...)
             end
         end
     end
+    if param == "SPELL_AURA_APPLIED" then
+        if spell == 323402 then
+            br.shadeUp = true
+        end
+    end
+    if param == "SPELL_AURA_REMOVED" then
+        if spell == 323402 then
+            br.shadeUp = false
+        end
+    end
 end
 function cl:Deathknight(...)
     local timeStamp, param, hideCaster, source, sourceName, sourceFlags, sourceRaidFlags, destination, destName, destFlags, destRaidFlags, spell, spellName, _, spellType = CombatLogGetCurrentEventInfo()
@@ -719,12 +740,12 @@ function cl:Rogue(...)
                     local destination = GetObjectWithGUID(destination)
                     if GetObjectExists(destination) then
                         thisUnit = destination
-                    -- elseif GetObjectExists("target") then
-                    --     thisUnit = GetObjectWithGUID(UnitGUID("target"))
+                    elseif GetObjectExists("target") then
+                        thisUnit = GetObjectWithGUID(UnitGUID("target"))
                     else
                         thisUnit = GetObjectWithGUID(UnitGUID("player"))
                     end
-                    if br.player ~= nil and getDistance(thisUnit) < 40 and thisUnit ~= nil then
+                    if br.player ~= nil and getDistance(thisUnit) < 40 then
                         local debuff = br.player.debuff
                         local debuffID = br.player.spell.debuffs
                         if debuffID ~= nil then

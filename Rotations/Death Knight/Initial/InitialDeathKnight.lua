@@ -1,4 +1,4 @@
-local br = _G["br"]
+local addonName, br = ...
 local rotationName = "Initial"
 
 ---------------

@@ -1,3 +1,4 @@
+local addonName, br = ...
 br.InFlight = {}
 local InFlight = br.InFlight
 InFlight.Tracker = {}

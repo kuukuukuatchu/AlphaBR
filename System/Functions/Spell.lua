@@ -1,3 +1,4 @@
+local addonName, br = ...
 function castInterrupt(SpellID,Percent,Unit)
 	Percent = Math.min(Percent + math.random(-6.5, 6.5), 99)
 	if Unit == nil then Unit = "target" end

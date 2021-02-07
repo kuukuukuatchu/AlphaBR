@@ -1,3 +1,4 @@
+local addonName, br = ...
 local LibDraw = LibStub("LibDraw-1.0")
 br.QuestCache = {}
 
@@ -7,7 +8,7 @@ local questTooltipScanQuest = CreateFrame ("GameTooltip", "QuestPlateTooltipScan
 local ScannedQuestTextCache = {}
 
 function isQuestUnit(Pointer)
-	local guid = ObjectGUID(Pointer)
+	local guid = UnitGUID(Pointer)
 	--local myName = UnitName("player")
 	questTooltipScanQuest:SetOwner(WorldFrame, 'ANCHOR_NONE')
 	questTooltipScanQuest:SetHyperlink('unit:' .. guid)
