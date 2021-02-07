@@ -259,10 +259,10 @@ local function BrUnlock()
 		end
 	end
 	local function lbUnlock(method)
-		lb.RunString(method.."Old = "..method.."; b."..method.." = function (...) return lb.Unlock(_G."..method.."Old, ...); end")
+		b[method] = function (...) return lb.Unlock(_G[method], ...); end
 	end
 	local function lbUnitTagHandler(method)
-		lb.RunString(method.."Old = "..method.."; b."..method.." = function (...) return lb.UnitTagHandler(_G."..method.."Old, ...); end")
+		b[method] = function (...) return lb.UnitTagHandler(lb.Unlock, _G[method], ...); end
 	end
 	for _, method in ipairs(TagHandlerList) do
 		lbUnitTagHandler(method)
@@ -271,32 +271,32 @@ local function BrUnlock()
 		lbUnlock(method)
 	end
 
-	ObjectPointer = UnitGUID
-	ObjectPosition = function (...) return lb.ObjectPosition(...) end
-	ObjectGUID = UnitGUID
-	ObjectIsUnit = function(...) local ObjType = lb.ObjectType(...); return ObjType == 5 or ObjType == 6 or ObjType == 7 end
-	ObjectIsGameObject = function(...) local ObjType = lb.ObjectType(...); return ObjType == 8 or ObjType == 11 end
-	ObjectID = function (...) return lb.ObjectId(...) end
-	UnitMovementFlags = function(...) return lb.UnitMovementFlags(...) end
-	TraceLine = function(...)
+	b.ObjectPointer = UnitGUID
+	b.ObjectPosition = function (...) return lb.ObjectPosition(...) end
+	b.ObjectGUID = UnitGUID
+	b.ObjectIsUnit = function(...) local ObjType = lb.ObjectType(...); return ObjType == 5 or ObjType == 6 or ObjType == 7 end
+	b.ObjectIsGameObject = function(...) local ObjType = lb.ObjectType(...); return ObjType == 8 or ObjType == 11 end
+	b.ObjectID = function (...) return lb.ObjectId(...) end
+	b.UnitMovementFlags = function(...) return lb.UnitMovementFlags(...) end
+	b.TraceLine = function(...)
 		lb.Raycast(...)
 	end
-	UnitTarget = lb.UnitTarget
-	IsQuestObject = function(obj)
+	b.UnitTarget = lb.UnitTarget
+	b.IsQuestObject = function(obj)
 		return false, false
 	end
-	-- UnitCastingInfo = lb.UnitCastingInfo
-	-- UnitChannelInfo = lb.UnitChannelInfo
-	UnitCastID = function(...)
+	b.UnitCastingInfo = lb.UnitCastingInfo
+	b.UnitChannelInfo = lb.UnitChannelInfo
+	b.UnitCastID = function(...)
 		local CastSpellID, CastTargetGUID, timeLeft, NotInterruptible = lb.UnitCastingInfo(...)
 		local ChannelSpellID, ChannelTargetGUID, timeLeft, NotInterruptible = lb.UnitChannelInfo(...)
 		return CastSpellID,ChannelSpellID,CastTargetGUID,ChannelTargetGUID
 	end
-	GetWoWDirectory = lb.GetGameDirectory
-	CreateDirectory = lb.CreateDirectory
-	GetDirectoryFiles = lb.GetFiles
-	GetKeyState = lb.GetKeyState
-	WorldToScreen = function (wX, wY, wZ)
+	b.GetWoWDirectory = lb.GetGameDirectory
+	b.CreateDirectory = lb.CreateDirectory
+	b.GetDirectoryFiles = lb.GetFiles
+	b.GetKeyState = lb.GetKeyState
+	b.WorldToScreen = function (wX, wY, wZ)
 		local ResolutionCoef = _G.WorldFrame:GetWidth() / lb.GetWindowSize()
 		local sX, sY = lb.WorldToScreen(wX, wY, wZ)
 		if sX and sY then
@@ -305,14 +305,14 @@ local function BrUnlock()
 			return sX, sY
 		end
 	end
-	ScreenToWorld = function()
+	b.ScreenToWorld = function()
 		return 0,0
 	end
-	GetDistanceBetweenPositions = function(X1, Y1, Z1, X2, Y2, Z2)
+	b.GetDistanceBetweenPositions = function(X1, Y1, Z1, X2, Y2, Z2)
 		return math.sqrt(math.pow(X2 - X1, 2) + math.pow(Y2 - Y1, 2) +  math.pow(Z2 - Z1, 2))
 	end
 
-	GetAnglesBetweenObjects = function(Object1,Object2)
+	b.GetAnglesBetweenObjects = function(Object1,Object2)
 		local X1,Y1,Z1 = ObjectPosition(Object1)
 		local X2,Y2,Z2 = ObjectPosition(Object2)
 		-- print(Unit1,X1,Y1,Z1,unit2,X2,Y2,Z2)
@@ -320,29 +320,29 @@ local function BrUnlock()
 			math.atan((Z1 - Z2) / math.sqrt(math.pow(X1 - X2, 2) + math.pow(Y1 - Y2, 2))) % math.pi
 	end
 
-	GetAnglesBetweenPositions = function(X1, Y1, Z1, X2, Y2, Z2)
+	b.GetAnglesBetweenPositions = function(X1, Y1, Z1, X2, Y2, Z2)
 		return math.atan2(Y2 - Y1, X2 - X1) % (math.pi * 2),
 			math.atan((Z1 - Z2) / math.sqrt(math.pow(X1 - X2, 2) + math.pow(Y1 - Y2, 2))) % math.pi
 	end
 
-	GetPositionFromPosition = function(X, Y, Z, Distance, AngleXY, AngleXYZ)
+	b.GetPositionFromPosition = function(X, Y, Z, Distance, AngleXY, AngleXYZ)
 		return math.cos(AngleXY) * Distance + X, math.sin(AngleXY) * Distance + Y, math.sin(AngleXYZ) * Distance + Z
 	end
 
-	GetPositionBetweenPositions = function(X1, Y1, Z1, X2, Y2, Z2, DistanceFromPosition1)
+	b.GetPositionBetweenPositions = function(X1, Y1, Z1, X2, Y2, Z2, DistanceFromPosition1)
 		local AngleXY, AngleXYZ = GetAnglesBetweenPositions(X1, Y1, Z1, X2, Y2, Z2)
 		return GetPositionFromPosition(X1, Y1, Z1, DistanceFromPosition1, AngleXY, AngleXYZ)
 	end
 
-	GetPositionBetweenObjects = function(unit1,unit2,DistanceFromPosition1)
+	b.GetPositionBetweenObjects = function(unit1,unit2,DistanceFromPosition1)
 		local X1,Y1,Z1 = ObjectPosition(unit1)
 
 		local X2,Y2,Z2 = ObjectPosition(unit2)
 		local AngleXY, AngleXYZ = GetAnglesBetweenPositions(X1, Y1, Z1, X2, Y2, Z2)
 		return GetPositionFromPosition(X1, Y1, Z1, DistanceFromPosition1, AngleXY, AngleXYZ)
 	end
-	ObjectFacing = lb.ObjectFacing
-	FaceDirection = function(arg)
+	b.ObjectFacing = lb.ObjectFacing
+	b.FaceDirection = function(arg)
 		if type(arg) == "number" then
 			lb.SetPlayerAngles (arg)
 		else
@@ -350,7 +350,7 @@ local function BrUnlock()
 			lb.SetPlayerAngles (arg)
 		end
 	end
-	function ObjectFacingObject(obj1,obj2, degrees)
+	function b.ObjectFacingObject(obj1,obj2, degrees)
 		local Facing = lb.ObjectFacing(obj1)
 		local AngleToUnit = GetAnglesBetweenObjects(obj1,obj2)
 		local AngleDifference = Facing > AngleToUnit and Facing - AngleToUnit or AngleToUnit - Facing
@@ -359,31 +359,31 @@ local function BrUnlock()
 		return ShortestAngle < degrees
 	end
 	-- getFacing = ObjectFacingObject
-	UnitCreator = lb.ObjectCreator
-	ObjectName = lb.ObjectName
-	GetDistanceBetweenPositions = lb.GetDistance3D
-	GetMapId = lb.GetMapId
-	UnitIsMounted = function (...)
+	b.UnitCreator = lb.ObjectCreator
+	b.ObjectName = lb.ObjectName
+	b.GetDistanceBetweenPositions = lb.GetDistance3D
+	b.GetMapId = lb.GetMapId
+	b.UnitIsMounted = function (...)
 		return lb.UnitHasFlag(...,lb.EUnitFlags.Mount)
 	end
-	SendMovementUpdate = lb.UpdatePlayerMovement
+	b.SendMovementUpdate = lb.UpdatePlayerMovement
 
-	ObjectDynamicFlags = lb.ObjectDynamicFlags
+	b.ObjectDynamicFlags = lb.ObjectDynamicFlags
 
-	IsHackEnabled = function (...)
+	b.IsHackEnabled = function (...)
 		--print(...)
 		return false
 
 	end
-	UnitCombatReach = lb.UnitCombatReach
-	ReadFile = lb.ReadFile
-	DirectoryExists = lb.DirectoryExists
-	WriteFile = function(file,string,boolean)
+	b.UnitCombatReach = lb.UnitCombatReach
+	b.ReadFile = lb.ReadFile
+	b.DirectoryExists = lb.DirectoryExists
+	b.WriteFile = function(file,string,boolean)
 		-- print(file,string,boolean)
 		lb.WriteFile(file,string,boolean)
 	end
 	-- local addedOM,removedOM = {}, {}
-	function GetObjectCountBR()
+	function b.GetObjectCount()
 		if not OldTable and not CurrentTable then
 			CurrentTable = lb.GetObjects()
 			return #CurrentTable, true, CurrentTable, {}
@@ -404,63 +404,18 @@ local function BrUnlock()
 			return #CurrentTable, true, TempTable, TempTableOld
 		end
 	end
-	function GetObjectWithIndex(n)
+	function b.GetObjectWithIndex(n)
 		return CurrentTable[n]
 	end
-	function GetObjectWithGUID(n)
+	function b.GetObjectWithGUID(n)
 		return n
 	end
-	ObjectIsVisible = lb.ObjectExists
-	ObjectExists = lb.ObjectExists
+	b.ObjectIsVisible = lb.ObjectExists
+	b.ObjectExists = lb.ObjectExists
 	-- GetUnitIsVisible = lb.ObjectExists
-	IsAoEPending = lb.IsAoEPending
-	ClickPosition = lb.ClickPosition
-	UnitBoundingRadius = lb.UnitBoundingRadius
-	GetUnitIsUnit = function(...)
-		local unit1, unit2 = ...
-		local guid1 = UnitGUID(unit1)
-		local guid2 = UnitGUID(unit2)
-		return guid1 == guid2 and true or nil
-	end
-	-- UnitIsUnitOld = UnitIsUnit
-	-- UnitIsUnit = function(...) return lb.UnitTagHandler(UnitIsUnitOld,...) end
-	-- CanLootUnit = lb.UnitIsLootable
-	-- function getGUID(unit)
-	-- 	local nShortHand, targetGUID = "", ""
-	-- 	if GetObjectExists(unit) then
-	-- 		if UnitIsPlayer(unit) then
-	-- 			targetGUID = unit
-	-- 			nShortHand = string.sub(unit,-5)
-	-- 		else
-	-- 			targetGUID = string.match(unit,"-(%d+)-%x+$")
-	-- 			nShortHand = string.sub(unit,-5)
-	-- 		end
-	-- 	end
-	-- 	return targetGUID,nShortHand
-	-- end
-	-- function getHP(Unit)
-	-- 	if GetObjectExists(Unit) then
-	-- 		if UnitIsEnemy("player", Unit) then
-	-- 			return 100*UnitHealth(Unit)/UnitHealthMax(Unit)
-	-- 		else
-	-- 			if not UnitIsDeadOrGhost(Unit) and GetUnitIsVisible(Unit) then
-	-- 				for i = 1,#br.friend do
-	-- 					if br.friend[i] then
-	-- 						if br.friend[i].guidsh == string.sub(Unit,-5) then
-	-- 							return br.friend[i].hp
-	-- 						end
-	-- 					end
-	-- 				end
-	-- 				if getOptionCheck("Incoming Heals") == true and UnitGetIncomingHeals(Unit,"player") ~= nil then
-	-- 					return 100*(UnitHealth(Unit)+UnitGetIncomingHeals(Unit,"player"))/UnitHealthMax(Unit)
-	-- 				else
-	-- 					return 100*UnitHealth(Unit)/UnitHealthMax(Unit)
-	-- 				end
-	-- 			end
-	-- 		end
-	-- 	end
-	-- 	return 0
-	-- end
+	b.IsAoEPending = lb.IsAoEPending
+	b.ClickPosition = lb.ClickPosition
+	b.UnitBoundingRadius = lb.UnitBoundingRadius
 	br.unlocked = true
 end
 local f = CreateFrame("Frame", "BrUnlock")
