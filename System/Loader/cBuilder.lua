@@ -19,13 +19,23 @@ end
 local function settingsDirectory()
     return GetWoWDirectory() .. '\\Interface\\AddOns\\' .. br.addonName .. '\\Settings\\'
 end
+
+local function errorhandler(err)
+    return geterrorhandler()(err)
+end
+
 local function loadFile(profile,file,support)
-    local loadProfile = loadstring(profile,file)
-    if loadProfile == nil then
-        Print("|cffff0000Failed to Load - |r"..tostring(file).."|cffff0000, contact dev.");
-    else
-        if support then Print("Loaded Support Rotation: "..file) end
-        loadProfile()
+    local custom_env = setmetatable({br = br}, {__index=_G})
+    local func, errorMessage = loadstring(profile, file);
+    if not func then
+        print('Error initializing 1')
+        errorhandler(errorMessage)
+    end
+    setfenv(func, custom_env)
+    local success, xerrorMessage = xpcall(func, errorhandler);
+    if not success then
+        print('Error initializing 2')
+        errorhandler(xerrorMessage)
     end
 end
 

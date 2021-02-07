@@ -1,5 +1,6 @@
 -- define br global that will hold the bot global background features
 local addonName, br = ...
+br._G = setmetatable({}, _G)
 br.data = {}
 br.data.settings = {}
 br.addonName = "BadRotations"

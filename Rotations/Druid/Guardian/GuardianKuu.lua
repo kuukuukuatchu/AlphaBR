@@ -1,11 +1,11 @@
-local addonName, br = ...
 local rotationName = "Kuu"
 
 ---------------
 --- Toggles ---
 ---------------
 local function createToggles()
-    RotationModes = {
+    local CreateButton = br["CreateButton"]
+    br.RotationModes = {
         [1] = {
             mode = "On",
             value = 1,
@@ -25,7 +25,7 @@ local function createToggles()
     }
     CreateButton("Rotation", 1, 0)
 
-    CooldownModes = {
+    br.CooldownModes = {
         [1] = {
             mode = "Auto",
             value = 1,
@@ -53,7 +53,7 @@ local function createToggles()
     }
     CreateButton("Cooldown", 2, 0)
 
-    DefensiveModes = {
+    br.DefensiveModes = {
         [1] = {
             mode = "On",
             value = 1,
@@ -73,7 +73,7 @@ local function createToggles()
     }
     CreateButton("Defensive", 3, 0)
 
-    InterruptModes = {
+    br.InterruptModes = {
         [1] = {
             mode = "On",
             value = 1,
@@ -93,7 +93,7 @@ local function createToggles()
     }
     CreateButton("Interrupt", 4, 0)
 
-    TauntModes = {
+    br.TauntModes = {
         [1] = {
             mode = "Dun",
             value = 1,
@@ -121,7 +121,7 @@ local function createToggles()
     }
     CreateButton("Taunt", 1, -1)
 
-    BristlingFurModes = {
+    br.BristlingFurModes = {
         [1] = {
             mode = "On",
             value = 1,
@@ -141,7 +141,7 @@ local function createToggles()
     }
     CreateButton("BristlingFur", 0, -1)
 
-    FormsModes = {
+    br.FormsModes = {
         [1] = {
             mode = "On",
             value = 1,
@@ -169,7 +169,7 @@ local function createToggles()
     }
     CreateButton("Forms", 2, -1)
 
-    MaulModes = {
+    br.MaulModes = {
         [1] = {
             mode = "On",
             value = 1,
@@ -189,7 +189,7 @@ local function createToggles()
     }
     CreateButton("Maul", 3, -1)
 
-    TravelModes = {
+    br.TravelModes = {
         [1] = {
             mode = "On",
             value = 1,

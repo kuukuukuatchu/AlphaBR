@@ -1,4 +1,5 @@
 local addonName, br = ...
+local b = br._G
 local CurrentTable,OldTable
 local function copyTable(datatable)
 	local tblRes={}
@@ -13,7 +14,7 @@ local function copyTable(datatable)
 end
 
 local TagHandlerList = {
-	"IsSpellInRange","IsItemInRange","UnitInRange","isCritter","UnitAura",
+	"IsSpellInRange","IsItemInRange","UnitInRange","isCritter","UnitAura", "UnitAuraSlots",
 	"UnitPlayerControlled",
 	"UnitIsVisible",
 	"GetUnitSpeed",
@@ -258,10 +259,10 @@ local function BrUnlock()
 		end
 	end
 	local function lbUnlock(method)
-		lb.RunString(method.."Old = "..method.."; "..method.." = function (...) return lb.Unlock(_G."..method.."Old, ...); end")
+		lb.RunString(method.."Old = "..method.."; b."..method.." = function (...) return lb.Unlock(_G."..method.."Old, ...); end")
 	end
 	local function lbUnitTagHandler(method)
-		lb.RunString(method.."Old = "..method.."; "..method.." = function (...) return lb.UnitTagHandler(_G."..method.."Old, ...); end")
+		lb.RunString(method.."Old = "..method.."; b."..method.." = function (...) return lb.UnitTagHandler(_G."..method.."Old, ...); end")
 	end
 	for _, method in ipairs(TagHandlerList) do
 		lbUnitTagHandler(method)
@@ -370,7 +371,7 @@ local function BrUnlock()
 	ObjectDynamicFlags = lb.ObjectDynamicFlags
 
 	IsHackEnabled = function (...)
-		print(...)
+		--print(...)
 		return false
 
 	end

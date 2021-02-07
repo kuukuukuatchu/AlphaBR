@@ -5,7 +5,8 @@ local rotationName = "ADSpirit" -- Based on Panglo's CR
 --- Toggles ---
 ---------------
 local function createToggles()
-    RotationModes = {
+    local CreateButton = br["CreateButton"]
+    br.RotationModes = {
         [1] = {
             mode = "On",
             value = 1,
@@ -25,7 +26,7 @@ local function createToggles()
     }
     CreateButton("Rotation", 1, 0)
 
-    CooldownModes = {
+    br.CooldownModes = {
         [1] = {
             mode = "Auto",
             value = 1,
@@ -53,7 +54,7 @@ local function createToggles()
     }
     CreateButton("Cooldown", 2, 0)
 
-    DefensiveModes = {
+    br.DefensiveModes = {
         [1] = {
             mode = "On",
             value = 1,
@@ -73,7 +74,7 @@ local function createToggles()
     }
     CreateButton("Defensive", 3, 0)
 
-    InterruptModes = {
+    br.InterruptModes = {
         [1] = {
             mode = "On",
             value = 1,
@@ -93,7 +94,7 @@ local function createToggles()
     }
     CreateButton("Interrupt", 4, 0)
 
-    RemoveCorruptionModes = {
+    br.RemoveCorruptionModes = {
         [1] = {
             mode = "On",
             value = 1,
@@ -113,7 +114,7 @@ local function createToggles()
     }
     CreateButton("RemoveCorruption", 1, -1)
 
-    IronfurModes = {
+    br.IronfurModes = {
         [1] = {
             mode = "On",
             value = 1,
@@ -133,7 +134,7 @@ local function createToggles()
     }
     CreateButton("Ironfur", 2, -1)
 
-    TauntModes = {
+    br.TauntModes = {
         [1] = {
             mode = "Dun",
             value = 1,
@@ -162,7 +163,7 @@ local function createToggles()
     CreateButton("Taunt", 3, -1)
 
 
-    WildChargeModes = {
+    br.WildChargeModes = {
         [1] = {
             mode = "On",
             value = 1,
@@ -182,7 +183,7 @@ local function createToggles()
     }
     CreateButton("WildCharge", 0, -1)
     
-    BristlingFurModes = {
+    br.BristlingFurModes = {
         [1] = {
             mode = "On",
             value = 1,
@@ -202,7 +203,7 @@ local function createToggles()
     }
     CreateButton("BristlingFur", 5, 0)
 
-    FormsModes = {
+    br.FormsModes = {
         [1] = { 
             mode = "On",
             value = 1,
@@ -224,7 +225,7 @@ local function createToggles()
     };
     CreateButton("Forms", 5, -1)
     
-    MaulModes = {
+    br.MaulModes = {
         [1] = { 
             mode = "On",
             value = 1,
