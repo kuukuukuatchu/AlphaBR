@@ -60,7 +60,7 @@ function br:MinimapButton()
 						mainButton:Show()
 					end
 				elseif IsShiftKeyDown() and not IsAltKeyDown() and UnitAffectingCombat("player") then
-					Print("Combat Lockdown detected. Unable to modify button bar. Please try again when out of combat.")
+					br._G_.print("Combat Lockdown detected. Unable to modify button bar. Please try again when out of combat.")
 				elseif not IsShiftKeyDown() and not IsAltKeyDown() then
 					br.ui:toggleWindow("config")
 				end

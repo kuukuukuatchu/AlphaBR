@@ -348,22 +348,22 @@ local function runRotation()
     local deadtar, attacktar, hastar, playertar =
         deadtar or UnitIsDeadOrGhost("target"),
         attacktar or UnitCanAttack("target", "player"),
-        hastar or GetObjectExists("target"),
+        hastar or br.GetObjectExists("target"),
         UnitIsPlayer("target")
     local debuff = br.player.debuff
     local energy, energyRegen, energyDeficit = br.player.power.energy.amount(), br.player.power.energy.regen(), br.player.power.energy.deficit()
     local enemies = br.player.enemies
     local falling, swimming, flying, moving = getFallTime(), IsSwimming(), IsFlying(), GetUnitSpeed("player") > 0
-    local flaskBuff = getBuffRemain("player", br.player.flask.wod.buff.agilityBig)
+    local flaskBuff = br.getBuffRemain("player", br.player.flask.wod.buff.agilityBig)
     local gcd = br.player.gcdMax
-    local hasMouse = GetObjectExists("mouseover")
+    local hasMouse = br.GetObjectExists("mouseover")
     local healPot = getHealthPot()
     local inCombat = br.player.inCombat
     local essence = br.player.essence
     local inInstance = br.player.instance == "party"
     local inRaid = br.player.instance == "raid"
     local level = br.player.level
-    local lossPercent = getHPLossPercent("player", 5)
+    local lossPercent = br.getHPLossPercent("player", 5)
     local lowest = br.friend[1]
     local mode = br.player.ui.mode
     local moving = isMoving("player")
@@ -377,7 +377,7 @@ local function runRotation()
     local snapLossHP = 0
     local spell = br.player.spell
     local talent = br.player.talent
-    local tanks = getTanksTable()
+    local tanks = br.getTanksTable()
     local traits = br.player.traits
     local travel, flight, bear, cat, noform =
         br.player.buff.travelForm.exists(),
@@ -386,7 +386,7 @@ local function runRotation()
         buff.catForm.exists(),
         GetShapeshiftForm() == 0
     local trinketProc = false
-    local ttd = getTTD
+    local ttd = br.getTTD
     local ttm = br.player.power.rage.ttm
     local unit = br.player.unit
     local units = br.player.units
@@ -435,7 +435,7 @@ local function runRotation()
         -- Bear Form when not in combat and target selected and within 20yrds
         if
             (mode.forms == 1 or (mode.forms == 2 and not SpecificToggle("Travel Key") and not SpecificToggle("Cat Key") and not GetCurrentKeyBoardFocus())) and
-                GetObjectExists("target") and
+                br.GetObjectExists("target") and
                 UnitCanAttack("player", "target") and
                 not UnitIsDeadOrGhost("target") and
                 not bear and
@@ -503,13 +503,13 @@ local function runRotation()
             end
         end
         if ui.checked("Revive") and not inCombat and not isMoving("player") and br.timer:useTimer("Resurrect", 4) then
-            if ui.value("Revive") == 1 and UnitIsPlayer("target") and UnitIsDeadOrGhost("target") and GetUnitIsFriend("target", "player") then
+            if ui.value("Revive") == 1 and UnitIsPlayer("target") and UnitIsDeadOrGhost("target") and br.GetUnitIsFriend("target", "player") then
                 if cast.revive("target", "dead") then
                     br.addonDebug("Casting Revive")
                     return true
                 end
             end
-            if ui.value("Revive") == 2 and UnitIsPlayer("mouseover") and UnitIsDeadOrGhost("mouseover") and GetUnitIsFriend("mouseover", "player") then
+            if ui.value("Revive") == 2 and UnitIsPlayer("mouseover") and UnitIsDeadOrGhost("mouseover") and br.GetUnitIsFriend("mouseover", "player") then
                 if cast.revive("mouseover", "dead") then
                     br.addonDebug("Casting Revive")
                     return true
@@ -674,13 +674,13 @@ local function runRotation()
 
     local function actionList_Defensive()
         if useDefensive() then
-            if ui.checked("Healthstone/Potion") and php <= ui.value("Healthstone/Potion") and (hasHealthPot() or hasItem(5512) or hasItem(166799)) then
-                if canUseItem(5512) then
-                    useItem(5512)
-                elseif canUseItem(healPot) then
-                    useItem(healPot)
-                elseif hasItem(166799) and canUseItem(166799) then
-                    useItem(166799)
+            if ui.checked("Healthstone/Potion") and php <= ui.value("Healthstone/Potion") and (hasHealthPot() or br.hasItem(5512) or br.hasItem(166799)) then
+                if br.canUseItem(5512) then
+                    br.useItem(5512)
+                elseif br.canUseItem(healPot) then
+                    br.useItem(healPot)
+                elseif br.hasItem(166799) and br.canUseItem(166799) then
+                    br.useItem(166799)
                 end
             end
             -- Rebirth
@@ -689,7 +689,7 @@ local function runRotation()
                     ui.value("Rebirth") == 1 and -- Target
                         UnitIsPlayer("target") and
                         UnitIsDeadOrGhost("target") and
-                        GetUnitIsFriend("target", "player")
+                        br.GetUnitIsFriend("target", "player")
                  then
                     if cast.rebirth("target", "dead") then
                         br.addonDebug("Casting Rebirth")
@@ -700,7 +700,7 @@ local function runRotation()
                     ui.value("Rebirth") == 2 and -- Mouseover
                         UnitIsPlayer("mouseover") and
                         UnitIsDeadOrGhost("mouseover") and
-                        GetUnitIsFriend("mouseover", "player")
+                        br.GetUnitIsFriend("mouseover", "player")
                  then
                     if cast.rebirth("mouseover", "dead") then
                         br.addonDebug("Casting Rebirth")
@@ -709,7 +709,7 @@ local function runRotation()
                 end
                 if ui.value("Rebirth") == 3 then -- Tank
                     for i = 1, #tanks do
-                        if UnitIsPlayer(tanks[i].unit) and UnitIsDeadOrGhost(tanks[i].unit) and GetUnitIsFriend(tanks[i].unit, "player") and getDistance(tanks[i].unit) <= 40 then
+                        if UnitIsPlayer(tanks[i].unit) and UnitIsDeadOrGhost(tanks[i].unit) and br.GetUnitIsFriend(tanks[i].unit, "player") and br.getDistance(tanks[i].unit) <= 40 then
                             if cast.rebirth(tanks[i].unit, "dead") then
                                 br.addonDebug("Casting Rebirth")
                                 return true
@@ -720,7 +720,7 @@ local function runRotation()
                 if ui.value("Rebirth") == 4 then -- Healer
                     for i = 1, #br.friend do
                         if
-                            UnitIsPlayer(br.friend[i].unit) and UnitIsDeadOrGhost(br.friend[i].unit) and GetUnitIsFriend(br.friend[i].unit, "player") and
+                            UnitIsPlayer(br.friend[i].unit) and UnitIsDeadOrGhost(br.friend[i].unit) and br.GetUnitIsFriend(br.friend[i].unit, "player") and
                                 (UnitGroupRolesAssigned(br.friend[i].unit) == "HEALER" or br.friend[i].role == "HEALER")
                          then
                             if cast.rebirth(br.friend[i].unit, "dead") then
@@ -733,7 +733,7 @@ local function runRotation()
                 if ui.value("Rebirth") == 5 then -- Tank/Healer
                     for i = 1, #br.friend do
                         if
-                            UnitIsPlayer(br.friend[i].unit) and UnitIsDeadOrGhost(br.friend[i].unit) and GetUnitIsFriend(br.friend[i].unit, "player") and
+                            UnitIsPlayer(br.friend[i].unit) and UnitIsDeadOrGhost(br.friend[i].unit) and br.GetUnitIsFriend(br.friend[i].unit, "player") and
                                 (UnitGroupRolesAssigned(br.friend[i].unit) == "HEALER" or br.friend[i].role == "HEALER" or br.friend[i].role == "TANK" or
                                     UnitGroupRolesAssigned(br.friend[i].unit) == "TANK")
                          then
@@ -746,7 +746,7 @@ local function runRotation()
                 end
                 if ui.value("Rebirth") == 6 then -- Any
                     for i = 1, #br.friend do
-                        if UnitIsPlayer(br.friend[i].unit) and UnitIsDeadOrGhost(br.friend[i].unit) and GetUnitIsFriend(br.friend[i].unit, "player") then
+                        if UnitIsPlayer(br.friend[i].unit) and UnitIsDeadOrGhost(br.friend[i].unit) and br.GetUnitIsFriend(br.friend[i].unit, "player") then
                             if cast.rebirth(br.friend[i].unit, "dead") then
                                 br.addonDebug("Casting Rebirth")
                                 return true
@@ -825,7 +825,7 @@ local function runRotation()
             if ui.checked("Auto Soothe") then
                 for i = 1, #enemies.yards40 do
                     thisUnit = enemies.yards40[i]
-                    if canDispel(thisUnit, spell.soothe) then
+                    if br.canDispel(thisUnit, spell.soothe) then
                         if cast.soothe(thisUnit) then
                             return
                         end
@@ -834,17 +834,17 @@ local function runRotation()
             end
             -- Remove Corruption
             if ui.checked("Remove Corruption") and ((mode.forms == 1 and ((mode.travel == 2 and travel) or (mode.travel == 1 and not travel))) or mode.forms ~= 1) then
-                if ui.value("Remove Corruption - Target") == 1 and canDispel("player", spell.removeCorruption) then
+                if ui.value("Remove Corruption - Target") == 1 and br.canDispel("player", spell.removeCorruption) then
                     if cast.removeCorruption("player") then
                         return
                     end
                 end
-                if ui.value("Remove Corruption - Target") == 2 and canDispel("target", spell.removeCorruption) then
+                if ui.value("Remove Corruption - Target") == 2 and br.canDispel("target", spell.removeCorruption) then
                     if cast.removeCorruption("target") then
                         return
                     end
                 end
-                if ui.value("Remove Corruption - Target") == 3 and canDispel("mouseover", spell.removeCorruption) then
+                if ui.value("Remove Corruption - Target") == 3 and br.canDispel("mouseover", spell.removeCorruption) then
                     if cast.removeCorruption("mouseover") then
                         return
                     end
@@ -897,11 +897,11 @@ local function runRotation()
                     }
                     for i = 1, #enemies.yards10 do
                         local thisUnit = enemies.yards10[i]
-                        local distance = getDistance(thisUnit)
+                        local distance = br.getDistance(thisUnit)
                         for k, v in pairs(Incap_list) do
                             if
-                                (Incap_unitList[GetObjectID(thisUnit)] ~= nil or UnitCastingInfo(thisUnit) == GetSpellInfo(v) or UnitChannelInfo(thisUnit) == GetSpellInfo(v)) and
-                                    getBuffRemain(thisUnit, 226510) == 0 and
+                                (Incap_unitList[br.GetObjectID(thisUnit)] ~= nil or UnitCastingInfo(thisUnit) == GetSpellInfo(v) or UnitChannelInfo(thisUnit) == GetSpellInfo(v)) and
+                                    br.getBuffRemain(thisUnit, 226510) == 0 and
                                     distance <= 20
                              then
                                 if cast.incapacitatingRoar(thisUnit) then
@@ -957,20 +957,20 @@ local function runRotation()
 
                 for i = 1, GetObjectCountBR() do
                     local object = GetObjectWithIndex(i)
-                    local ID = ObjectID(object)
+                    local ID = br._G.ObjectID(object)
                     if
-                        root_UnitList[ID] ~= nil and getBuffRemain(object, 226510) == 0 and getHP(object) > 90 and not isLongTimeCCed(object) and
-                            (getBuffRemain(object, 102359) < 2 or getBuffRemain(object, 339) < 2)
+                        root_UnitList[ID] ~= nil and br.getBuffRemain(object, 226510) == 0 and br.getHP(object) > 90 and not isLongTimeCCed(object) and
+                            (br.getBuffRemain(object, 102359) < 2 or br.getBuffRemain(object, 339) < 2)
                      then
-                        local x1, y1, z1 = ObjectPosition("player")
-                        local x2, y2, z2 = ObjectPosition(object)
+                        local x1, y1, z1 = br._G.ObjectPosition("player")
+                        local x2, y2, z2 = br._G.ObjectPosition(object)
                         local distance = math.sqrt(((x2 - x1) ^ 2) + ((y2 - y1) ^ 2) + ((z2 - z1) ^ 2))
                         if distance <= 8 and talent.mightyBash then
-                            CastSpellByName("Mighty Bash", object)
+                            br._G.CastSpellByName("Mighty Bash", object)
                             return true
                         end
                         if distance < root_range and not isLongTimeCCed(object) then
-                            CastSpellByName(root, object)
+                            br._G.CastSpellByName(root, object)
                         end
                     end
                 end -- end root
@@ -1025,7 +1025,7 @@ local function runRotation()
             if combo == 5 and #enemies.yards8 < 4 then
                 for i = 1, #enemies.yards5 do
                     local thisUnit = enemies.yards5[i]
-                    if getDistance(thisUnit) < 5 then
+                    if br.getDistance(thisUnit) < 5 then
                         if not debuff.rip.exists(thisUnit) or debuff.rip.remain(thisUnit) < 4 then
                             if cast.rip(thisUnit) then
                                 return
@@ -1038,7 +1038,7 @@ local function runRotation()
             if combo < 5 and #enemies.yards8 < 4 then
                 for i = 1, #enemies.yards5 do
                     local thisUnit = enemies.yards5[i]
-                    if getDistance(thisUnit) < 5 then
+                    if br.getDistance(thisUnit) < 5 then
                         if not debuff.rake.exists(thisUnit) then
                             if cast.rake(thisUnit) then
                                 return
@@ -1051,7 +1051,7 @@ local function runRotation()
             if combo == 5 and #enemies.yards8 < 4 then
                 for i = 1, #enemies.yards5 do
                     local thisUnit = enemies.yards5[i]
-                    if getDistance(thisUnit) < 5 and debuff.rip.exists(thisUnit) then
+                    if br.getDistance(thisUnit) < 5 and debuff.rip.exists(thisUnit) then
                         if cast.ferociousBite(thisUnit) then
                             return
                         end
@@ -1064,8 +1064,8 @@ local function runRotation()
                     return
                 end
             end
-            if getDistance("target") < 5 then
-                StartAttack()
+            if br.getDistance("target") < 5 then
+                br._G.StartAttack()
             end
         end
     end
@@ -1100,7 +1100,7 @@ local function runRotation()
             end
 
             if ui.checked("Wild Charge") then
-                if getDistance("target") > 9 and bear then
+                if br.getDistance("target") > 9 and bear then
                     if cast.wildCharge("target") then
                         return
                     end
@@ -1228,8 +1228,8 @@ local function runRotation()
                 return
             end
             -- Start Attack
-            if getDistance("target") < 5 then
-                StartAttack()
+            if br.getDistance("target") < 5 then
+                br._G.StartAttack()
             end
         end
     end
@@ -1244,7 +1244,7 @@ local function runRotation()
         ---------------------------------
         --- Out Of Combat - Rotations ---
         ---------------------------------
-        if not inCombat and not UnitBuffID("player", 115834) then
+        if not inCombat and not br.UnitBuffID("player", 115834) then
             if mode.forms == 2 and not GetCurrentKeyBoardFocus() then
                 if SpecificToggle("Cat Key") then
                     cat_form()
@@ -1258,7 +1258,7 @@ local function runRotation()
         -----------------------------
         --- In Combat - Rotations ---
         -----------------------------
-        if inCombat and not UnitBuffID("player", 115834) then
+        if inCombat and not br.UnitBuffID("player", 115834) then
             if mode.forms == 2 then
                 if SpecificToggle("Cat Key") and not GetCurrentKeyBoardFocus() and talent.feralAffinity then
                     cat_dps()

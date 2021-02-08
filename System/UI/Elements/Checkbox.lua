@@ -61,9 +61,9 @@ function br.ui:createCheckbox(parent, text, tooltip, checked)
         -- Create Chat Overlay
         if checked then
             DiesalStyle:StyleTexture(checkBox.check,classColor)
-            ChatOverlay("|cff15FF00"..text.." Enabled")
+            br.ChatOverlay("|cff15FF00"..text.." Enabled")
         else
-            ChatOverlay("|cFFED0000"..text.." Disabled")
+            br.ChatOverlay("|cFFED0000"..text.." Disabled")
         end
     end)
     -- Event: Tooltip

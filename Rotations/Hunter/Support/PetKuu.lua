@@ -50,21 +50,21 @@ br.rotations.support["PetKuu"] = function()
     enemies.yards40r = getEnemiesInRect(10,40,false) or 0
        
     if UnitAffectingCombat("player") then
-        if getOptionValue("Pet Target") == 1 and isValidUnit(units.dyn40) then
+        if br.getOptionValue("Pet Target") == 1 and br.isValidUnit(units.dyn40) then
             petTarget = units.dyn40
             -- Print("Pet is now attacking - "..UnitName(petTarget).." | This is your target: "..tostring(UnitIsUnit("target",petTarget)))
         end
-        if getOptionValue("Pet Target") == 2 and UnitExists("target") then
+        if br.getOptionValue("Pet Target") == 2 and UnitExists("target") then
             petTarget = "target"
             -- Print("Pet is now attacking - "..UnitName(petTarget).." | This is your target: "..tostring(UnitIsUnit("target",petTarget)))
         end
-        if getOptionValue("Pet Target") == 3 then
+        if br.getOptionValue("Pet Target") == 3 then
             for i=1, #enemies.yards40 do
                 local thisUnit = enemies.yards40[i]
-                if (isValidUnit(thisUnit) or isDummy()) then petTarget = thisUnit --[[Print("Pet is now attacking - "..UnitName(petTarget).." | This is your target: "..tostring(UnitIsUnit("target",petTarget)))]] break end
+                if (br.isValidUnit(thisUnit) or br.isDummy()) then petTarget = thisUnit --[[Print("Pet is now attacking - "..UnitName(petTarget).." | This is your target: "..tostring(UnitIsUnit("target",petTarget)))]] break end
             end
         end
-        if getOptionValue("Pet Target") == 4 and petTarget == nil then
+        if br.getOptionValue("Pet Target") == 4 and petTarget == nil then
             petTarget = "target"
             -- Print("Pet is now attacking - "..UnitName(petTarget).." | This is your target: "..tostring(UnitIsUnit("target",petTarget)))
         end
@@ -74,14 +74,14 @@ br.rotations.support["PetKuu"] = function()
     local friendUnit = br.friend[1].unit
     local petActive = IsPetActive()
     local petCombat = UnitAffectingCombat("pet")
-    local petDistance = getDistance(petTarget,"pet") or 99
+    local petDistance = br.getDistance(petTarget,"pet") or 99
     local petExists = UnitExists("pet")
-    local petHealth = getHP("pet")
+    local petHealth = br.getHP("pet")
     local petMode = getCurrentPetMode()
-    local validTarget = UnitExists(petTarget) and (isValidUnit(petTarget) or isDummy()) --or (not UnitExists("pettarget") and isValidUnit("target")) or isDummy()
+    local validTarget = UnitExists(petTarget) and (br.isValidUnit(petTarget) or br.isDummy()) --or (not UnitExists("pettarget") and br.isValidUnit("target")) or br.isDummy()
     
 
-    if isChecked("Auto Attack/Passive") then
+    if br.isChecked("Auto Attack/Passive") then
         -- Set Pet Mode Out of Comat / Set Mode Passive In Combat
         if inCombat and #enemies.yards40 > 0 and (petMode == "Defensive" or petMode == "Passive") and not haltProfile then
             PetAssistMode()
@@ -91,7 +91,7 @@ br.rotations.support["PetKuu"] = function()
             PetPassiveMode()
         end
         -- Pet Attack / retreat
-        if ((inCombat or petCombat) and isValidUnit(petTarget)) and not buff.playDead.exists("pet") and not haltProfile then
+        if ((inCombat or petCombat) and br.isValidUnit(petTarget)) and not buff.playDead.exists("pet") and not haltProfile then
             PetAttack(petTarget)
         elseif (not inCombat or haltProfile)
             and IsPetAttackActive() and not isUnitCasting("player")
@@ -100,9 +100,9 @@ br.rotations.support["PetKuu"] = function()
             PetFollow()
         end
     end
-    -- if isChecked("Auto Attack/Passive") then
+    -- if br.isChecked("Auto Attack/Passive") then
     --     -- Set Pet Mode Out of Comat / Set Mode Passive In Combat
-    --     if getOptionValue("Pet Target") and inCombat and (petMode == "Defensive" or petMode == "Passive") and not haltProfile then
+    --     if br.getOptionValue("Pet Target") and inCombat and (petMode == "Defensive" or petMode == "Passive") and not haltProfile then
     --         PetAssistMode()
     --     elseif not inCombat and petMode == "Assist" and #enemies.yards40nc > 0 and not haltProfile then
     --         PetDefensiveMode()
@@ -112,7 +112,7 @@ br.rotations.support["PetKuu"] = function()
     --     -- Pet Attack / retreat
     --     if (inCombat or petCombat) and not buff.playDead.exists("pet") and not haltProfile then
     --         PetAttack(petTarget)
-    --     elseif (not inCombat or (inCombat and not isValidUnit(petTarget)) or haltProfile)
+    --     elseif (not inCombat or (inCombat and not br.isValidUnit(petTarget)) or haltProfile)
     --         and IsPetAttackActive()
     --     then
     --         PetStopAttack()
@@ -121,35 +121,35 @@ br.rotations.support["PetKuu"] = function()
     -- end
     -- Manage Pet Abilities
     -- Cat-like Refelexes / Spirit Mend / Survival of the Fittest
-    if isChecked("Spirit Mend") and getHP(friendUnit) <= getOptionValue("Spirit Mend") then
+    if br.isChecked("Spirit Mend") and br.getHP(friendUnit) <= br.getOptionValue("Spirit Mend") then
         if cast.spiritmend(friendUnit) then end
     end
-    if inCombat and isChecked("Cat-like Reflexes") and petHealth <= getOptionValue("Cat-like Reflexes") then
+    if inCombat and br.isChecked("Cat-like Reflexes") and petHealth <= br.getOptionValue("Cat-like Reflexes") then
         if cast.catlikeReflexes() then end
     end
-    if inCombat and isChecked("Survival of the Fittest") 
-        --[[and petCombat ]]and petHealth <= getOptionValue("Survival of the Fittest")
+    if inCombat and br.isChecked("Survival of the Fittest") 
+        --[[and petCombat ]]and petHealth <= br.getOptionValue("Survival of the Fittest")
     then
         if cast.survivalOfTheFittest() then end
     end
     -- Bite/Claw
-    if isChecked("Bite / Claw") and petCombat and validTarget and petDistance < 5 and not haltProfile and not isTotem(petTarget) then
+    if br.isChecked("Bite / Claw") and petCombat and validTarget and petDistance < 5 and not haltProfile and not br.isTotem(petTarget) then
         if cast.bite(petTarget,"pet") then end
         if cast.claw(petTarget,"pet") then end
     end
     -- Dash
-    if isChecked("Dash") and inCombat and validTarget and petDistance > 10 and getDistance(petTarget) < 40 then
+    if br.isChecked("Dash") and inCombat and validTarget and petDistance > 10 and br.getDistance(petTarget) < 40 then
         if cast.dash("pet") then end
     end
     -- Purge
-    -- if isChecked("Purge") and inCombat then
+    -- if br.isChecked("Purge") and inCombat then
     --     if #enemies.yards5p > 0 then
     --         local dispelled = false
     --         local dispelledUnit = "player"
     --         for i = 1, #enemies.yards5p do
     --             local thisUnit = enemies.yards5p[i]
-    --             if getOptionValue("Purge") == 1 or (getOptionValue("Purge") == 2 and UnitIsUnit(thisUnit,"target")) then
-    --                 if isValidUnit(thisUnit) and canDispel(thisUnit,spell.spiritShock) then
+    --             if br.getOptionValue("Purge") == 1 or (br.getOptionValue("Purge") == 2 and UnitIsUnit(thisUnit,"target")) then
+    --                 if br.isValidUnit(thisUnit) and br.canDispel(thisUnit,spell.spiritShock) then
     --                     if cast.able.spiritShock(thisUnit,"pet") then
     --                         if cast.spiritShock(thisUnit,"pet") then dispelled = true; dispelledUnit = thisUnit; break end
     --                     elseif cast.able.chiJiTranq(thisUnit,"pet") then
@@ -172,7 +172,7 @@ br.rotations.support["PetKuu"] = function()
     --     end
     -- end
     -- Growl
-    if isChecked("Auto Growl") and inCombat then
+    if br.isChecked("Auto Growl") and inCombat then
         local _, autoCastEnabled = GetSpellAutocast(spell.growl)
         if autoCastEnabled then DisableSpellAutocast(spell.growl) end
         if not isTankInRange() and not buff.prowl.exists("pet") then
@@ -185,21 +185,21 @@ br.rotations.support["PetKuu"] = function()
         end
     end
     -- Play Dead / Wake Up
-    if isChecked("Play Dead / Wake Up") and not deadPet then
+    if br.isChecked("Play Dead / Wake Up") and not deadPet then
         if cast.able.playDead() and petCombat and not buff.playDead.exists("pet")
-            and petHealth < getOptionValue("Play Dead / Wake Up")
+            and petHealth < br.getOptionValue("Play Dead / Wake Up")
         then
             if cast.playDead() then end
         end
         if cast.able.wakeUp() and buff.playDead.exists("pet") and not buff.feignDeath.exists()
-            and petHealth >= getOptionValue("Play Dead / Wake Up")
+            and petHealth >= br.getOptionValue("Play Dead / Wake Up")
         then
             if cast.wakeUp() then end
         end
     end
     -- Prowl
-    if isChecked("Prowl / Spirit Walk") and not petCombat
-        and (not IsResting() or isDummy()) and #enemies.yards40nc > 0
+    if br.isChecked("Prowl / Spirit Walk") and not petCombat
+        and (not IsResting() or br.isDummy()) and #enemies.yards40nc > 0
     then
         if cast.able.spiritWalk() and not buff.spiritWalk.exists("pet") then
             if cast.spiritWalk("pet") then end

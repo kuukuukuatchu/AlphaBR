@@ -402,16 +402,16 @@ br.tableSave = function(tbl, filename)
             end
         end
         -- file:write( "},"..charE )
-        WriteFile(filename, "}," .. charE, true)
+        br._G.WriteFile(filename, "}," .. charE, true)
     end
     -- file:write( "}" )
-    WriteFile(filename, "}", true)
+    br._G.WriteFile(filename, "}", true)
     -- file:close()
 end
 
 --// The Load Function
 br.tableLoad = function(sfile)
-    local file = ReadFile(sfile)
+    local file = br._G.ReadFile(sfile)
     if file == nil or file == "" then
         return
     end

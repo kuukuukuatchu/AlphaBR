@@ -278,7 +278,7 @@ end
 local function canDoT(thisUnit)
     local unitHealthMax = unit.healthMax(thisUnit)
     if var.noDoT or not unit.exists(units.dyn5) then return false end
-    if not unit.isBoss(thisUnit) and unit.facing("player",thisUnit)
+    if not unit.br.isBoss(thisUnit) and unit.facing("player",thisUnit)
         and (multidot or (unit.isUnit(thisUnit,units.dyn5) and not multidot))
         and not unit.charmed(thisUnit)
     then
@@ -323,7 +323,7 @@ local function ferociousBiteFinish(thisUnit)
     local desc = GetSpellDescription(spell.ferociousBite)
     local damage = 0
     local finishHim = false
-    if ui.value("Ferocious Bite Execute") ~= 3 and comboPoints > 0 and not unit.isDummy(thisUnit) then
+    if ui.value("Ferocious Bite Execute") ~= 3 and comboPoints > 0 and not unit.br.isDummy(thisUnit) then
         local comboStart = desc:find(" "..comboPoints.." ",1,true)
         if comboStart ~= nil then
             comboStart = comboStart + 2
@@ -348,7 +348,7 @@ local function usePrimalWrath()
         local ripCount = 0
         for i = 1, #enemies.yards8 do
             local thisUnit = enemies.yards8[i]
-            if debuff.rip.remain(thisUnit) <= 4 and (unit.ttd(thisUnit) > 8 or unit.isDummy(thisUnit)) then
+            if debuff.rip.remain(thisUnit) <= 4 and (unit.ttd(thisUnit) > 8 or unit.br.isDummy(thisUnit)) then
                 ripCount = ripCount + 1
             end
         end
@@ -483,7 +483,7 @@ actionList.Extras = function()
     -- Dummy Test
     if ui.checked("DPS Testing") then
         if unit.exists("target") then
-            if unit.combatTime() >= (tonumber(ui.value("DPS Testing"))*60) and unit.isDummy() then
+            if unit.combatTime() >= (tonumber(ui.value("DPS Testing"))*60) and unit.br.isDummy() then
                 StopAttack()
                 ClearTarget()
                 ui.print(tonumber(ui.value("DPS Testing")) .." Minute Dummy Test Concluded - Profile Stopped")
@@ -762,7 +762,7 @@ actionList.Cooldowns = function()
         end
         -- Potion
         -- potion,if=buff.bs_inc.up
-        if ui.value("Potion") ~= 2 and unit.isBoss("target") then
+        if ui.value("Potion") ~= 2 and unit.br.isBoss("target") then
             if ((unit.instance("raid") or (unit.instance("party") and unit.ttd(units.dyn5) > 45)) and (buff.berserk.exists() and buff.berserk.remain() > 18
                 or buff.incarnationKingOfTheJungle.exists() and buff.incarnationKingOfTheJungle.remain() > 28))
             then
@@ -780,7 +780,7 @@ actionList.Cooldowns = function()
         -- Convoke the Spirits
         -- convoke_the_spirits,if=(dot.rip.remains>4&combo_points<3&dot.rake.ticking&energy.deficit>=20)|fight_remains<5
         if ui.alwaysCdNever("Covenant Ability") and cast.able.convokeTheSpirits() and ((debuff.rip.remain(units.dyn5) > 4
-            and comboPoints < 3 and debuff.rake.exists(units.dyn5,"EXACT") and energyDeficit >= 20 and unit.ttdGroup(5) > 10)) --or (unit.ttdGroup(5) < 5 and unit.isBoss()))
+            and comboPoints < 3 and debuff.rake.exists(units.dyn5,"EXACT") and energyDeficit >= 20 and unit.ttdGroup(5) > 10)) --or (unit.ttdGroup(5) < 5 and unit.br.isBoss()))
         then
             if cast.convokeTheSpirits() then ui.debug("Casting Convoke the Spirits [Night Fae]") return true end
         end
@@ -817,7 +817,7 @@ actionList.Opener = function()
     end
     -- Start Attack
     -- auto_attack
-    if ui.checked("Opener") and unit.isBoss("target") and not opener.complete then
+    if ui.checked("Opener") and unit.br.isBoss("target") and not opener.complete then
         if unit.valid("target") and unit.exists("target") and unit.distance("target") < 5
             and unit.facing("player","target") and unit.gcd() == 0
         then
@@ -877,7 +877,7 @@ actionList.Opener = function()
                 opener.complete = true
             end
         end
-    elseif (unit.exists("target") and not unit.isBoss("target")) or not ui.checked("Opener") then
+    elseif (unit.exists("target") and not unit.br.isBoss("target")) or not ui.checked("Opener") then
         opener.complete = true
     end
 end -- End Action List - Opener
@@ -1293,7 +1293,7 @@ local function runRotation()
         if var.profileStop then var.profileStop = false end
         var.leftCombat = GetTime()
     end
-    var.unit5ID = GetObjectID(units.dyn5) or 0
+    var.unit5ID = br.GetObjectID(units.dyn5) or 0
     var.noDoT = var.unit5ID == 153758 or var.unit5ID == 156857 or var.unit5ID == 156849 or var.unit5ID == 156865 or var.unit5ID == 156869
 
     -- Blood of the Enemy

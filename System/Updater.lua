@@ -16,7 +16,7 @@ local isInitialized = false
 -- Utilities
 ----------------------------------------------------------------------------------------------------
 local function IsSettingChecked()
-   return isChecked("Auto Check for Updates")
+   return br.isChecked("Auto Check for Updates")
 end
 
 local function Print(msg)
@@ -30,7 +30,7 @@ local function PrintError(msg)
 end
 
 local function RaidWarning(message)
-   if isChecked("Overlay Messages") then
+   if br.isChecked("Overlay Messages") then
       RaidNotice_AddMessage(RaidWarningFrame, message, {r = 1, g = 0.3, b = 0.1})
    end
 end

@@ -14,7 +14,7 @@ local function copyTable(datatable)
 end
 
 local TagHandlerList = {
-	"IsSpellInRange","IsItemInRange","UnitInRange","isCritter","UnitAura", "UnitAuraSlots",
+	"IsSpellInRange","IsItemInRange","UnitInRange","br.isCritter","UnitAura", "UnitAuraSlots",
 	"UnitPlayerControlled",
 	"UnitIsVisible",
 	"GetUnitSpeed",
@@ -39,7 +39,6 @@ local TagHandlerList = {
 	"UnitBuff",
 	"UnitDebuff",
 	-- "CanLootUnit",
-	"UnitInPhase",
 	"UnitIsFriend",
 	"UnitClassification",
 	"UnitReaction",
@@ -271,9 +270,9 @@ local function BrUnlock()
 		lbUnlock(method)
 	end
 
-	b.ObjectPointer = UnitGUID
+	b.ObjectPointer = br._G.UnitGUID
 	b.ObjectPosition = function (...) return lb.ObjectPosition(...) end
-	b.ObjectGUID = UnitGUID
+	b.ObjectGUID = br._G.UnitGUID
 	b.ObjectIsUnit = function(...) local ObjType = lb.ObjectType(...); return ObjType == 5 or ObjType == 6 or ObjType == 7 end
 	b.ObjectIsGameObject = function(...) local ObjType = lb.ObjectType(...); return ObjType == 8 or ObjType == 11 end
 	b.ObjectID = function (...) return lb.ObjectId(...) end
@@ -313,8 +312,8 @@ local function BrUnlock()
 	end
 
 	b.GetAnglesBetweenObjects = function(Object1,Object2)
-		local X1,Y1,Z1 = ObjectPosition(Object1)
-		local X2,Y2,Z2 = ObjectPosition(Object2)
+		local X1,Y1,Z1 = br._G.ObjectPosition(Object1)
+		local X2,Y2,Z2 = br._G.ObjectPosition(Object2)
 		-- print(Unit1,X1,Y1,Z1,unit2,X2,Y2,Z2)
 		return math.atan2(Y2 - Y1, X2 - X1) % (math.pi * 2),
 			math.atan((Z1 - Z2) / math.sqrt(math.pow(X1 - X2, 2) + math.pow(Y1 - Y2, 2))) % math.pi
@@ -335,9 +334,9 @@ local function BrUnlock()
 	end
 
 	b.GetPositionBetweenObjects = function(unit1,unit2,DistanceFromPosition1)
-		local X1,Y1,Z1 = ObjectPosition(unit1)
+		local X1,Y1,Z1 = br._G.ObjectPosition(unit1)
 
-		local X2,Y2,Z2 = ObjectPosition(unit2)
+		local X2,Y2,Z2 = br._G.ObjectPosition(unit2)
 		local AngleXY, AngleXYZ = GetAnglesBetweenPositions(X1, Y1, Z1, X2, Y2, Z2)
 		return GetPositionFromPosition(X1, Y1, Z1, DistanceFromPosition1, AngleXY, AngleXYZ)
 	end
@@ -358,7 +357,7 @@ local function BrUnlock()
 		degrees = degrees and rad(degrees)/2 or math.pi/2
 		return ShortestAngle < degrees
 	end
-	-- getFacing = ObjectFacingObject
+	-- br.getFacing = ObjectFacingObject
 	b.UnitCreator = lb.ObjectCreator
 	b.ObjectName = lb.ObjectName
 	b.GetDistanceBetweenPositions = lb.GetDistance3D
@@ -412,7 +411,7 @@ local function BrUnlock()
 	end
 	b.ObjectIsVisible = lb.ObjectExists
 	b.ObjectExists = lb.ObjectExists
-	-- GetUnitIsVisible = lb.ObjectExists
+	-- br.GetUnitIsVisible = lb.ObjectExists
 	b.IsAoEPending = lb.IsAoEPending
 	b.ClickPosition = lb.ClickPosition
 	b.UnitBoundingRadius = lb.UnitBoundingRadius

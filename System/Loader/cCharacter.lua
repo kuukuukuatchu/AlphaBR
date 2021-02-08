@@ -137,7 +137,7 @@ function cCharacter:new(class)
 	function self.getCharacterInfo()
 		self.gcd = self.getGlobalCooldown()
 		self.gcdMax = self.getGlobalCooldown(true)
-		self.health = getHP("player")
+		self.health = br.getHP("player")
 		self.instance = select(2, IsInInstance())
 		self.level = UnitLevel("player") -- TODO: EVENT - UNIT_LEVEL
 		self.spec = select(2, GetSpecializationInfo(GetSpecialization())) or "None"
@@ -147,18 +147,18 @@ function cCharacter:new(class)
 		else
 			self.petId = 0
 		end
-		self.posX, self.posY, self.posZ = GetObjectPosition("player")
+		self.posX, self.posY, self.posZ = br.GetObjectPosition("player")
 	end
 
 	-- Updates things Out of Combat like Talents, Gear, etc.
 	function self.baseUpdateOOC()
 		-- Updates special Equip like set bonuses
 		self.baseGetEquip()
-		if getOptionCheck("Queue Casting") and #self.queue ~= 0 then
+		if br.getOptionCheck("Queue Casting") and #self.queue ~= 0 then
 			self.queue = {} -- Reset Queue Casting Table out of combat
 			Print("Out of Combat - Queue List Cleared")
 		end
-		self.ignoreCombat = getOptionCheck("Ignore Combat")
+		self.ignoreCombat = br.getOptionCheck("Ignore Combat")
 	end
 
 	-- Updates toggle data
@@ -172,19 +172,19 @@ function cCharacter:new(class)
 
 	-- Returns the Global Cooldown time
 	function self.getGlobalCooldown(max)
-		return getGlobalCD(max)
+		return br.getGlobalCD(max)
 	end
 
 	-- Starts auto attack when in melee range and facing enemy
 	function self.startMeleeAttack()
-		if self.inCombat and (isInMelee() and getFacing("player", "target") == true) then
-			StartAttack()
+		if self.inCombat and (isInMelee() and br.getFacing("player", "target") == true) then
+			br._G.StartAttack()
 		end
 	end
 
 	function self.tankAggro()
 		if self.instance == "raid" or self.instance == "party" then
-			local tanksTable = getTanksTable()
+			local tanksTable = br.getTanksTable()
 			if tanksTable ~= nil then
 				for i = 1, #tanksTable do
 					if UnitAffectingCombat(tanksTable[i].unit) and tanksTable[i].distance < 40 then
@@ -199,7 +199,7 @@ function cCharacter:new(class)
 	-- Returns if in combat
 	function self.getInCombat()
 		if
-			UnitAffectingCombat("player") or self.ignoreCombat or (isChecked("Tank Aggro = Player Aggro") and self.tankAggro()) or
+			UnitAffectingCombat("player") or self.ignoreCombat or (br.isChecked("Tank Aggro = Player Aggro") and self.tankAggro()) or
 				(GetNumGroupMembers() > 1 and (UnitAffectingCombat("player") or UnitAffectingCombat("target")))
 		 then
 			self.inCombat = true
@@ -232,7 +232,7 @@ function cCharacter:new(class)
 		end
 		-- Debugging
 		br.debug.cpu:updateDebug(startTime, "rotation")
-		-- if isChecked("Debug Timers") then
+		-- if br.isChecked("Debug Timers") then
 		-- 	-- br.debug.cpu.rotation = {
 		-- 	-- 	maxTimeOoC = 0,
 		-- 	-- 	minTimeOoC = 999,
@@ -288,7 +288,7 @@ function cCharacter:new(class)
 
 	-- Casts the racial
 	function self.castRacial()
-		if getSpellCD(self.racial) == 0 and getOptionValue("Racial") then
+		if br.getSpellCD(self.racial) == 0 and br.getOptionValue("Racial") then
 			if self.race == "Pandaren" or self.race == "Goblin" then
 				return castSpell("target", self.racial, true, false) == true
 			else

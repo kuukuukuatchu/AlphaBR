@@ -2,7 +2,7 @@ local addonName, br = ...
 function castInterrupt(SpellID,Percent,Unit)
 	Percent = Math.min(Percent + math.random(-6.5, 6.5), 99)
 	if Unit == nil then Unit = "target" end
-	if GetObjectExists(Unit) then
+	if br.GetObjectExists(Unit) then
 		local castName, _, _, castStartTime, castEndTime, _, _, castInterruptable = UnitCastingInfo(Unit)
 		local channelName, _, _, channelStartTime, channelEndTime, _, channelInterruptable = UnitChannelInfo(Unit)
 		-- first make sure we will be able to cast the spellID
@@ -43,7 +43,7 @@ function castInterrupt(SpellID,Percent,Unit)
 					return false
 				end
 				--cast the spell
-				if getDistance("player",Unit) < allowedDistance then
+				if br.getDistance("player",Unit) < allowedDistance then
 					if castSpell(Unit,SpellID,false,false) then
 						return true
 					end
@@ -57,13 +57,13 @@ end
 function canInterrupt(unit,percentint)
 	unit = unit or "target"
 	-- M+ Affix: Beguiling (Prevents Interrupt) - Queen's Decree: Unstoppable buff
-	if UnitBuffID(unit,302417) ~= nil then return false end
-	local interruptTarget = getOptionValue("Interrupt Target")
-	if interruptTarget == 2 and not GetUnitIsUnit(unit, "target") then
+	if br.UnitBuffID(unit,302417) ~= nil then return false end
+	local interruptTarget = br.getOptionValue("Interrupt Target")
+	if interruptTarget == 2 and not br.GetUnitIsUnit(unit, "target") then
 		return false
-	elseif interruptTarget == 3 and not GetUnitIsUnit(unit, "focus") then
+	elseif interruptTarget == 3 and not br.GetUnitIsUnit(unit, "focus") then
 		return false
-	elseif interruptTarget == 4 and getOptionValue("Interrupt Mark") ~= GetRaidTargetIndex(unit) then
+	elseif interruptTarget == 4 and br.getOptionValue("Interrupt Mark") ~= GetRaidTargetIndex(unit) then
 		return false
 	end
 	local castStartTime, castEndTime, interruptID, interruptable = 0, 0, 0, false
@@ -71,7 +71,7 @@ function canInterrupt(unit,percentint)
 	local channelDelay = 1 -- Delay to mimick human reaction time for channeled spells
 	local castType = "spellcast" -- Handle difference in logic if the spell is cast or being channeles
 	local onWhitelist = false
-	if GetUnitExists(unit)
+	if br.GetUnitExists(unit)
 		and UnitCanAttack("player",unit)
 		and not UnitIsDeadOrGhost(unit)
 	then
@@ -129,19 +129,19 @@ function canInterrupt(unit,percentint)
 			end
 		end
 		-- Check if on whitelist (if selected)
-		if isChecked("Interrupt Only Whitelist") and br.lists.interruptWhitelist[interruptID] then
+		if br.isChecked("Interrupt Only Whitelist") and br.lists.interruptWhitelist[interruptID] then
 			 onWhitelist = true
 		end
 		-- Return when interrupt time is met
-		if ((isChecked("Interrupt Only Whitelist") and (onWhitelist or not (br.player.instance=="party" or br.player.instance=="raid"))) or not isChecked("Interrupt Only Whitelist")) then
+		if ((br.isChecked("Interrupt Only Whitelist") and (onWhitelist or not (br.player.instance=="party" or br.player.instance=="raid"))) or not br.isChecked("Interrupt Only Whitelist")) then
 			if castType == "spellcast" then
-				if math.ceil((castTimeRemain/castDuration)*100) <= castPercent and interruptable == true and getTTD(unit)>castTimeRemain then
+				if math.ceil((castTimeRemain/castDuration)*100) <= castPercent and interruptable == true and br.getTTD(unit)>castTimeRemain then
 					return true
 				end
 			end
 			if castType == "spellchannel" then
 				--if (GetTime() - castStartTime/1000) > channelDelay and interruptable == true then
-				if (GetTime() - castStartTime/1000) > (channelDelay-0.2 + math.random() * 0.4) and (math.ceil((castTimeRemain/castDuration)*100) <= castPercent or castPercent == 100) and interruptable == true and (getTTD(unit)>castTimeRemain or castPercent == 100) then
+				if (GetTime() - castStartTime/1000) > (channelDelay-0.2 + math.random() * 0.4) and (math.ceil((castTimeRemain/castDuration)*100) <= castPercent or castPercent == 100) and interruptable == true and (br.getTTD(unit)>castTimeRemain or castPercent == 100) then
 					return true
 				end
 			end
@@ -152,8 +152,8 @@ end
 function canStun(unit)
 	return isCrowdControlCandidates(unit)
 end
--- if getCharges(115399) > 0 then
-function getCharges(spellID)
+-- if br.getCharges(115399) > 0 then
+function br.getCharges(spellID)
 	return select(1,GetSpellCharges(spellID))
 end
 function getChargesFrac(spellID,chargeMax)
@@ -197,8 +197,8 @@ function getFullRechargeTime(spellID)
     end
     return 0
 end
--- if getSpellCD(12345) <= 0.4 then
-function getSpellCD(SpellID)
+-- if br.getSpellCD(12345) <= 0.4 then
+function br.getSpellCD(SpellID)
 	if SpellID == nil then return false end
 	if GetSpellCooldown(SpellID) == 0 then
 		return 0
@@ -210,7 +210,7 @@ function getSpellCD(SpellID)
 		return MyCD
 	end
 end
-function getGlobalCD(max)
+function br.getGlobalCD(max)
 	local currentSpecName = select(2,GetSpecializationInfo(GetSpecialization()))
 	if currentSpecName == "" then currentSpecName = "Initial" end
 	if max == true then
@@ -220,7 +220,7 @@ function getGlobalCD(max)
 			return math.max(math.max(1, 1.5 / (1 + UnitSpellHaste("player") / 100)), 0.75)
 		end
 	end
-	return getSpellCD(61304)
+	return br.getSpellCD(61304)
 end
 function getSpellType(spellName)
 	if spellName == nil then return "Invalid" end
@@ -232,7 +232,7 @@ function getSpellType(spellName)
     if not helpful and not harmful then return "Unknown" end
 end
 function getCastingRegen(spellID)
-	local regenRate = getRegen("player")
+	local regenRate = br.getRegen("player")
 	local power = 0
 	local desc = GetSpellDescription(spellID)
 	local generates = desc:gsub("%D+", "")
@@ -244,8 +244,8 @@ function getCastingRegen(spellID)
 	power = power + regenRate * castSeconds + tooltip
 
 	-- Get the amount of time remaining on the Steady Focus buff.
-	if UnitBuffID("player", 193534) ~= nil then
-		local seconds = getBuffRemain("player", 193534)
+	if br.UnitBuffID("player", 193534) ~= nil then
+		local seconds = br.getBuffRemain("player", 193534)
 		if seconds <= 0 then
 			seconds = 0
 		elseif seconds > castSeconds then

@@ -14,10 +14,10 @@ local function getFolderSpecName(class,specID)
     end
 end
 local function rotationsDirectory()
-    return GetWoWDirectory() .. '\\Interface\\AddOns\\' .. br.addonName .. '\\Rotations\\'
+    return br._G.GetWoWDirectory() .. '\\Interface\\AddOns\\' .. br.addonName .. '\\Rotations\\'
 end
 local function settingsDirectory()
-    return GetWoWDirectory() .. '\\Interface\\AddOns\\' .. br.addonName .. '\\Settings\\'
+    return br._G.GetWoWDirectory() .. '\\Interface\\AddOns\\' .. br.addonName .. '\\Settings\\'
 end
 
 local function errorhandler(err)
@@ -46,10 +46,10 @@ function br.loader.loadProfiles()
     local specID = GetSpecializationInfo(GetSpecialization())
     local folderSpec = getFolderSpecName(class,specID)
     local path = rotationsDirectory() .. getFolderClassName(class) .. '\\' .. folderSpec .. '\\'
-    local profiles = GetDirectoryFiles(path .. '*.lua')
+    local profiles = br._G.GetDirectoryFiles(path .. '*.lua')
     local profileName = ""
     for _, file in pairs(profiles) do
-        local profile = ReadFile(path..file)
+        local profile = br._G.ReadFile(path..file)
         local start = string.find(profile,"local id = ",1,true) or 0
         local profileID = 0
         if folderSpec == "Initial" then 
@@ -438,7 +438,7 @@ function br.loader:new(spec,specName)
             if aoe == nil then aoe = false end
             if aoe then dynString = dynString.."AOE" end
             local facing = not aoe
-            local thisUnit = dynamicTarget(range, facing)
+            local thisUnit = br.dynamicTarget(range, facing)
             -- Build units.dyn varaible
             if self.units[dynString] == nil then self.units[dynString] = {} end
             self.units[dynString] = thisUnit
@@ -449,7 +449,7 @@ function br.loader:new(spec,specName)
             if unit == nil then unit = "player" end
             if checkNoCombat == nil then checkNoCombat = false end
             if facing == nil then facing = false end
-            local enemyTable = getEnemies(unit,range,checkNoCombat,facing)
+            local enemyTable = br.getEnemies(unit,range,checkNoCombat,facing)
             -- Build enemies.yards variable
             local insertTable = "yards"..range -- Ex: enemies.yards8 (returns all enemies around player in 8yrds)
             if unit ~= "player" then insertTable = insertTable..unit:sub(1,1) end -- Ex: enemies.yards8t (returns all enemies around target in 8yrds)
@@ -477,7 +477,7 @@ function br.loader:new(spec,specName)
         -- self.pet.buff.exists = function(buffID,petID)
         --     for k, v in pairs(self.pet) do
         --         local pet = self.pet[k]
-        --         if self.pet[k].id == petID and UnitBuffID(k,buffID) ~= nil then return true end
+        --         if self.pet[k].id == petID and br.UnitBuffID(k,buffID) ~= nil then return true end
         --     end
         --     return false
         -- end
@@ -486,7 +486,7 @@ function br.loader:new(spec,specName)
         --     local petCount = 0
         --     for k, v in pairs(self.pet) do
         --         local pet = self.pet[k]
-        --         if self.pet[k].id == petID and UnitBuffID(k,buffID) ~= nil then petCount = petCount + 1 end
+        --         if self.pet[k].id == petID and br.UnitBuffID(k,buffID) ~= nil then petCount = petCount + 1 end
         --     end
         --     return petCount
         -- end
@@ -495,7 +495,7 @@ function br.loader:new(spec,specName)
         --     local petCount = 0
         --     for k, v in pairs(self.pet) do
         --         local pet = self.pet[k]
-        --         if self.pet[k].id == petID and UnitBuffID(k,buffID) == nil then petCount = petCount + 1 end
+        --         if self.pet[k].id == petID and br.UnitBuffID(k,buffID) == nil then petCount = petCount + 1 end
         --     end
         --     return petCount
         -- end
@@ -628,7 +628,7 @@ function br.loader:new(spec,specName)
 
     -- Create the toggle defined within rotation files
     function self.createToggles()
-        GarbageButtons()
+        br.GarbageButtons()
         if self.rotation ~= nil then
             self.rotation.toggles()
         else
@@ -724,7 +724,7 @@ function br.loader:new(spec,specName)
 
     function useCDs()
         local cooldown = self.ui.mode.cooldown
-        if (cooldown == 1 and isBoss()) or cooldown == 2 or (cooldown == 4 and hasBloodLust()) then
+        if (cooldown == 1 and br.isBoss()) or cooldown == 2 or (cooldown == 4 and hasBloodLust()) then
             return true
         else
             return false
@@ -782,14 +782,14 @@ function br.loader:new(spec,specName)
     function mantleDuration()
         if hasEquiped(144236) then
             --if br.player.buff.masterAssassinsInitiative.remain("player") > 100 or br.player.buff.masterAssassinsInitiative.remain("player") < 0 then
-            if br.player.buff.masterAssassinsInitiative.exists("player") and (getBuffRemain("player",235027) > 100 or getBuffRemain("player",235027) < 100) then
+            if br.player.buff.masterAssassinsInitiative.exists("player") and (br.getBuffRemain("player",235027) > 100 or br.getBuffRemain("player",235027) < 100) then
                 return br.player.cd.global.remain() + 5
             else
                 --return br.player.buff.masterAssassinsInitiative.remain("player")
-                if getBuffRemain("player",235027) >= 0 and getBuffRemain("player",235027) < 0.1 then
+                if br.getBuffRemain("player",235027) >= 0 and br.getBuffRemain("player",235027) < 0.1 then
                     return 0
                 else
-                    return getBuffRemain("player",235027)
+                    return br.getBuffRemain("player",235027)
                 end
             end
         else

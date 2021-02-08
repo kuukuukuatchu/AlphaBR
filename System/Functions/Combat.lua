@@ -3,9 +3,9 @@ function canAoE(unit,distance)
 	local notValid = false
 	if unit == nil then return false end
 	if distance == nil then distance = 8 end
-	for i = 1, #getEnemies(unit,distance) do
-		local thisUnit = getEnemies(unit,distance)[i]
-		if not isValidUnit(thisUnit) then
+	for i = 1, #br.getEnemies(unit,distance) do
+		local thisUnit = br.getEnemies(unit,distance)[i]
+		if not br.isValidUnit(thisUnit) then
 			notValid = true;
 			break
 		end
@@ -28,7 +28,7 @@ end
 function canDisarm(Unit)
 	if DisarmedTarget == nil then DisarmedTarget = 0 end
 	if isDisarmed == true then
-		if GetUnitExists(Unit) and UnitGUID(Unit)~=DisarmedTarget then
+		if br.GetUnitExists(Unit) and UnitGUID(Unit)~=DisarmedTarget then
 			DisarmedTarget = UnitGUID(Unit)
 			return false
 		else
@@ -36,7 +36,7 @@ function canDisarm(Unit)
 			return true
 		end
 	end
-	if not isInCombat("player") or GetUnitExists(Unit) then
+	if not isInCombat("player") or br.GetUnitExists(Unit) then
 		if not isInCombat("player") or UnitGUID(Unit)~=DisarmedTarget then
 			isDisarmed = false
 			return true
@@ -95,7 +95,7 @@ function getLowAlliesInTable(Value, unitTable)
 end
 -- if getNumEnemies("target",10) >= 3 then
 function getNumEnemies(Unit,Radius)
-	return #getEnemies(Unit,Radius)
+	return #br.getEnemies(Unit,Radius)
 end
 
 function isIncapacitated(spellID)
@@ -225,18 +225,18 @@ function hasNoControl(spellID,unit)
 	end
 	return false
 end
--- if hasThreat("target") then
-function hasThreat(unit,playerUnit)
+-- if br.hasThreat("target") then
+function br.hasThreat(unit,playerUnit)
 	-- Damaged Validation
-	if br.damaged[ObjectPointer(unit)] ~= nil then --[[Print("[Damage Threat] You attacked "..UnitName(unit).." it now hates you.")]] return true end
-	local unitID = getUnitID(unit)
+	if br.damaged[br._G.ObjectPointer(unit)] ~= nil then --[[Print("[Damage Threat] You attacked "..UnitName(unit).." it now hates you.")]] return true end
+	local unitID = br.getUnitID(unit)
 	local instance = select(2,IsInInstance())
 	if playerUnit == nil then playerUnit = "player" end
 	local targetUnit, targetFriend
-	if GetUnit(unit) == nil or UnitIsDeadOrGhost(unit) or UnitIsTapDenied(unit) then
+	if br.GetUnit(unit) == nil or UnitIsDeadOrGhost(unit) or UnitIsTapDenied(unit) then
 		targetUnit = "None"
-	elseif UnitTarget(GetUnit(unit)) ~= nil then
-		targetUnit = UnitTarget(GetUnit(unit))
+	elseif br._G.UnitTarget(br.GetUnit(unit)) ~= nil then
+		targetUnit = br._G.UnitTarget(br.GetUnit(unit))
 	else
 		targetUnit = "None"
 	end
@@ -245,10 +245,10 @@ function hasThreat(unit,playerUnit)
 	end
 	
 	local function threatSituation(friendlyUnit,enemyUnit)
-		local _,_,threatPct = UnitDetailedThreatSituation(friendlyUnit,enemyUnit)
+		local _,_,threatPct = br._G.UnitDetailedThreatSituation(friendlyUnit,enemyUnit)
 		if threatPct ~= nil then 
 			if threatPct > 0 then
-				if isChecked("Cast Debug") and not UnitExists("target") then Print(UnitName(enemyUnit).." is threatening "..UnitName(friendlyUnit).."."); end
+				if br.isChecked("Cast Debug") and not UnitExists("target") then Print(UnitName(enemyUnit).." is threatening "..UnitName(friendlyUnit).."."); end
 				return true
 			end
 		end	
@@ -256,29 +256,29 @@ function hasThreat(unit,playerUnit)
 	end
 	
 	-- Valididation Checks
-	-- Print(tostring(unit).." | "..tostring(GetUnit(unit)).." | "..tostring(targetUnit).." | "..tostring(targetFriend))
-	if unit == nil --[[or (not GetObjectExists(targetUnit) and br.lists.threatBypass[unitID] == nil)]] then return false end
+	-- Print(tostring(unit).." | "..tostring(br.GetUnit(unit)).." | "..tostring(targetUnit).." | "..tostring(targetFriend))
+	if unit == nil --[[or (not br.GetObjectExists(targetUnit) and br.lists.threatBypass[unitID] == nil)]] then return false end
 	-- Print("Unit: "..tostring(UnitName(unit)).." | Player: "..tostring(playerUnit))
 	local playerInCombat = UnitAffectingCombat("player")
 	local unitInCombat = UnitAffectingCombat(unit)
 	-- Unit is Targeting Player/Pet/Party/Raid Validation
 	if targetFriend then
-		if isChecked("Cast Debug") and not GetObjectExists("target") then Print(UnitName(GetUnit(unit)).." is targetting "..UnitName(targetUnit)) end
-		-- Print("[Targeting Threat] "..UnitName(GetUnit(unit)).." is targetting "..UnitName(targetUnit))
+		if br.isChecked("Cast Debug") and not br.GetObjectExists("target") then Print(UnitName(br.GetUnit(unit)).." is targetting "..UnitName(targetUnit)) end
+		-- Print("[Targeting Threat] "..UnitName(br.GetUnit(unit)).." is targetting "..UnitName(targetUnit))
 		return targetFriend
 	end
 	-- Boss Adds Validation
-	if isBoss(unit) and unitInCombat and (instance == "party" or instance == "raid") then
+	if br.isBoss(unit) and unitInCombat and (instance == "party" or instance == "raid") then
 		-- Print("[Boss Threat] "..UnitName(unit).." has threat with you.")
 		return true
 	-- Threat Bypass Validation
-	-- elseif playerInCombat and br.lists.threatBypass[unitID] ~= nil and #getEnemies(unit,20,true) == 0 then
+	-- elseif playerInCombat and br.lists.threatBypass[unitID] ~= nil and #br.getEnemies(unit,20,true) == 0 then
 	-- 		return true
 	end
 	-- Open World Mob Pack Validation
 	if instance == "none" and playerInCombat and unitInCombat then
-		local theseEnemies = getEnemies(unit,8)
-		if #theseEnemies == 1 and GetObjectExists("target") then --[[Print("[Open World Threat] Your Target "..UnitName(unit).." has threat on you.")]] return true end
+		local theseEnemies = br.getEnemies(unit,8)
+		if #theseEnemies == 1 and br.GetObjectExists("target") then --[[Print("[Open World Threat] Your Target "..UnitName(unit).." has threat on you.")]] return true end
 		for i = 1, #theseEnemies do
 			local thisUnit = theseEnemies[i]
 			if UnitIsUnit(unit,thisUnit) then return true end

@@ -35,16 +35,16 @@ function br:getUpdateRate()
 	local updateRate = updateRate or 0.1
 
 	local FrameRate = GetFramerate() or 0
-	if isChecked("Auto Delay") then
+	if br.isChecked("Auto Delay") then
 		if FrameRate >= 0 and FrameRate < 60 then
 			updateRate = (60 - FrameRate) / 60
 		else
 			updateRate = 0.1
 		end
-	elseif getOptionValue("Bot Update Rate") == nil then
+	elseif br.getOptionValue("Bot Update Rate") == nil then
 		updateRate = 0.1
 	else
-		updateRate = getOptionValue("Bot Update Rate")
+		updateRate = br.getOptionValue("Bot Update Rate")
 	end
 	return updateRate
 end
@@ -52,11 +52,8 @@ end
 local collectGarbage = true
 function BadRotationsUpdate(self)
 	local startTime = debugprofilestop()
-	local ChatOverlay = _G["ChatOverlay"]
-	local getOptionValue = _G["getOptionValue"]
-	local isChecked = _G["isChecked"]
 	local LibDraw = _G["LibDraw"]
-	local Print = _G["Print"]
+	local Print = br._G["Print"]
 	-- Check for Unlocker
 	if not br.unlocked then
 		br.unlocked = br:loadUnlockerAPI()
@@ -69,12 +66,12 @@ function BadRotationsUpdate(self)
 		-- Load and Cycle BR
 		-- Notify Not Unlocked
 		br.ui:closeWindow("all")
-		ChatOverlay("Unable To Load")
-		if isChecked("Notify Not Unlocked") and br.timer:useTimer("notLoaded", getOptionValue("Notify Not Unlocked")) then
+		br.ChatOverlay("Unable To Load")
+		if br.isChecked("Notify Not Unlocked") and br.timer:useTimer("notLoaded", br.getOptionValue("Notify Not Unlocked")) then
 			Print("|cffFFFFFFCannot Start... |cffFF1100BR |cffFFFFFFcan not complete loading. Please check requirements.")
 		end
 		return false
-	elseif br.unlocked and GetObjectCountBR() ~= nil then
+	elseif br.unlocked and br._G.GetObjectCount() ~= nil then
 		-- Check BR Out of Date
 		br:checkBrOutOfDate()
 		-- Get Current Addon Name
@@ -90,7 +87,7 @@ function BadRotationsUpdate(self)
 				-- Clear Queue
 				if br.player ~= nil and br.player.queue ~= nil and #br.player.queue ~= 0 then
 					wipe(br.player.queue)
-					if not isChecked("Mute Queue") then
+					if not br.isChecked("Mute Queue") then
 						Print("BR Disabled! - Queue Cleared.")
 					end
 				end
@@ -103,15 +100,15 @@ function BadRotationsUpdate(self)
 				-- Set Fall Distance
 				br.fallDist = getFallDistance() or 0
 				-- Quaking helper
-				if getOptionCheck("Quaking Helper") then
-					if (UnitChannelInfo("player") or UnitCastingInfo("player")) and getDebuffRemain("player", 240448) < 0.5 and getDebuffRemain("player", 240448) > 0 then
+				if br.getOptionCheck("Quaking Helper") then
+					if (UnitChannelInfo("player") or UnitCastingInfo("player")) and br.getDebuffRemain("player", 240448) < 0.5 and br.getDebuffRemain("player", 240448) > 0 then
 						RunMacroText("/stopcasting")
 					end
 				end
 				if isCastingSpell(318763) then
 					return true
 				end
-				-- Blizz CastSpellByName bug bypass
+				-- Blizz br._G.CastSpellByName bug bypass
 				if br.castID then
 					-- Print("Casting by ID")
 					CastSpellByID(botSpell, botUnit)
@@ -142,15 +139,15 @@ function BadRotationsUpdate(self)
 					br.rotationChanged = false
 				end
 				-- Queue Casting
-				if (isChecked("Queue Casting") or (br.player ~= nil and br.player.queue ~= 0)) and not UnitChannelInfo("player") then
+				if (br.isChecked("Queue Casting") or (br.player ~= nil and br.player.queue ~= 0)) and not UnitChannelInfo("player") then
 					if castQueue() then
 						return
 					end
 				end
-				if (not isChecked("Queue Casting") or UnitIsDeadOrGhost("player") or not UnitAffectingCombat("player")) and br.player ~= nil and #br.player.queue ~= 0 then
+				if (not br.isChecked("Queue Casting") or UnitIsDeadOrGhost("player") or not UnitAffectingCombat("player")) and br.player ~= nil and #br.player.queue ~= 0 then
 					wipe(br.player.queue)
-					if not isChecked("Mute Queue") then
-						if not isChecked("Queue Casting") then
+					if not br.isChecked("Mute Queue") then
+						if not br.isChecked("Queue Casting") then
 							Print("Queue System Disabled! - Queue Cleared.")
 						end
 						if UnitIsDeadOrGhost("player") then
@@ -162,19 +159,19 @@ function BadRotationsUpdate(self)
 					end
 				end
 				--Smart Queue
-				if br.unlocked and isChecked("Smart Queue") then
+				if br.unlocked and br.isChecked("Smart Queue") then
 					br.smartQueue()
 				end
 				-- Update Player
-				if br.player ~= nil and (not CanExitVehicle() or (UnitExists("target") and getDistance("target") < 5)) then
+				if br.player ~= nil and (not CanExitVehicle() or (UnitExists("target") and br.getDistance("target") < 5)) then
 					br.player:update()
 				end
 				-- Automatic catch the pig
-				if getOptionCheck("Freehold - Pig Catcher") or getOptionCheck("De Other Side - Bomb Snatcher") then
-					bossHelper()
+				if br.getOptionCheck("Freehold - Pig Catcher") or br.getOptionCheck("De Other Side - Bomb Snatcher") then
+					br.bossHelper()
 				end
 				-- Healing Engine
-				if isChecked("HE Active") then
+				if br.isChecked("HE Active") then
 					br.friend:Update()
 				end
 				-- Auto Loot
@@ -206,13 +203,13 @@ function BadRotationsUpdate(self)
 					end
 				end
 				-- Display Distance on Main Icon
-				local targetDistance = getDistance("target") or 0
+				local targetDistance = br.getDistance("target") or 0
 				local displayDistance = math.ceil(targetDistance)
 				if mainButton ~= nil then
-					mainText:SetText(displayDistance)
+					br.mainText:SetText(displayDistance)
 				end
 				-- LoS Line Draw
-				if isChecked("Healer Line of Sight Indicator") then
+				if br.isChecked("Healer Line of Sight Indicator") then
 					inLoSHealer()
 				end
 				-- Get DBM/BigWigs Timer/Bars

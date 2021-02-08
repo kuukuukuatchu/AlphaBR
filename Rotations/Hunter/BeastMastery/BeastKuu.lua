@@ -256,11 +256,11 @@ local lowestBarbedShot
 --- Functions ---
 -----------------
 local function isTankInRange()
-    if isChecked("Auto Growl") then
+    if br.isChecked("Auto Growl") then
         if #br.friend > 1 then
             for i = 1, #br.friend do
                 local friend = br.friend[i]
-                if friend.GetRole()== "TANK" and not UnitIsDeadOrGhost(friend.unit) and getDistance(friend.unit) < 100 then
+                if friend.GetRole()== "TANK" and not UnitIsDeadOrGhost(friend.unit) and br.getDistance(friend.unit) < 100 then
                 return true
                 end
             end
@@ -270,8 +270,8 @@ local function isTankInRange()
 end
 
 local function autoCorrupt()
-    if isChecked("Enable Corruption") then
-        if isChecked("Use Cloak") and (debuff.eyeOfCorruption.stack("player") >= 10 or (debuff.eyeOfCorruption.exists("player") and debuff.grandDelusions.exists("player")
+    if br.isChecked("Enable Corruption") then
+        if br.isChecked("Use Cloak") and (debuff.eyeOfCorruption.stack("player") >= 10 or (debuff.eyeOfCorruption.exists("player") and debuff.grandDelusions.exists("player")
             and debuff.graspingTendrils.exists("player")))
         then
             if br.player.use.shroudOfResolve() then
@@ -280,32 +280,32 @@ local function autoCorrupt()
         end
         for i = 1, GetObjectCountBR() do
             local object = GetObjectWithIndex(i)
-            local ID = ObjectID(object)
+            local ID = br._G.ObjectID(object)
             if ID == 161895 then
-                local x1, y1, z1 = ObjectPosition("player")
-                local x2, y2, z2 = ObjectPosition(object)
+                local x1, y1, z1 = br._G.ObjectPosition("player")
+                local x2, y2, z2 = br._G.ObjectPosition(object)
                 local distance = math.sqrt(((x2 - x1) ^ 2) + ((y2 - y1) ^ 2) + ((z2 - z1) ^ 2))
                 if not (debuff.freezingTrap.exists(object) or debuff.intimidation.exists(object)) 
                 and not (cast.last.freezingTrap() or cast.last.bindingShot() or cast.last.intimidation() or cast.last.feignDeath()) then
-                    if cd.freezingTrap.remains() <= gcdMax and isChecked("Ice Trap") then
+                    if cd.freezingTrap.remains() <= gcdMax and br.isChecked("Ice Trap") then
                         if distance <= 40 then
                             if cast.freezingTrap(object) then
                                 return true
                             end
                         end
-                    elseif talent.bindingShot and cd.bindingShot.remains() <= gcdMax and isChecked("Binding Shot") then
+                    elseif talent.bindingShot and cd.bindingShot.remains() <= gcdMax and br.isChecked("Binding Shot") then
                         if distance < 30 then
                             if cast.bindingShot(object) then
                                 return true
                             end
                         end
-                    elseif cd.concussiveShot.remains() <= gcdMax and isChecked("Conc Shot") then
+                    elseif cd.concussiveShot.remains() <= gcdMax and br.isChecked("Conc Shot") then
                         if distance < 40 then
                             if cast.concussiveShot(object) then
                                 return true
                             end
                         end
-                    elseif cd.tarTrap.remains() <= gcdMax and isChecked("Tar Trap") then
+                    elseif cd.tarTrap.remains() <= gcdMax and br.isChecked("Tar Trap") then
                         if distance < 40 then
                             if cast.tarTrap(object) then
                                 return true
@@ -324,12 +324,12 @@ end
 -- Action List - Extras
 actionList.Extras = function()
     -- Dummy Test
-    if isChecked("DPS Testing") then
-        if GetObjectExists("target") then
-            if getCombatTime() >= (tonumber(getOptionValue("DPS Testing"))*60) and isDummy() then
+    if br.isChecked("DPS Testing") then
+        if br.GetObjectExists("target") then
+            if getCombatTime() >= (tonumber(br.getOptionValue("DPS Testing"))*60) and br.isDummy() then
                 StopAttack()
                 ClearTarget()
-                Print(tonumber(getOptionValue("DPS Testing")) .." Minute Dummy Test Concluded - Profile Stopped")
+                Print(tonumber(br.getOptionValue("DPS Testing")) .." Minute Dummy Test Concluded - Profile Stopped")
                 profileStop = true
             end
         end
@@ -337,35 +337,35 @@ actionList.Extras = function()
     -- Misdirection
     if mode.misdirection == 1 then
         local misdirectUnit = nil
-        if isValidUnit("target") and getDistance("target") < 40 then
-            if getOptionValue("Misdirection") == 3 then
+        if br.isValidUnit("target") and br.getDistance("target") < 40 then
+            if br.getOptionValue("Misdirection") == 3 then
                 misdirectUnit = "pet"
             end
-            if getOptionValue("Misdirection") == 1 then
+            if br.getOptionValue("Misdirection") == 1 then
                if getFocusedTank() ~= nil and not UnitIsDeadOrGhost(getFocusedTank().unit) and getFocusedTank().distance < 100 then
                     misdirectUnit = getFocusedTank().unit
-               elseif #getTanksTable() > 0 and not UnitIsDeadOrGhost(getTanksTable()[1].unit) and getTanksTable()[1].distance < 100 then
-                    misdirectUnit = getTanksTable()[1].unit
+               elseif #br.getTanksTable() > 0 and not UnitIsDeadOrGhost(br.getTanksTable()[1].unit) and br.getTanksTable()[1].distance < 100 then
+                    misdirectUnit = br.getTanksTable()[1].unit
                else
                     misdirectUnit = "pet"
                end
             end
-            if getOptionValue("Misdirection") == 2 and not UnitIsDeadOrGhost("focus")
-                and GetUnitIsFriend("focus","player")
+            if br.getOptionValue("Misdirection") == 2 and not UnitIsDeadOrGhost("focus")
+                and br.GetUnitIsFriend("focus","player")
             then
                 misdirectUnit = "focus"
             end
             if misdirectUnit ~= nil then
                 for i = 1, #enemies.yards40 do
                 local thisUnit = enemies.yards40[i]
-                    if (UnitTarget(thisUnit) == "TANK" or UnitGroupRolesAssigned(UnitTarget(thisUnit)) == "TANK") and UnitThreatSituation(misdirectUnit, thisUnit) ~= nil and UnitThreatSituation(misdirectUnit, thisUnit) <= 2 then
+                    if (br._G.UnitTarget(thisUnit) == "TANK" or UnitGroupRolesAssigned(br._G.UnitTarget(thisUnit)) == "TANK") and UnitThreatSituation(misdirectUnit, thisUnit) ~= nil and UnitThreatSituation(misdirectUnit, thisUnit) <= 2 then
                         if cast.misdirection(misdirectUnit) then
                             return
                         end
                     end
                 end
             end
-            -- if GetUnitExists(misdirectUnit) then
+            -- if br.GetUnitExists(misdirectUnit) then
             --     if cast.misdirection(misdirectUnit) then return end
             -- end
         end
@@ -376,47 +376,47 @@ end -- End Action List - Extras
 actionList.Defensive = function()
     if useDefensive() and inCombat then
         -- Pot/Stoned
-        if isChecked("Pot/Stoned") and (use.able.healthstone() or canUseItem(healPot))
-            and php <= getOptionValue("Pot/Stoned") and inCombat and (hasHealthPot() or has.healthstone())
+        if br.isChecked("Pot/Stoned") and (use.able.healthstone() or br.canUseItem(healPot))
+            and php <= br.getOptionValue("Pot/Stoned") and inCombat and (hasHealthPot() or has.healthstone())
         then
             if use.able.healthstone() then
                 use.healthstone()
-            elseif canUseItem(healPot) then
-                useItem(healPot)
+            elseif br.canUseItem(healPot) then
+                br.useItem(healPot)
             end
         end
         -- Heirloom Neck
-        if isChecked("Heirloom Neck") and php <= getOptionValue("Heirloom Neck") then
+        if br.isChecked("Heirloom Neck") and php <= br.getOptionValue("Heirloom Neck") then
             if use.able.heirloomNeck() and item.heirloomNeck ~= 0 and item.heirloomNeck ~= item.manariTrainingAmulet then
                 if use.heirloomNeck() then return true end
             end
         end
         -- Aspect of the Turtle
-        if isChecked("Aspect Of The Turtle") and php <= getOptionValue("Aspect Of The Turtle") then
+        if br.isChecked("Aspect Of The Turtle") and php <= br.getOptionValue("Aspect Of The Turtle") then
             if cast.aspectOfTheTurtle("player") then return end
         end
         -- Concussive Shot
-        if isChecked("Concussive Shot") and getDistance("target") < getOptionValue("Concussive Shot") and isValidUnit("target") then
+        if br.isChecked("Concussive Shot") and br.getDistance("target") < br.getOptionValue("Concussive Shot") and br.isValidUnit("target") then
             if cast.concussiveShot("target") then return end
         end
         -- Disengage
-        if isChecked("Disengage") and getDistance("target") < getOptionValue("Disengage") and isValidUnit("target") then
+        if br.isChecked("Disengage") and br.getDistance("target") < br.getOptionValue("Disengage") and br.isValidUnit("target") then
             if cast.disengage("player") then return end
         end
         -- Exhilaration
-        if isChecked("Exhilaration") and php <= getOptionValue("Exhilaration") then
+        if br.isChecked("Exhilaration") and php <= br.getOptionValue("Exhilaration") then
             if cast.exhilaration("player") then return end
         end
         -- Feign Death
-        if isChecked("Feign Death") and php <= getOptionValue("Feign Death") then
+        if br.isChecked("Feign Death") and php <= br.getOptionValue("Feign Death") then
             if cast.feignDeath("player") then return end
         end
-        if isChecked("Purge") then
+        if br.isChecked("Purge") then
             if #enemies.yards40f > 0 then
                 for i = 1, #enemies.yards40f do
                     local thisUnit = enemies.yards40f[i]
-                    if getOptionValue("Purge") == 1 or (getOptionValue("Purge") == 2 and UnitIsUnit(thisUnit,"target")) then
-                        if isValidUnit(thisUnit) and canDispel(thisUnit,spell.tranquilizingShot) then
+                    if br.getOptionValue("Purge") == 1 or (br.getOptionValue("Purge") == 2 and UnitIsUnit(thisUnit,"target")) then
+                        if br.isValidUnit(thisUnit) and br.canDispel(thisUnit,spell.tranquilizingShot) then
                             if cast.tranquilizingShot(thisUnit) then return end
                         end
                     end
@@ -433,15 +433,15 @@ actionList.Interrupts = function()
         -- Counter Shot
         for i=1, #enemies.yards40f do
             thisUnit = enemies.yards40f[i]
-            if canInterrupt(thisUnit,getOptionValue("Interrupt At")) then
-                if isChecked("Counter Shot") and cd.counterShot.remains() <= gcdMax and br.timer:useTimer("Interrupts", 0.5) then
+            if canInterrupt(thisUnit,br.getOptionValue("Interrupt At")) then
+                if br.isChecked("Counter Shot") and cd.counterShot.remains() <= gcdMax and br.timer:useTimer("Interrupts", 0.5) then
                     if cast.counterShot(thisUnit) then return end
-                elseif isChecked("Freezing Trap") and not pause() and (cd.counterShot.remains() > gcdMax or not isChecked("Counter Shot")) and cd.freezingTrap.remains() <= gcdMax 
-                    and br.timer:useTimer("Interrupts", 0.5) and getDistance(thisUnit) > 8 and getCastTimeRemain(thisUnit) > 3
+                elseif br.isChecked("Freezing Trap") and not pause() and (cd.counterShot.remains() > gcdMax or not br.isChecked("Counter Shot")) and cd.freezingTrap.remains() <= gcdMax 
+                    and br.timer:useTimer("Interrupts", 0.5) and br.getDistance(thisUnit) > 8 and getCastTimeRemain(thisUnit) > 3
                 then
                     if cast.freezingTrap(thisUnit,"ground") then return true end
-                elseif isChecked("Intimidation") and not pause() and not UnitIsDeadOrGhost("pet") and UnitExists("pet") and (cd.counterShot.remains() > gcdMax or not isChecked("Counter Shot")) 
-                    and cd.intimidation.remains() <= gcdMax and getDistance(thisUnit,"pet") <= 8 and br.timer:useTimer("Interrupts", 0.5) 
+                elseif br.isChecked("Intimidation") and not pause() and not UnitIsDeadOrGhost("pet") and UnitExists("pet") and (cd.counterShot.remains() > gcdMax or not br.isChecked("Counter Shot")) 
+                    and cd.intimidation.remains() <= gcdMax and br.getDistance(thisUnit,"pet") <= 8 and br.timer:useTimer("Interrupts", 0.5) 
                 then
                     if cast.intimidation(thisUnit) then return end
                 end
@@ -454,24 +454,24 @@ end -- End Action List - Interrupts
 actionList.Cooldowns = function()
     if useCDs() then
         -- Potion
-        if isChecked("Potion") and not buff.potionOfUnbridledFury.exists() and canUseItem(item.potionOfUnbridledFury) and buff.bestialWrath.exists() and buff.aspectOfTheWild.exists() then
+        if br.isChecked("Potion") and not buff.potionOfUnbridledFury.exists() and br.canUseItem(item.potionOfUnbridledFury) and buff.bestialWrath.exists() and buff.aspectOfTheWild.exists() then
             if use.potionOfUnbridledFury() then return end
         end
         -- Trinkets
-        if (getOptionValue("Trinkets") == 1 or getOptionValue("Trinkets") == 3)
+        if (br.getOptionValue("Trinkets") == 1 or br.getOptionValue("Trinkets") == 3)
             and use.able.slot(13) and not equiped.vigorTrinket(13)
             and not equiped.pocketSizedComputationDevice(13) and not equiped.ashvanesRazorCoral(13)
         then
             use.slot(13)
         end
-        if (getOptionValue("Trinkets") == 2 or getOptionValue("Trinkets") == 3)
+        if (br.getOptionValue("Trinkets") == 2 or br.getOptionValue("Trinkets") == 3)
             and use.able.slot(14) and not equiped.vigorTrinket(14)
             and not equiped.pocketSizedComputationDevice(14) and not equiped.ashvanesRazorCoral(14)
         then
             use.slot(14)
         end
         if useCDs() and #enemies.yards40f >= 1 then
-            if isChecked("Power Reactor") and equiped.vigorTrinket() and use.able.vigorTrinket() then
+            if br.isChecked("Power Reactor") and equiped.vigorTrinket() and use.able.vigorTrinket() then
                 if buff.vigorEngaged.exists() and buff.vigorEngaged.stack() == 6
                     and br.timer:useTimer("Vigor Engaged Delay", 6)
                 then
@@ -485,21 +485,21 @@ actionList.Cooldowns = function()
         -- use_item,name=ashvanes_razor_coral,if=debuff.razor_coral_debuff.up&(!equipped.azsharas_font_of_power|trinket.azsharas_font_of_power.cooldown.remains>86|essence.blood_of_the_enemy.major)&(prev_gcd.1.aspect_of_the_wild|!equipped.cyclotronic_blast&buff.aspect_of_the_wild.remains>5)&(!essence.condensed_lifeforce.major|buff.guardian_of_azeroth.up)&(target.health.pct<35|!essence.condensed_lifeforce.major|!talent.killer_instinct.enabled)|(debuff.razor_coral_debuff.down|target.time_to_die<26)&target.time_to_die>(24*(cooldown.cyclotronic_blast.remains+4<target.time_to_die))
         -- Pocket Sized Computation Device
         -- use_item,effect_name=cyclotronic_blast,if=!buff.bestial_wrath.up
-        if isChecked("Pocket Sized Computation Device") and equiped.pocketSizedComputationDevice() 
+        if br.isChecked("Pocket Sized Computation Device") and equiped.pocketSizedComputationDevice() 
             and use.able.pocketSizedComputationDevice() and not buff.bestialWrath.exists()
         then
             use.pocketSizedComputationDevice()
         end
         -- Ashvane's Razor Coral
         -- use_item,name=ashvanes_razor_coral,if=debuff.razor_coral_debuff.up&(prev_gcd.1.aspect_of_the_wild|!equipped.cyclotronic_blast&buff.aspect_of_the_wild.up)&(target.health.pct<35|!essence.condensed_lifeforce.major)|(debuff.razor_coral_debuff.down|target.time_to_die<26)&target.time_to_die>(24*(cooldown.cyclotronic_blast.remains+4<target.time_to_die))
-        if isChecked("Ashvane's Razor Coral") and equiped.ashvanesRazorCoral() and use.able.ashvanesRazorCoral()
+        if br.isChecked("Ashvane's Razor Coral") and equiped.ashvanesRazorCoral() and use.able.ashvanesRazorCoral()
             and debuff.razorCoral.exists("target") and (cast.last.aspectOfTheWild() --[[or not equiped.pocketSizedComputationDevice()]] and buff.aspectOfTheWild.exists("player")) 
             and (thp("target") < 35 or not essence.guardianOfAzeroth.active) or (not debuff.razorCoral.exists("target") or ttd("target") < 26)
         then
             use.ashvanesRazorCoral()
         end
         -- Racial: Orc Blood Fury | Troll Berserking | Blood Elf Arcane Torrent
-        if isChecked("Racial") then --and cd.racial.remain() == 0 then
+        if br.isChecked("Racial") then --and cd.racial.remain() == 0 then
             -- ancestral_call,if=cooldown.bestial_wrath.remains>30
             -- fireblood,if=cooldown.bestial_wrath.remains>30
             if cd.bestialWrath.remain() > 30 and (race == "MagharOrc" or race == "DarkIronDwarf") then
@@ -521,7 +521,7 @@ actionList.Cooldowns = function()
         end
     end -- End useCooldowns check
     -- Heart Essence
-    if isChecked("Use Essence") then
+    if br.isChecked("Use Essence") then
         -- worldvein_resonance,if=(prev_gcd.1.aspect_of_the_wild|cooldown.aspect_of_the_wild.remains<gcd|target.time_to_die<20)|!essence.vision_of_perfection.minor
         if not isMoving("player") and essence.worldveinResonance.active and cd.worldveinResonance.remain() <= gcdMax and useCDs()
             and ((cast.last.aspectOfTheWild() or cd.aspectOfTheWild.remain() < gcdMax or ttd(units.dyn40) < 20)
@@ -544,7 +544,7 @@ actionList.Cooldowns = function()
             if cast.memoryOfLucidDreams() then return end
         end
         -- reaping_flames,if=target.health.pct>80|target.health.pct<=20|target.time_to_pct_20>30
-        if essence.reapingFlames.active and cd.worldveinResonance.remain() <= gcdMax and (getHP(units.dyn40) > 80 or getHP(units.dyn40) <= 20 or getTTD(units.dyn40,20) > 30) then
+        if essence.reapingFlames.active and cd.worldveinResonance.remain() <= gcdMax and (br.getHP(units.dyn40) > 80 or br.getHP(units.dyn40) <= 20 or br.getTTD(units.dyn40,20) > 30) then
             if cast.reapingFlames() then return end
         end
     end
@@ -554,16 +554,16 @@ end -- End Action List - Cooldowns
 actionList.Opener = function()
     -- Start Attack
     -- auto_attack
-    if isChecked("Opener") and useCDs() and not opener.complete then
-        if isValidUnit("target") and getDistance("target") < 40
-            and getFacing("player","target") and getSpellCD(61304) == 0
+    if br.isChecked("Opener") and useCDs() and not opener.complete then
+        if br.isValidUnit("target") and br.getDistance("target") < 40
+            and br.getFacing("player","target") and br.getSpellCD(61304) == 0
         then
             -- Begin
             if not opener.OPN1 then
                 Print("Starting Opener")
                 opener.count = opener.count + 1
                 opener.OPN1 = true
-                StartAttack()
+                br._G.StartAttack()
                 return
             -- Aspect of the Wild - No Primal Instincts
             elseif opener.OPN1 and not opener.AOW1 then
@@ -718,7 +718,7 @@ actionList.Opener = function()
                 opener.complete = true
             end
         end
-    elseif (UnitExists("target") and not useCDs()) or not isChecked("Opener") then
+    elseif (UnitExists("target") and not useCDs()) or not br.isChecked("Opener") then
         opener.complete = true
     end
 end -- End Action List - Opener
@@ -729,56 +729,56 @@ actionList.St = function()
     -- barbed_shot,if=pet.turtle.buff.frenzy.up&pet.turtle.buff.frenzy.remains<gcd|cooldown.bestial_wrath.remains&(full_recharge_time<gcd|azerite.primal_instincts.enabled&cooldown.aspect_of_the_wild.remains<gcd)
     if ((buff.frenzy.exists("pet") and buff.frenzy.remain("pet") <= gcdMax + 0.1)
         or (cd.bestialWrath.remain() > gcdMax and (charges.barbedShot.timeTillFull() < gcdMax
-        or (traits.primalInstincts.active and isChecked("Aspect of the Wild") and useCDs() and cd.aspectOfTheWild.remain() < gcdMax))))
+        or (traits.primalInstincts.active and br.isChecked("Aspect of the Wild") and useCDs() and cd.aspectOfTheWild.remain() < gcdMax))))
     then
         if cast.barbedShot() then return end
     end
     -- Concentrated Flame
     -- concentrated_flame,if=focus+focus.regen*gcd<focus.max&buff.bestial_wrath.down&(!dot.concentrated_flame_burn.remains&!action.concentrated_flame.in_flight)|full_recharge_time<gcd|target.time_to_die<5
-    if isChecked("Use Essence") and essence.concentratedFlame.active then
+    if br.isChecked("Use Essence") and essence.concentratedFlame.active then
      	if (focus + focusRegen * gcdMax < focusMax and not buff.bestialWrath.exists() and (not debuff.concentratedFlame.exists(units.dyn40) and cast.timeSinceLast.concentratedFlame() >= 2)) or charges.concentratedFlame.timeTillFull() < gcdMax or (ttd(units.dyn40) < 5 and useCDs()) then
         	if cast.concentratedFlame() then return end
     	end
     end
     -- Aspect of the Wild
     -- aspect_of_the_wild,if=buff.aspect_of_the_wild.down&(cooldown.barbed_shot.charges<1|!azerite.primal_instincts.enabled)
-    if isChecked("Aspect of the Wild") and useCDs() and (ttd(units.dyn40) > 15 or useCDs())
+    if br.isChecked("Aspect of the Wild") and useCDs() and (ttd(units.dyn40) > 15 or useCDs())
         and not buff.aspectOfTheWild.exists() and (charges.barbedShot.count() < 1 or not traits.primalInstincts.active)
     then
         if cast.aspectOfTheWild() then return end
     end
     -- Stampede
     -- stampede,if=buff.aspect_of_the_wild.up&buff.bestial_wrath.up|target.time_to_die<15
-    if isChecked("Stampede") and talent.stampede 
+    if br.isChecked("Stampede") and talent.stampede 
     and (buff.aspectOfTheWild.exists() and buff.bestialWrath.exists()) and (ttd(units.dyn40) > 15 or useCDs())
     then
         if cast.stampede() then return end
     end
     -- A Murder of Crows
     -- a_murder_of_crows
-    if isChecked("A Murder Of Crows / Barrage") and mode.murderOfCrows == 1 then
+    if br.isChecked("A Murder Of Crows / Barrage") and mode.murderOfCrows == 1 then
         if cast.aMurderOfCrows() then return end
     end
     -- Focused Azerite Beam
     -- focused_azerite_beam,if=buff.bestial_wrath.down|target.time_to_die<5
-    if isChecked("Use Essence") and essence.focusedAzeriteBeam.active and cd.focusedAzeriteBeam.remain() <= gcdMax
-        and (not buff.bestialWrath.exists() or ((ttd(units.dyn40) < 5 or isDummy()) and useCDs()))
+    if br.isChecked("Use Essence") and essence.focusedAzeriteBeam.active and cd.focusedAzeriteBeam.remain() <= gcdMax
+        and (not buff.bestialWrath.exists() or ((ttd(units.dyn40) < 5 or br.isDummy()) and useCDs()))
         and (enemies.yards30r >= 3 or useCDs())
     then
         if cast.focusedAzeriteBeam(nil,"rect",minCount, 30) then return end
     end
     -- The Unbound Force
     -- the_unbound_force,if=buff.reckless_force.up|buff.reckless_force_counter.stack<10|target.time_to_die<5
-    if isChecked("Use Essence") and essence.theUnboundForce.active and cd.theUnboundForce.remain() <= gcdMax and (buff.recklessForce.exists()
+    if br.isChecked("Use Essence") and essence.theUnboundForce.active and cd.theUnboundForce.remain() <= gcdMax and (buff.recklessForce.exists()
         or buff.recklessForceCounter.stack() < 10 or (ttd(units.dyn40) < 5 and useCDs()))
     then
         if cast.theUnboundForce() then return end
     end
     -- Bestial Wrath
     -- bestial_wrath,if=talent.one_with_the_pack.enabled&buff.bestial_wrath.remains<gcd|buff.bestial_wrath.down&cooldown.aspect_of_the_wild.remains>15|target.time_to_die<15+gcd
-    if mode.bestialWrath == 1 and (getOptionValue("Bestial Wrath") == 2 or (getOptionValue("Bestial Wrath") == 1 and useCDs()))
+    if mode.bestialWrath == 1 and (br.getOptionValue("Bestial Wrath") == 2 or (br.getOptionValue("Bestial Wrath") == 1 and useCDs()))
         and (talent.oneWithThePack and buff.bestialWrath.remain() <= gcdMax
-            or not buff.bestialWrath.exists() and (cd.aspectOfTheWild.remain() > 15 or not isChecked("Aspect of the Wild"))
+            or not buff.bestialWrath.exists() and (cd.aspectOfTheWild.remain() > 15 or not br.isChecked("Aspect of the Wild"))
             or (ttd(units.dyn40) < 15 + gcdMax))
     then
         if cast.bestialWrath() then return end
@@ -790,8 +790,8 @@ actionList.St = function()
     end
     -- Blood of the Enemy
     -- blood_of_the_enemy,if=buff.aspect_of_the_wild.remains>10+gcd|target.time_to_die<10+gcd
-    if isChecked("Use Essence") and (buff.aspectOfTheWild.remain() > 10 + gcdMax
-        or not isChecked("Aspect of the Wild") or (ttd(units.dyn40) < 10 + gcdMax and useCDs()))
+    if br.isChecked("Use Essence") and (buff.aspectOfTheWild.remain() > 10 + gcdMax
+        or not br.isChecked("Aspect of the Wild") or (ttd(units.dyn40) < 10 + gcdMax and useCDs()))
     then
         if cast.bloodOfTheEnemy() then return end
     end
@@ -819,12 +819,12 @@ actionList.St = function()
     end
     -- Purifying Blast
     -- purifying_blast,if=buff.bestial_wrath.down|target.time_to_die<8
-    if isChecked("Use Essence") and (not buff.bestialWrath.exists() or (ttd(units.dyn40) < 8 and useCDs())) then
+    if br.isChecked("Use Essence") and (not buff.bestialWrath.exists() or (ttd(units.dyn40) < 8 and useCDs())) then
         if cast.purifyingBlast("best", nil, 1, 8) then return true end
     end
     -- Barrage
     -- barrage
-    if isChecked("A Murder Of Crows / Barrage") then
+    if br.isChecked("A Murder Of Crows / Barrage") then
         if cast.barrage() then return end
     end
     -- Cobra Shot
@@ -837,7 +837,7 @@ actionList.St = function()
     end
     -- Spitting Cobra
     -- spitting_cobra
-    if isChecked("Spitting Cobra") and talent.spittingCobra then
+    if br.isChecked("Spitting Cobra") and talent.spittingCobra then
         if cast.spittingCobra() then return end
     end
     -- Barbed Shot
@@ -872,19 +872,19 @@ actionList.Cleave = function()
     end
     -- Aspect of the Wild
     -- aspect_of_the_wild
-    if isChecked("Aspect of the Wild") and not buff.aspectOfTheWild.exists() and useCDs() and (ttd(units.dyn40) > 15 or useCDs()) then
+    if br.isChecked("Aspect of the Wild") and not buff.aspectOfTheWild.exists() and useCDs() and (ttd(units.dyn40) > 15 or useCDs()) then
         if cast.aspectOfTheWild() then return end
     end
     -- Stampede
     -- stampede,if=buff.aspect_of_the_wild.up&buff.bestial_wrath.up|target.time_to_die<15
-    if isChecked("Stampede") and talent.stampede and (buff.aspectOfTheWild.exists() and buff.bestialWrath.exists()) and (ttd(units.dyn40) > 15 or useCDs())
+    if br.isChecked("Stampede") and talent.stampede and (buff.aspectOfTheWild.exists() and buff.bestialWrath.exists()) and (ttd(units.dyn40) > 15 or useCDs())
     then
         if cast.stampede() then return end
     end
     -- Bestial Wrath
     -- bestial_wrath,if=cooldown.aspect_of_the_wild.remains_guess>20|talent.one_with_the_pack.enabled|target.time_to_die<15
-    if mode.bestialWrath == 1 and (getOptionValue("Bestial Wrath") == 2 or (getOptionValue("Bestial Wrath") == 1 and useCDs()))
-        and (not isChecked("Aspect of the Wild") or cd.aspectOfTheWild.remains() > 20 or talent.oneWithThePack
+    if mode.bestialWrath == 1 and (br.getOptionValue("Bestial Wrath") == 2 or (br.getOptionValue("Bestial Wrath") == 1 and useCDs()))
+        and (not br.isChecked("Aspect of the Wild") or cd.aspectOfTheWild.remains() > 20 or talent.oneWithThePack
         or ttd(units.dyn40) < 15)
     then
         if cast.bestialWrath() then return end
@@ -899,12 +899,12 @@ actionList.Cleave = function()
     end
     -- A Murder of Crows
     -- a_murder_of_crows
-    if isChecked("A Murder Of Crows / Barrage") and mode.murderOfCrows == 1 then
+    if br.isChecked("A Murder Of Crows / Barrage") and mode.murderOfCrows == 1 then
         if cast.aMurderOfCrows() then return end
     end
     -- Barrage
     -- barrage
-    if isChecked("A Murder Of Crows / Barrage") then
+    if br.isChecked("A Murder Of Crows / Barrage") then
         if cast.barrage() then return end
     end
     -- Kill Command
@@ -920,15 +920,15 @@ actionList.Cleave = function()
     -- Barbed Shot
     -- barbed_shot,target_if=min:dot.barbed_shot.remains,if=pet.turtle.buff.frenzy.down&(charges_fractional>1.8|buff.bestial_wrath.up)|cooldown.aspect_of_the_wild.remains<pet.turtle.buff.frenzy.duration-gcd&azerite.primal_instincts.enabled|charges_fractional>1.4|target.time_to_die<9
     if not buff.frenzy.exists("pet") and (charges.barbedShot.frac() > 1.8 or buff.bestialWrath.exists())
-        or (traits.primalInstincts.active and isChecked("Aspect of the Wild") and useCDs() and cd.aspectOfTheWild.remain() < (buff.frenzy.remain("pet") - gcdMax))
+        or (traits.primalInstincts.active and br.isChecked("Aspect of the Wild") and useCDs() and cd.aspectOfTheWild.remain() < (buff.frenzy.remain("pet") - gcdMax))
         or (useCDs() and ttd(units.dyn40) < 9)
     then
         if cast.barbedShot(lowestBarbedShot) then return end
     end
     -- Heart Essence
-    if isChecked("Use Essence") then
+    if br.isChecked("Use Essence") then
         -- focused_azerite_beam
-        if isChecked("Use Essence") and not buff.bestialWrath.exists()
+        if br.isChecked("Use Essence") and not buff.bestialWrath.exists()
             and (enemies.yards30r >= 3 or useCDs())
         then
             if cast.focusedAzeriteBeam(nil,"rect",minCount, 30) then return end
@@ -962,7 +962,7 @@ actionList.Cleave = function()
     end
     -- Spitting Cobra
     -- spitting_cobra
-    if isChecked("Spitting Cobra") and talent.spittingCobra then
+    if br.isChecked("Spitting Cobra") and talent.spittingCobra then
         if cast.spittingCobra() then return end
     end
 end -- End Action List - Cleave
@@ -970,52 +970,52 @@ end -- End Action List - Cleave
 -- Action List - PreCombat
 actionList.PreCombat = function()
     if not inCombat and not (flying or IsMounted()) then
-        if isChecked("Pre-Pull") then
+        if br.isChecked("Pre-Pull") then
             -- Flask / Crystal
-            if ((pullTimer <= 5 and (not equiped.azsharasFontOfPower or not canUseItem(item.azsharasFontOfPower))) or (equiped.azsharasFontOfPower and canUseItem(item.azsharasFontOfPower) and pullTimer <= 9 and pullTimer > 5)) then
-                if getOptionValue("Elixir") == 1 and inRaid and not buff.greaterFlaskOfTheCurrents.exists() and canUseItem(item.greaterFlaskOfTheCurrents) then
+            if ((pullTimer <= 5 and (not equiped.azsharasFontOfPower or not br.canUseItem(item.azsharasFontOfPower))) or (equiped.azsharasFontOfPower and br.canUseItem(item.azsharasFontOfPower) and pullTimer <= 9 and pullTimer > 5)) then
+                if br.getOptionValue("Elixir") == 1 and inRaid and not buff.greaterFlaskOfTheCurrents.exists() and br.canUseItem(item.greaterFlaskOfTheCurrents) then
                     if use.greaterFlaskOfTheCurrents() then return end
-                elseif getOptionValue("Elixir") == 2 and inRaid and not buff.flaskOfTheCurrents.exists() and canUseItem(item.flaskOfTheCurrents) then
+                elseif br.getOptionValue("Elixir") == 2 and inRaid and not buff.flaskOfTheCurrents.exists() and br.canUseItem(item.flaskOfTheCurrents) then
                     if use.greaterFlaskOfTheCurrents() then return end
                 end
                 -- augment
-                if isChecked("Augment") and not buff.battleScarredAugmentation.exists() and (canUseItem(item.battleScarredAugmentRune) or canUseItem(174906)) then
+                if br.isChecked("Augment") and not buff.battleScarredAugmentation.exists() and (br.canUseItem(item.battleScarredAugmentRune) or br.canUseItem(174906)) then
                     if use.battleScarredAugmentRune() then return end
                 end
                 -- potion
-                if isChecked("Potion") and not buff.potionOfUnbridledFury.exists() and canUseItem(item.potionOfUnbridledFury) then
+                if br.isChecked("Potion") and not buff.potionOfUnbridledFury.exists() and br.canUseItem(item.potionOfUnbridledFury) then
                     if use.potionOfUnbridledFury() then return end
                 end
                 -- Aspect of the Wild
                 -- aspect_of_the_wild,precast_time=1.1,if=!azerite.primal_instincts.enabled
-                if isChecked("Aspect of the Wild") and not buff.aspectOfTheWild.exists() and useCDs() and (not traits.primalInstincts.active) and pullTimer <= 1.1
+                if br.isChecked("Aspect of the Wild") and not buff.aspectOfTheWild.exists() and useCDs() and (not traits.primalInstincts.active) and pullTimer <= 1.1
                 then
-                    CastSpellByName(GetSpellInfo(spell.aspectOfTheWild)) return 
+                    br._G.CastSpellByName(GetSpellInfo(spell.aspectOfTheWild)) return 
                 end
                 -- Bestial Wrath
                 -- bestial_wrath,precast_time=1.5,if=azerite.primal_instincts.enabled&(!essence.essence_of_the_focusing_iris.major)&(!equipped.pocketsized_computation_device|!cooldown.cyclotronic_blast.duration)
-                if mode.bestialWrath == 1 and (getOptionValue("Bestial Wrath") == 2 or (getOptionValue("Bestial Wrath") == 1 and useCDs()))
+                if mode.bestialWrath == 1 and (br.getOptionValue("Bestial Wrath") == 2 or (br.getOptionValue("Bestial Wrath") == 1 and useCDs()))
                 and (traits.primalInstincts.active) and not essence.focusedAzeriteBeam.major and 
-                (not equiped.pocketSizedComputationDevice or not canUseItem(item.pocketSizedComputationDevice)) and pullTimer <= 1.5
+                (not equiped.pocketSizedComputationDevice or not br.canUseItem(item.pocketSizedComputationDevice)) and pullTimer <= 1.5
                 then
-                    CastSpellByName(GetSpellInfo(spell.bestialWrath)) return 
+                    br._G.CastSpellByName(GetSpellInfo(spell.bestialWrath)) return 
                 end
-            elseif equiped.azsharasFontOfPower and canUseItem(item.azsharasFontOfPower) and pullTimer <= 5 then
+            elseif equiped.azsharasFontOfPower and br.canUseItem(item.azsharasFontOfPower) and pullTimer <= 5 then
                 if br.timer:useTimer("Font Delay", 4) then
-                    useItem(169314)
+                    br.useItem(169314)
                 end
             end
         end -- End Pre-Pull     
         -- Beast Mode
-        if (isChecked("Beast Mode")) then
+        if (br.isChecked("Beast Mode")) then
             for k,v in pairs(enemies.yards40nc) do
                 TargetUnit(v)
             end
         end
         -- Init Combat
-        if getDistance("target") < 40 and isValidUnit("target") and opener.complete then
+        if br.getDistance("target") < 40 and br.isValidUnit("target") and opener.complete then
             -- Auto Shot
-            StartAttack()
+            br._G.StartAttack()
         end
     end -- End No Combat
     -- Opener
@@ -1072,10 +1072,10 @@ local function runRotation()
     flying                             = IsFlying()
     healPot                            = getHealthPot()
     pullTimer                          = PullTimerRemain()
-    thp                                = getHP
-    ttd                                = getTTD
+    thp                                = br.getHP
+    ttd                                = br.getTTD
     haltProfile                        = ((inCombat and profileStop) or IsMounted() or flying
-                                            or (isChecked("Pause Mode") and SpecificToggle("Pause Mode")) or buff.feignDeath.exists() or mode.rotation==4)
+                                            or (br.isChecked("Pause Mode") and SpecificToggle("Pause Mode")) or buff.feignDeath.exists() or mode.rotation==4)
 
     -- Get Best Unit for Range
     -- units.get(range, aoe)
@@ -1099,12 +1099,12 @@ local function runRotation()
         wipe(timersTable)
     end
 
-    if isChecked("Enemy Target Lock") and inCombat and UnitIsFriend("target", "player") then
+    if br.isChecked("Enemy Target Lock") and inCombat and UnitIsFriend("target", "player") then
         TargetLastEnemy()
     end
 
     -- General Vars
-    if isChecked("Spirit Mend") and not isChecked("HE Active") then br.friend:Update() end
+    if br.isChecked("Spirit Mend") and not br.isChecked("HE Active") then br.friend:Update() end
     if leftCombat == nil then leftCombat = GetTime() end
     if profileStop == nil or (not inCombat and not UnitExists("target") and profileStop == true) then
         profileStop = false
@@ -1115,7 +1115,7 @@ local function runRotation()
     lowestBarbedShot = debuff.barbedShot.lowest(8,"remain","pet")
 
     -- Opener Reset
-    if (not inCombat and not GetObjectExists("target")) or opener.complete == nil then
+    if (not inCombat and not br.GetObjectExists("target")) or opener.complete == nil then
         opener.count = 0
         opener.OPN1 = false
         opener.AOW1 = false
@@ -1148,7 +1148,7 @@ local function runRotation()
             if cast.playDead() then return end
         end
         StopAttack()
-        if isDummy() then ClearTarget() end
+        if br.isDummy() then ClearTarget() end
         return true
     else
         -----------------
@@ -1176,13 +1176,13 @@ local function runRotation()
 
             local petActive = IsPetActive()
             local petExists = UnitExists("pet")
-            local petHealth = getHP("pet")
+            local petHealth = br.getHP("pet")
             if IsMounted() or IsFlying() or UnitHasVehicleUI("player") or CanExitVehicle("player") then
                 waitForPetToAppear = GetTime()
             elseif mode.petSummon ~= 6 then
                 local callPet = spell["callPet"..mode.petSummon]
                 if waitForPetToAppear ~= nil and GetTime() - waitForPetToAppear > 2 then
-                    if not isMoving("player") and ((petExists and petActive and (callPet == nil or UnitName("pet") ~= select(2,GetCallPetSpellInfo(callPet)))) or petExists and getDistance("pet") > 60) then
+                    if not isMoving("player") and ((petExists and petActive and (callPet == nil or UnitName("pet") ~= select(2,GetCallPetSpellInfo(callPet)))) or petExists and br.getDistance("pet") > 60) then
                         if cast.dismissPet() then waitForPetToAppear = GetTime(); return true end
                     elseif callPet ~= nil then
                         if ((petExists and petHealth == 0) or (br.callP == true and not petExists)) and not isMoving("player") then
@@ -1201,8 +1201,8 @@ local function runRotation()
                 if cast.dismissPet() then waitForPetToAppear = GetTime(); return true end
             end
                 -- Mend Pet
-            if isChecked("Mend Pet") and petExists and not deadPet
-                and not buff.mendPet.exists("pet") and petHealth < getOptionValue("Mend Pet")
+            if br.isChecked("Mend Pet") and petExists and not deadPet
+                and not buff.mendPet.exists("pet") and petHealth < br.getOptionValue("Mend Pet")
             then
                 if cast.mendPet() then return end
             end
@@ -1213,21 +1213,21 @@ local function runRotation()
             --------------------------
             --- In Combat Rotation ---
             --------------------------
-            if inCombat and isValidUnit("target") and opener.complete then
+            if inCombat and br.isValidUnit("target") and opener.complete then
                 ---------------------------
                 --- SimulationCraft APL ---
                 ---------------------------
-                if getOptionValue("APL Mode") == 1 and getHP("pet") ~= 0 then
+                if br.getOptionValue("APL Mode") == 1 and br.getHP("pet") ~= 0 then
                     -- auto_shot
-                    StartAttack()
+                    br._G.StartAttack()
                     -- call_action_list,name=cds
                     actionList.Cooldowns()
                     -- call_action_list,name=st,if=active_enemies<2
-                    if (mode.rotation == 1 and #enemies.yards8p < getOptionValue("Units To AoE")) or mode.rotation == 3 or level < 16 then
+                    if (mode.rotation == 1 and #enemies.yards8p < br.getOptionValue("Units To AoE")) or mode.rotation == 3 or level < 16 then
                         actionList.St()
                     end
                     -- call_action_list,name=cleave,if=active_enemies>1
-                    if (mode.rotation == 1 and #enemies.yards8p >= getOptionValue("Units To AoE")) or mode.rotation == 2 then
+                    if (mode.rotation == 1 and #enemies.yards8p >= br.getOptionValue("Units To AoE")) or mode.rotation == 2 then
                         actionList.Cleave()
                     end
                 end -- End SimC APL

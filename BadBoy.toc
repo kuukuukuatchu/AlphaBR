@@ -4,8 +4,8 @@
 ## Author: CuteOne
 ## Version: 1.33.8
 
-System\BadRotationsPatcher.lua
 BadRotations.lua
+System\BadRotationsPatcher.lua
 bindings.xml
 misc.xml
 
@@ -87,7 +87,6 @@ Libs\LibGroupInSpecT-1.1\LibGroupInSpecT-1.1.lua
 
 ## Engines
 
-System\Engines\ArtifactTable.lua
 System\Engines\EnemiesEngine.lua
 System\Engines\EnemiesEngineFunctions.lua
 System\Engines\HealingEngine.lua

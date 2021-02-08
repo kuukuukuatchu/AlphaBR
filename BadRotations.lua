@@ -1,6 +1,6 @@
 -- define br global that will hold the bot global background features
-local addonName, br = ...
-br._G = setmetatable({}, _G)
+local _, br = ...
+br._G = setmetatable({}, {__index=_G})
 br.data = {}
 br.data.settings = {}
 br.addonName = "BadRotations"
@@ -25,8 +25,8 @@ br.dropOptions.CD = {"Never", "CDs", "Always"}
 br.engines = {}
 br.loadedIn = false
 br.loadFile = false
-br.pauseCast = GetTime()
-br.prevQueueWindow = GetCVar("SpellQueueWindow")
+br.pauseCast = _G.GetTime()
+br.prevQueueWindow = _G.GetCVar("SpellQueueWindow")
 br.profile = {}
 br.rotations = {}
 br.selectedSpec = "None"
@@ -51,7 +51,7 @@ br.classColors = {
 	[11] = {class = "Druid", B = 0.04, G = 0.49, R = 1, hex = "ff7d0a"},
 	[12] = {class = "Demonhunter", B = 0.79, G = 0.19, R = 0.64, hex = "a330c9"}
 }
-br.classColor = tostring("|cff" .. br.classColors[select(3, UnitClass("player"))].hex)
+br.classColor = tostring("|cff" .. br.classColors[select(3, br._G.UnitClass("player"))].hex)
 br.qualityColors = {
 	blue = "0070dd",
 	green = "1eff00",
@@ -60,14 +60,14 @@ br.qualityColors = {
 }
 
 local nameSet = false
-function br:setAddonName()
+function br.setAddonName()
 	if not nameSet then
-		for i = 1, GetNumAddOns() do
-			local name, title = GetAddOnInfo(i)
+		for i = 1, _G.GetNumAddOns() do
+			local name, title = _G.GetAddOnInfo(i)
 			if title == "|cffa330c9BadRotations" then
 				br.addonName = name
 				if br.addonName ~= "BadRotations" then
-					Print("Currently known as " .. tostring(br.addonName))
+					br._G.print("Currently known as " .. tostring(br.addonName))
 				end
 				nameSet = true
 				break
@@ -76,33 +76,30 @@ function br:setAddonName()
 	end
 end
 
--- Cache all non-nil return values from GetSpellInfo in a table to improve performance
-local spellcache =
-	setmetatable(
-	{},
-	{
-		__index = function(t, v)
-			local a = {GetSpellInfo(v)}
-			if GetSpellInfo(v) then
-				t[v] = a
-			end
-			return a
-		end
-	}
-)
-local function GetSpellInfo(a)
-	return unpack(spellcache[a])
-end
+-- -- Cache all non-nil return values from GetSpellInfo in a table to improve performance
+-- local spellcache =
+-- 	setmetatable(
+-- 	{},
+-- 	{
+-- 		__index = function(t, v)
+-- 			local a = {_G.GetSpellInfo(v)}
+-- 			if _G.GetSpellInfo(v) then
+-- 				t[v] = a
+-- 			end
+-- 			return a
+-- 		end
+-- 	}
+-- )
 -- Custom Print
-function br.debug:Print(message)
+function br.debugPrint(message)
 	if br.data.settings[br.selectedSpec].toggles["isDebugging"] == true then
-		Print(message)
+		br._G.print(message)
 	end
 end
 -- Run
-function br:Run()
+function br.Run()
 	if br.selectedSpec == nil then
-		br.selectedSpecID, br.selectedSpec = select(GetSpecializationInfo(GetSpecialization()))
+		br.selectedSpecID, br.selectedSpec = select(_G.GetSpecializationInfo(_G.GetSpecialization()))
 		if br.selectedSpec == "" then
 			br.selectedSpec = "Initial"
 		end
@@ -120,14 +117,14 @@ function br:Run()
 		br:Engine()
 		br:ObjectManager()
 		-- Complete Loadin
-		ChatOverlay("-= BadRotations Loaded =-")
-		Print("Loaded")
+		br.ChatOverlay("-= BadRotations Loaded =-")
+		br._G.print("Loaded")
 		br.loadedIn = true
 	end
 end
 -- Default Settings
-function br:defaultSettings()
-	C_Timer.After(
+function br.defaultSettings()
+	_G.C_Timer.After(
 		2,
 		function()
 			if br.ui.window.config == nil then
@@ -167,7 +164,7 @@ function br:defaultSettings()
 	end
 end
 -- Load Saved Settings
-function br:loadSavedSettings()
+function br.loadSavedSettings()
 	if br.initializeSettings then
 		br.initOM = true
 		br.loader.loadProfiles()
@@ -177,20 +174,20 @@ function br:loadSavedSettings()
 		else
 			br:loadSettings(nil, nil, nil, br.rotations[br.selectedSpec][1].name)
 		end
-		br:defaultSettings()
+		br.defaultSettings()
 		-- Build the Toggles
-		TogglesFrame()
+		br.TogglesFrame()
 		br.initializeSettings = false
 	end
 end
-local frame = CreateFrame("FRAME")
+local frame = _G.CreateFrame("FRAME")
 frame:RegisterEvent("ADDON_LOADED")
 frame:RegisterEvent("PLAYER_LOGOUT")
 frame:RegisterUnitEvent("PLAYER_ENTERING_WORLD")
 frame:RegisterUnitEvent("PLAYER_LEAVING_WORLD")
 frame:RegisterEvent("LOADING_SCREEN_ENABLED")
 frame:RegisterEvent("LOADING_SCREEN_DISABLED")
-function frame:OnEvent(event, arg1, arg2, arg3, arg4, arg5)
+function frame:OnEvent(event)
 	if event == "LOADING_SCREEN_ENABLED" then
 		br.disablePulse = true
 	end
@@ -200,11 +197,11 @@ function frame:OnEvent(event, arg1, arg2, arg3, arg4, arg5)
 	if event == "PLAYER_LOGOUT" then
 		if br.unlocked then
 			-- Return queue window to previous setting
-			if GetCVar("SpellQueueWindow") == "0" then
-				RunMacroText("/console SpellQueueWindow " .. br.prevQueueWindow)
+			if _G.GetCVar("SpellQueueWindow") == "0" then
+				br._G.RunMacroText("/console SpellQueueWindow " .. br.prevQueueWindow)
 			end
 			br.ui:saveWindowPosition()
-			if getOptionCheck("Reset Options") then
+			if br.getOptionCheck("Reset Options") then
 				-- Reset Settings
 				br:saveSettings(nil, nil, br.selectedSpec, br.selectedProfileName, true)
 			else
@@ -216,14 +213,14 @@ function frame:OnEvent(event, arg1, arg2, arg3, arg4, arg5)
 	end
 	if event == "PLAYER_ENTERING_WORLD" then
 		-- Update Selected Spec
-		br.selectedSpecID, br.selectedSpec = GetSpecializationInfo(GetSpecialization())		
-    	if br.selectedSpec == "" then br.selectedSpec = "Initial" end
-		br.activeSpecGroup = GetActiveSpecGroup()
+		br.selectedSpecID, br.selectedSpec = _G.GetSpecializationInfo(_G.GetSpecialization())
+		if br.selectedSpec == "" then br.selectedSpec = "Initial" end
+		br.activeSpecGroup = _G.GetActiveSpecGroup()
 		if br.data == nil then
 			br.data = {}
 		end
 		if br.data.tracker == nil then
-			Print("br.data.tracker not found")
+			br._G.print("br.data.tracker not found")
 			br.data.tracker = {}
 		end
 		if br.data.settings == nil then

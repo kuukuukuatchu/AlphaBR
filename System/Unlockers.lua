@@ -13,10 +13,10 @@ function br:loadUnlockerAPI()
         b.ObjectPointer = ObjectPointer
         b.ObjectExists = ObjectExists
         b.ObjectIsVisible = ObjectIsVisible
-        b.ObjectPosition = ObjectPosition
+        b.br._G.ObjectPosition = br._G.ObjectPosition
         b.ObjectFacing = ObjectFacing
         b.ObjectName = ObjectName
-        b.ObjectID = ObjectID
+        b.br._G.ObjectID = br._G.ObjectID
         b.ObjectIsUnit = ObjectIsUnit
         b.GetDistanceBetweenPositions = GetDistanceBetweenPositions
         b.GetDistanceBetweenObjects = GetDistanceBetweenObjects
@@ -34,7 +34,7 @@ function br:loadUnlockerAPI()
         b.GetPlayerWithIndex = GetObjectWithIndex
         -- Unit
         b.UnitBoundingRadius = UnitBoundingRadius
-        b.UnitCombatReach = UnitCombatReach
+        b.UnitCombatReach = br._G.UnitCombatReach
         b.UnitTarget = UnitTarget
         b.UnitCastID = UnitCastID
         -- World
@@ -85,8 +85,8 @@ function br:loadUnlockerAPI()
         end
         b.ObjectExists = wmbapi.ObjectExists
         b.ObjectIsVisible = b.UnitIsVisible
-        b.ObjectPosition = function(obj) 
-            local x,y,z = wmbapi.ObjectPosition(obj) 
+        b.br._G.ObjectPosition = function(obj) 
+            local x,y,z = wmbapi.br._G.ObjectPosition(obj) 
             if x then
                 return x,y,z
             else
@@ -107,7 +107,7 @@ function br:loadUnlockerAPI()
                 return ""
             end
         end
-        b.ObjectID = function(obj) 
+        b.br._G.ObjectID = function(obj) 
             if b.UnitIsVisible(obj) then
                 return wmbapi.ObjectId(obj)
             else
@@ -162,14 +162,14 @@ function br:loadUnlockerAPI()
         end
         b.UnitCombatReach = function(obj) 
             if b.UnitIsVisible(obj) then
-                return wmbapi.UnitCombatReach(obj)
+                return wmbapi.br._G.UnitCombatReach(obj)
             else
                 return 0
             end
         end
-        b.UnitTarget = function(obj) 
+        br._G.UnitTarget = function(obj) 
             if b.UnitIsVisible(obj) then
-                return wmbapi.UnitTarget(obj)
+                return wmbapi.br._G.UnitTarget(obj)
             else
                 return ""
             end
@@ -184,7 +184,7 @@ function br:loadUnlockerAPI()
         end
         b.UnitCreator = function(obj) 
             if b.UnitIsVisible(obj) then
-                return wmbapi.UnitCreator(obj)
+                return wmbapi.br._G.UnitCreator(obj)
             else
                 return ""
             end
@@ -292,10 +292,10 @@ function br:loadUnlockerAPI()
         -- ObjectPointer = function() return "" end
         -- ObjectExists = UnitExists
         -- ObjectIsVisible = UnitIsVisible
-        -- ObjectPosition = function() return 0,0,0 end
+        -- br._G.ObjectPosition = function() return 0,0,0 end
         -- ObjectFacing = function() return 0,0 end
         -- ObjectName = function() return "" end
-        -- ObjectID = function() return 0 end
+        -- br._G.ObjectID = function() return 0 end
         -- ObjectIsUnit = UnitIsUnit
         -- GetDistanceBetweenPositions = function() return 999 end
         -- GetDistanceBetweenObjects = function() return 999 end
@@ -309,8 +309,8 @@ function br:loadUnlockerAPI()
         -- GetObjectWithGUID = function() return "target" end
         -- -- Unit
         -- UnitBoundingRadius = function() return 0 end
-        -- UnitCombatReach = function() return 0 end
-        -- UnitTarget = function() return "target" end
+        -- br._G.UnitCombatReach = function() return 0 end
+        -- br._G.UnitTarget = function() return "target" end
         -- UnitCastID = function() return 0 end
         -- -- World
         -- TraceLine = function() return 0,0,0 end
@@ -382,7 +382,7 @@ function br:checkBrOutOfDate()
                 brcleanLoc = gsub(tostring(brlocVersion),"%p","")
                 if tonumber(brcleanCurr) ~= tonumber(brcleanLoc) then 
                     local msg = "BadRotations is currently out of date. Local Version: "..brlocVersion.. " Current Version: "..brcurrVersion..".  Please download latest version for best performance."
-                    if isChecked("Overlay Messages") then
+                    if br.isChecked("Overlay Messages") then
                         RaidNotice_AddMessage(RaidWarningFrame, msg, {r=1, g=0.3, b=0.1})
                     else
                         Print(msg)

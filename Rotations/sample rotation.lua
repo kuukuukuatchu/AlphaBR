@@ -179,10 +179,10 @@ local function runRotation()
     units                                         = br.player.units
     use                                           = br.player.use
     -- General Locals
-    hastar                                        = GetObjectExists("target")
+    hastar                                        = br.GetObjectExists("target")
     healPot                                       = getHealthPot()
     profileStop                                   = profileStop or false
-    ttd                                           = getTTD
+    ttd                                           = br.getTTD
     haltProfile                                   = (inCombat and profileStop) or (IsMounted() or IsFlying()) or pause() or mode.rotation==4
     -- Units
     units.get(5) -- Makes a variable called, units.dyn5
@@ -223,7 +223,7 @@ local function runRotation()
         -----------------------------
         --- In Combat - Rotations ---
         -----------------------------
-        if inCombat and isValidUnit("target") and cd.global.remain() == 0 then
+        if inCombat and br.isValidUnit("target") and cd.global.remain() == 0 then
             ------------------------------
             --- In Combat - Interrupts ---
             ------------------------------
@@ -231,11 +231,11 @@ local function runRotation()
             ---------------------------
             --- SimulationCraft APL ---
             ---------------------------
-            if getOptionValue("APL Mode") == 1 then
+            if br.getOptionValue("APL Mode") == 1 then
                 -- Start Attack
                 -- actions=auto_attack
-                if not IsAutoRepeatSpell(GetSpellInfo(6603)) and getDistance(units.dyn5) < 5 then
-                    StartAttack(units.dyn5)
+                if not IsAutoRepeatSpell(GetSpellInfo(6603)) and br.getDistance(units.dyn5) < 5 then
+                    br._G.StartAttack(units.dyn5)
                 end
                 -- Cooldowns
                 -- call_action_list,name=CDs
@@ -244,7 +244,7 @@ local function runRotation()
             ------------------------
             --- Ask Mr Robot APL ---
             ------------------------
-            if getOptionValue("APL Mode") == 2 then
+            if br.getOptionValue("APL Mode") == 2 then
 
             end -- End AMR
         end -- End In Combat Rotation
